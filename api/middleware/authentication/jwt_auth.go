@@ -4,6 +4,7 @@ import (
 	jwtmiddleware "github.com/iris-contrib/middleware/jwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kataras/iris/context"
+	"encoding/json"
 )
 
 const (
@@ -30,7 +31,9 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 			"msg" : s,
 		}
 
-		jwtmiddleware.OnError(ctx,s)
+		data,_ := json.Marshal(res)
+
+		jwtmiddleware.OnError(ctx,string(data))
 	},
 
 })

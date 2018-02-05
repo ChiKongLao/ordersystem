@@ -16,7 +16,7 @@ func (c *MessageController) Post() (int,interface{}) {
 	//	Token: c.Ctx.FormValue(datamodels.NameToken),
 	//	Platform: platform}
 
-	var status int
+	var status = iris.StatusOK
 	var err	error
 
 	if  status == iris.StatusOK{

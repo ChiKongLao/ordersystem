@@ -5,6 +5,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kataras/iris/context"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
+	"github.com/kataras/iris"
+	"time"
+	"errors"
 )
 
 const (
@@ -26,14 +30,31 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 	// Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
 	SigningMethod: jwt.SigningMethodHS256,
 	ErrorHandler: func(ctx context.Context, s string) {
-		//s = fmt.Sprintf("{\"msg\":\"认证失败: %s\"",s)
 		res := map[string]string{
-			"msg" : s,
+			"msg" : "认证失败",
 		}
+		logrus.Errorf("jwt认证失败: %s",s)
 
 		data,_ := json.Marshal(res)
-
 		jwtmiddleware.OnError(ctx,string(data))
 	},
 
 })
+
+func MakeToken(ctx iris.Context, userName, password string) (string,error){
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := make(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 7).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["userName"] = userName
+	claims["password"] = password
+	token.Claims = claims
+
+	signedString, err := token.SignedString([]byte(SecretKey))
+	if err != nil {
+		logrus.Errorf("生成token失败: %s",err)
+		return "",errors.New("生成token失败")
+	}
+
+	return "Bearer "+signedString,nil
+}

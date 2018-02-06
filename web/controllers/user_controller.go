@@ -4,6 +4,7 @@ import (
 	"github.com/chikong/ordersystem/datamodels"
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
+	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
 type UserController struct {
@@ -34,7 +35,12 @@ func (c *UserController) PostLogin()(int,interface{}){
 	userName := c.Ctx.FormValue(datamodels.UserName)
 	password := c.Ctx.FormValue(datamodels.Password)
 
-	status, token, err := c.UserService.Login(userName,password)
+	status, _, err := c.UserService.Login(userName,password)
+	if err != nil{
+		return status,datamodels.NewErrorResponse(err)
+	}
+
+	token, err := authentication.MakeToken(c.Ctx,userName,password)
 	if err != nil{
 		return status,datamodels.NewErrorResponse(err)
 	}

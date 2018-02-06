@@ -19,10 +19,11 @@ type User struct {
 	Token       string `json:"token" orm:"VARCHAR(255)"`                               // token
 }
 
-func NewLoginUser(userName, password string) *User {
+func NewLoginUser(userName, password, nickName string) *User {
 	user := &User{}
 	user.UserName = userName
 	user.Password = password
+	user.NickName = nickName
 	user.CreatedTime = time.Now().Unix()
 	return user
 

@@ -16,11 +16,9 @@ type UserController struct {
 func (c *UserController) PostRegister() (int,interface{}) {
 	userName := c.Ctx.FormValue(datamodels.NameUserName)
 	password := c.Ctx.FormValue(datamodels.NamePassword)
+	nickName := c.Ctx.FormValue(datamodels.NameNickName)
 
-	//var status int
-	//var err	error
-
-	status,err := c.UserService.InsertUser(userName,password)
+	status,err := c.UserService.InsertUser(userName,password,nickName)
 
 	if err != nil{
 		return status,datamodels.NewErrorResponse(err)

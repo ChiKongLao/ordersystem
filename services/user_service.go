@@ -12,7 +12,7 @@ import (
 )
 
 type UserService interface {
-	InsertUser(userName string, password string) (int, error)
+	InsertUser(userName, password, nickName string) (int, error)
 	Login(context iris.Context,userName, password string) (int, string, error)
 	GetUserByName(userName string) (*datamodels.User, error)
 	HashPassword(password string) (string, error)
@@ -28,11 +28,14 @@ type userService struct {
 }
 
 // 注册
-func (s *userService) InsertUser(userName, password string) (int, error) {
+func (s *userService) InsertUser(userName, password, nickName string) (int, error) {
 	if userName == "" || password == ""{
 		return iris.StatusBadRequest,errors.New("用户名或密码不能为空")
 	}
-	user := datamodels.NewLoginUser(userName,password)
+	if nickName == ""{
+		return iris.StatusBadRequest,errors.New("昵称不能为空")
+	}
+	user := datamodels.NewLoginUser(userName,password,nickName)
 	_, err := manager.DBEngine.InsertOne(user)
 	if err != nil{
 		if strings.Contains(err.Error(),"Duplicate entry") {

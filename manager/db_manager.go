@@ -6,6 +6,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// 根据表生成model
+// xorm reverse mysql root:@/order_system?charset=utf8 /Users/chikong/go_workspace/src/github.com/go-xorm/cmd/xorm/templates/goxorm
+
+
+
 type DbManager interface {
 	SetDBEngine(engine *xorm.Engine)
 }
@@ -23,7 +28,7 @@ func sync(engine *xorm.Engine){
 	unSuccessTableName := ""
 	var err error
 	defer func() {
-		if unSuccessTableName != "" {
+		if unSuccessTableName == "user" {
 			logrus.Errorf("创建用户表失败: %v\n", err)
 		}else{
 			logrus.Info("初始化数据表成功")

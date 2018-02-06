@@ -9,6 +9,8 @@ import (
 	"github.com/kataras/iris"
 	"time"
 	"errors"
+	"github.com/chikong/ordersystem/datamodels"
+	"strings"
 )
 
 const (
@@ -41,7 +43,8 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 
 })
 
-func MakeToken(ctx iris.Context, userName, password string) (string,error){
+// 生成token
+func MakeToken(userName, password string) (string,error){
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 7).Unix()
@@ -58,3 +61,41 @@ func MakeToken(ctx iris.Context, userName, password string) (string,error){
 
 	return "Bearer "+signedString,nil
 }
+
+// 从Context获取token
+func GetToken(ctx iris.Context) (token *jwt.Token){
+	token = ctx.Values().Get(JWTHandler.Config.ContextKey).(*jwt.Token)
+	return token
+}
+
+// 从Context获取token string
+func GetTokenString(ctx iris.Context) string{
+	return GetToken(ctx).Raw
+}
+
+// 从请求头获取token
+func GetTokenFormHeader(ctx iris.Context) (*jwt.Token,error){
+	tokenString := strings.Replace(ctx.GetHeader(datamodels.NameAuthorization),"Bearer ","",1)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey), nil
+	})
+
+	if err != nil {
+		logrus.Errorf("从请求头获取token失败: %s",err)
+		return nil,errors.New("解析token失败")
+	}
+	return token,nil
+}
+
+// 从请求头获取token的用户名
+func GetUserNameFormHeaderToken(ctx iris.Context) (string,error){
+	token, err := GetTokenFormHeader(ctx)
+	if err != nil {
+		logrus.Errorf("从请求头获取token信息失败: %s",err)
+		return "",errors.New("解析token信息失败")
+	}
+	claim := token.Claims.(jwt.MapClaims)
+	return claim[datamodels.NameUserName].(string),nil
+}
+
+

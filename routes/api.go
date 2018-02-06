@@ -31,7 +31,8 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	auth := authentication.JWTHandler.Serve
 
 	{
-		mvc.Configure(v1.Party("/user"), func(mvcApp *mvc.Application) {
+		userParty := v1.Party("/user")
+		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
 			service := services.NewUserService()
 			mvcApp.Register(service)
 			mvcApp.Handle(new(controllers.UserController))

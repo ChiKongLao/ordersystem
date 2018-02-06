@@ -14,8 +14,8 @@ type UserController struct {
 
 // 注册
 func (c *UserController) PostRegister() (int,interface{}) {
-	userName := c.Ctx.FormValue(datamodels.UserName)
-	password := c.Ctx.FormValue(datamodels.Password)
+	userName := c.Ctx.FormValue(datamodels.NameUserName)
+	password := c.Ctx.FormValue(datamodels.NamePassword)
 
 	//var status int
 	//var err	error
@@ -32,21 +32,34 @@ func (c *UserController) PostRegister() (int,interface{}) {
 
 // 登录
 func (c *UserController) PostLogin()(int,interface{}){
-	userName := c.Ctx.FormValue(datamodels.UserName)
-	password := c.Ctx.FormValue(datamodels.Password)
+	userName := c.Ctx.FormValue(datamodels.NameUserName)
+	password := c.Ctx.FormValue(datamodels.NamePassword)
 
-	status, _, err := c.UserService.Login(userName,password)
-	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
-	}
-
-	token, err := authentication.MakeToken(c.Ctx,userName,password)
+	status, token, err := c.UserService.Login(c.Ctx,userName,password)
 	if err != nil{
 		return status,datamodels.NewErrorResponse(err)
 	}
 
 	return status,map[string]string{
-		datamodels.Token:token,
+		datamodels.NameAuthorization:token,
+	}
+
+}
+
+// 获取用户信息
+func (c *UserController) Get()(int,interface{}){
+	userName,err := authentication.GetUserNameFormHeaderToken(c.Ctx)
+	if err != nil{
+		return iris.StatusInternalServerError,datamodels.NewErrorResponse(err)
+	}
+	user, err := c.UserService.GetUserByName(userName)
+	if err != nil{
+		return iris.StatusInternalServerError,datamodels.NewErrorResponse(err)
+	}
+
+	return iris.StatusOK,iris.Map{
+		datamodels.NameID:user.Id,
+		datamodels.NameNickName:user.NickName,
 	}
 
 }

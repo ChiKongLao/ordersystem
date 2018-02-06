@@ -8,11 +8,13 @@ import (
 	"errors"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
 type UserService interface {
 	InsertUser(userName string, password string) (int, error)
-	Login(userName, password string) (int, string, error)
+	Login(context iris.Context,userName, password string) (int, string, error)
+	GetUserByName(userName string) (*datamodels.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
 }
@@ -42,13 +44,38 @@ func (s *userService) InsertUser(userName, password string) (int, error) {
 	return iris.StatusOK, nil
 }
 
+// 登录
+func (s *userService) Login(ctx iris.Context, userName, password string) (int, string, error) {
+	if userName == "" || password == ""{
+		return iris.StatusBadRequest,"",errors.New("用户名或密码不能为空")
+	}
+
+	user,err := s.GetUserByName(userName)
+	if err != nil{
+		return iris.StatusInternalServerError,"",errors.New("没有找到该用户")
+	}
+	if user.Password != password {
+		return iris.StatusBadRequest,"",errors.New("密码不正确")
+	}
+	token, err := authentication.MakeToken(userName,password)
+	if err != nil {
+		return iris.StatusInternalServerError,"",err
+	}
+	setToken(user,token)
+
+	return iris.StatusOK,token,nil
+
+}
+
+
+
 // 查询
-func getUserByName(userName string) (*datamodels.User, error) {
+func (s *userService)GetUserByName(userName string) (*datamodels.User, error) {
 	user := new(datamodels.User)
 	res, err := manager.DBEngine.Where("user_name=?",userName).Get(user)
 	if err != nil{
 		logrus.Errorf("查找用户失败:%s",err)
-		return nil,err
+		return nil,errors.New("查找用户失败")
 	}
 	if res == false{
 		return nil,errors.New("没有找到该用户")
@@ -56,16 +83,15 @@ func getUserByName(userName string) (*datamodels.User, error) {
 	return user,nil
 
 }
-// 登录
-func (s *userService) Login(userName,password string) (int,string, error) {
-	user,err := getUserByName(userName)
-	if err != nil{
-		return iris.StatusInternalServerError,"",errors.New("没有找到该用户")
+
+// 设置token
+func setToken(user *datamodels.User, token string){
+	user.Token = token
+	_, err := manager.DBEngine.Id(user.Id).Update(user)
+	if err != nil {
+		logrus.Errorf("更新用户token失败: %s",err)
+		return
 	}
-	if user.Password != password {
-		return iris.StatusBadRequest,"",errors.New("密码不正确")
-	}
-	return iris.StatusOK,user.Token,nil
 
 }
 

@@ -10,12 +10,16 @@ import (
 	"strings"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 	"time"
+	"fmt"
+	"github.com/chikong/ordersystem/constant"
 )
 
 type UserService interface {
-	InsertUser(role int, userName, password, nickName string) (int, error)
+	InsertUser(int, string, string, string) (int, error)
 	Login(context iris.Context,userName, password string) (int, string, error)
-	GetUserByName(userName string) (*datamodels.User, error)
+	GetUserByName(userName string) (int, *datamodels.User, error)
+	GetUserById(string) (int, *datamodels.User, error)
+	GetBusinessById(string) (int, *datamodels.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
 }
@@ -59,14 +63,14 @@ func (s *userService) Login(ctx iris.Context, userName, password string) (int, s
 		return iris.StatusBadRequest,"",errors.New("用户名或密码不能为空")
 	}
 
-	user,err := s.GetUserByName(userName)
+	status, user, err := s.GetUserByName(userName)
 	if err != nil{
-		return iris.StatusInternalServerError,"",errors.New("没有找到该用户")
+		return status,"",errors.New("没有找到该用户")
 	}
 	if user.Password != password {
 		return iris.StatusBadRequest,"",errors.New("密码不正确")
 	}
-	token, err := authentication.MakeToken(userName,password)
+	token, err := authentication.MakeToken(user)
 	if err != nil {
 		return iris.StatusInternalServerError,"",err
 	}
@@ -79,18 +83,46 @@ func (s *userService) Login(ctx iris.Context, userName, password string) (int, s
 
 
 // 查询
-func (s *userService)GetUserByName(userName string) (*datamodels.User, error) {
+func (s *userService)GetUserByName(userName string) (int, *datamodels.User, error) {
 	user := new(datamodels.User)
-	res, err := manager.DBEngine.Where("user_name=?",userName).Get(user)
+	res, err := manager.DBEngine.Where(
+		fmt.Sprintf("%s=?",constant.ColumnUserName),userName).Get(user)
 	if err != nil{
 		logrus.Errorf("查找用户失败:%s",err)
-		return nil,errors.New("查找用户失败")
+		return iris.StatusInternalServerError, nil,errors.New("查找用户失败")
 	}
 	if res == false{
-		return nil,errors.New("没有找到该用户")
+		return iris.StatusNotFound,nil,errors.New("没有找到该用户")
 	}
-	return user,nil
+	return iris.StatusOK,user,nil
 
+}
+
+// 查询商家
+func (s *userService)GetBusinessById(id string) (int, *datamodels.User, error) {
+	status, user, err := s.GetUserById(id)
+	if err != nil {
+		return status,nil,err
+	}
+	if !user.IsBusiness() {
+		return iris.StatusNotFound,nil,errors.New("没有找到该用户")
+	}
+	return status,user,nil
+}
+
+// 查询
+func (s *userService)GetUserById(id string) (int, *datamodels.User, error) {
+	user := new(datamodels.User)
+	res, err := manager.DBEngine.Where(
+		fmt.Sprintf("%s=?",constant.NameID),id).Get(user)
+	if err != nil{
+		logrus.Errorf("查找用户失败:%s",err)
+		return iris.StatusInternalServerError, nil,errors.New("查找用户失败")
+	}
+	if res == false{
+		return iris.StatusNotFound,nil,errors.New("没有找到该用户")
+	}
+	return iris.StatusOK,user,nil
 }
 
 // 设置token

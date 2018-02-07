@@ -2,11 +2,6 @@ package datamodels
 
 import "strings"
 
-const (
-	NamePayload = "payload"
-	NameToken = "token"
-	NamePlatForm = "platform"
-)
 
 type Message struct {
 	// 数据内容载体

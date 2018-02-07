@@ -6,6 +6,7 @@ import (
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 	"strconv"
+	"github.com/chikong/ordersystem/constant"
 )
 
 type UserController struct {
@@ -15,10 +16,10 @@ type UserController struct {
 
 // 注册
 func (c *UserController) PostRegister() (int,interface{}) {
-	userName := c.Ctx.FormValue(datamodels.NameUserName)
-	password := c.Ctx.FormValue(datamodels.NamePassword)
-	nickName := c.Ctx.FormValue(datamodels.NameNickName)
-	role,_ := strconv.Atoi(c.Ctx.FormValue(datamodels.NameRole))
+	userName := c.Ctx.FormValue(constant.NameUserName)
+	password := c.Ctx.FormValue(constant.NamePassword)
+	nickName := c.Ctx.FormValue(constant.NameNickName)
+	role,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameRole))
 
 	status,err := c.UserService.InsertUser(role,userName,password,nickName)
 
@@ -26,14 +27,14 @@ func (c *UserController) PostRegister() (int,interface{}) {
 		return status,datamodels.NewErrorResponse(err)
 	}
 
-	return status,iris.Map{datamodels.KeyIsOk:true}
+	return status,iris.Map{constant.NameIsOk:true}
 }
 
 
 // 登录
 func (c *UserController) PostLogin()(int,interface{}){
-	userName := c.Ctx.FormValue(datamodels.NameUserName)
-	password := c.Ctx.FormValue(datamodels.NamePassword)
+	userName := c.Ctx.FormValue(constant.NameUserName)
+	password := c.Ctx.FormValue(constant.NamePassword)
 
 	status, token, err := c.UserService.Login(c.Ctx,userName,password)
 	if err != nil{
@@ -41,7 +42,7 @@ func (c *UserController) PostLogin()(int,interface{}){
 	}
 
 	return status,map[string]string{
-		datamodels.NameAuthorization:token,
+		constant.NameAuthorization:token,
 	}
 
 }
@@ -52,14 +53,14 @@ func (c *UserController) Get()(int,interface{}){
 	if err != nil{
 		return iris.StatusInternalServerError,datamodels.NewErrorResponse(err)
 	}
-	user, err := c.UserService.GetUserByName(userName)
+	status, user, err := c.UserService.GetUserByName(userName)
 	if err != nil{
-		return iris.StatusInternalServerError,datamodels.NewErrorResponse(err)
+		return status,datamodels.NewErrorResponse(err)
 	}
 
-	return iris.StatusOK,iris.Map{
-		datamodels.NameID:user.Id,
-		datamodels.NameNickName:user.NickName,
+	return status,iris.Map{
+		constant.NameID:user.Id,
+		constant.NameNickName:user.NickName,
 	}
 
 }

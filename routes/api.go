@@ -31,11 +31,18 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	auth := authentication.JWTHandler.Serve
 
 	{
+		userService := services.NewUserService()
+
 		userParty := v1.Party("/user")
 		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
-			service := services.NewUserService()
-			mvcApp.Register(service)
+			mvcApp.Register(userService)
 			mvcApp.Handle(new(controllers.UserController))
+
+		})
+		mvc.Configure(v1.Party("/menu",auth), func(mvcApp *mvc.Application) {
+			service := services.NewDashesService()
+			mvcApp.Register(service,userService)
+			mvcApp.Handle(new(controllers.DashesController))
 
 		})
 

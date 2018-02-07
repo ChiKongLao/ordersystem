@@ -1,13 +1,6 @@
 package datamodels
 
 // 邮件
-const (
-	From = "From"
-	To = "To"
-	Cc = "Cc"
-	Subject = "Subject"
-)
-
 type Mail struct {
 	From string			// 发件人
 	To []string			// 收件人

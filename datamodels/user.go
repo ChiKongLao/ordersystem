@@ -1,19 +1,7 @@
 package datamodels
 
-const (
-	NameID            = "id"
-	NameUserName      = "userName"
-	NamePassword      = "password"
-	NameNickName      = "nickName"
-	NameRole          = "role"
-	NameAuthorization = "authorization"
-	RoleManager       = "1" // 管理员
-	RoleCustomer      = "2" // 客户
-	RoleBusiness      = "3" // 商家
-)
-
 type User struct {
-	Id          string `json:"id" xorm:"not null pk autoincr unique INT(11)"`          // id
+	Id          int `json:"id" xorm:"not null pk autoincr unique INT(11)"`          // id
 	UserName    string `json:"userName" xorm:"VARCHAR(25) notnull unique 'user_name'"` // 名字
 	Password    string `json:"password" xorm:"not null VARCHAR(20) "`                  // 密码
 	NickName    string `json:"nickName" xorm:"VARCHAR(30)"`                            // 昵称

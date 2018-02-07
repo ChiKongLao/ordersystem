@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/chikong/ordersystem/datamodels"
 	"github.com/kataras/iris"
+	"github.com/chikong/ordersystem/constant"
 )
 
 type MessageController struct {
@@ -21,9 +22,9 @@ func (c *MessageController) Post() (int,interface{}) {
 	var err	error
 
 	if  status == iris.StatusOK{
-		return status,iris.Map{datamodels.KeyIsOk:true}
+		return status,iris.Map{constant.NameIsOk:true}
 	} else{
-		return status,&datamodels.Response{err.Error()}
+		return status,datamodels.NewErrorResponse(err)
 	}
 	return iris.StatusOK,""
 }

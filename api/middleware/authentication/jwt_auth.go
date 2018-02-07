@@ -9,8 +9,9 @@ import (
 	"github.com/kataras/iris"
 	"time"
 	"errors"
-	"github.com/chikong/ordersystem/datamodels"
 	"strings"
+	"github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/datamodels"
 )
 
 const (
@@ -44,13 +45,14 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 })
 
 // 生成token
-func MakeToken(userName, password string) (string,error){
+func MakeToken(user *datamodels.User) (string,error){
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 7).Unix()
 	claims["iat"] = time.Now().Unix()
-	claims["userName"] = userName
-	claims["password"] = password
+	claims["userName"] = user.UserName
+	claims["password"] = user.Password
+	claims["id"] = user.Id
 	token.Claims = claims
 
 	signedString, err := token.SignedString([]byte(SecretKey))
@@ -75,7 +77,7 @@ func GetTokenString(ctx iris.Context) string{
 
 // 从请求头获取token
 func GetTokenFormHeader(ctx iris.Context) (*jwt.Token,error){
-	tokenString := strings.Replace(ctx.GetHeader(datamodels.NameAuthorization),"Bearer ","",1)
+	tokenString := strings.Replace(ctx.GetHeader(constant.NameAuthorization),"Bearer ","",1)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SecretKey), nil
 	})
@@ -89,13 +91,47 @@ func GetTokenFormHeader(ctx iris.Context) (*jwt.Token,error){
 
 // 从请求头获取token的用户名
 func GetUserNameFormHeaderToken(ctx iris.Context) (string,error){
+	claim, err := getClaims(ctx)
+	if err != nil {
+		return "",err
+	}
+
+	return claim[constant.NameUserName].(string),nil
+}
+
+// 从请求头获取token对应的用户ID
+func GetUserIDFormHeaderToken(ctx iris.Context) (string,error){
+	claim, err := getClaims(ctx)
+	if err != nil {
+		return "",err
+	}
+
+	return claim[constant.NameID].(string),nil
+}
+
+// 从请求头获取token对应的信息
+func getClaims(ctx iris.Context) (jwt.MapClaims,error){
 	token, err := GetTokenFormHeader(ctx)
 	if err != nil {
 		logrus.Errorf("从请求头获取token信息失败: %s",err)
-		return "",errors.New("解析token信息失败")
+		return nil,errors.New("解析token信息失败")
 	}
-	claim := token.Claims.(jwt.MapClaims)
-	return claim[datamodels.NameUserName].(string),nil
+
+	return token.Claims.(jwt.MapClaims),nil
+}
+
+// 从userId和token的id对比是不为自己
+func IsOwnWithToken(ctx iris.Context, userId string) (bool, error){
+	id, err := GetUserIDFormHeaderToken(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if userId != id {
+		return false, errors.New("帐号不匹配")
+	}
+	return userId == id,nil
+
 }
 
 

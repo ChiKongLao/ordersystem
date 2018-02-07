@@ -5,6 +5,7 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
+	"strconv"
 )
 
 type UserController struct {
@@ -17,8 +18,9 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	userName := c.Ctx.FormValue(datamodels.NameUserName)
 	password := c.Ctx.FormValue(datamodels.NamePassword)
 	nickName := c.Ctx.FormValue(datamodels.NameNickName)
+	role,_ := strconv.Atoi(c.Ctx.FormValue(datamodels.NameRole))
 
-	status,err := c.UserService.InsertUser(userName,password,nickName)
+	status,err := c.UserService.InsertUser(role,userName,password,nickName)
 
 	if err != nil{
 		return status,datamodels.NewErrorResponse(err)

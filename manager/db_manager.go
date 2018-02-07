@@ -8,6 +8,7 @@ import (
 
 // 根据表生成model
 // xorm reverse mysql root:@/order_system?charset=utf8 /Users/chikong/go_workspace/src/github.com/go-xorm/cmd/xorm/templates/goxorm
+// xorm reverse mysql root:@/order_system?charset=utf8 H:\GOPATH\src\github.com\go-xorm\cmd\xorm\templates\goxorm
 
 
 

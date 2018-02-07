@@ -3,8 +3,6 @@ package controllers
 import (
 	"github.com/chikong/ordersystem/datamodels"
 	"github.com/kataras/iris"
-	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"github.com/sirupsen/logrus"
 )
 
 type MessageController struct {
@@ -23,9 +21,6 @@ func (c *MessageController) Post() (int,interface{}) {
 	var err	error
 
 	if  status == iris.StatusOK{
-		//token := c.Ctx.Values().Get(authentication.JWTHandler.Config.ContextKey).(*jwt.Token)
-		token := authentication.GetTokenString(c.Ctx)
-		logrus.Infof("token = %v",token)
 		return status,iris.Map{datamodels.KeyIsOk:true}
 	} else{
 		return status,&datamodels.Response{err.Error()}

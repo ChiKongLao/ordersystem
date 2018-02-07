@@ -42,5 +42,6 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))
 
 
+
 	}
 }

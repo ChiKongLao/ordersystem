@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/chikong/ordersystem/manager"
 	"github.com/kataras/iris"
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"errors"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -17,9 +17,9 @@ import (
 type UserService interface {
 	InsertUser(int, string, string, string) (int, error)
 	Login(context iris.Context,userName, password string) (int, string, error)
-	GetUserByName(userName string) (int, *datamodels.User, error)
-	GetUserById(string) (int, *datamodels.User, error)
-	GetBusinessById(string) (int, *datamodels.User, error)
+	GetUserByName(userName string) (int, *model.User, error)
+	GetUserById(string) (int, *model.User, error)
+	GetBusinessById(string) (int, *model.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
 }
@@ -40,7 +40,7 @@ func (s *userService) InsertUser(role int, userName, password, nickName string) 
 	if nickName == ""{
 		return iris.StatusBadRequest,errors.New("昵称不能为空")
 	}
-	 user := &datamodels.User{
+	 user := &model.User{
 		UserName:    userName,
 		Password:    password,
 		NickName:    nickName,
@@ -83,8 +83,8 @@ func (s *userService) Login(ctx iris.Context, userName, password string) (int, s
 
 
 // 查询
-func (s *userService)GetUserByName(userName string) (int, *datamodels.User, error) {
-	user := new(datamodels.User)
+func (s *userService)GetUserByName(userName string) (int, *model.User, error) {
+	user := new(model.User)
 	res, err := manager.DBEngine.Where(
 		fmt.Sprintf("%s=?",constant.ColumnUserName),userName).Get(user)
 	if err != nil{
@@ -99,7 +99,7 @@ func (s *userService)GetUserByName(userName string) (int, *datamodels.User, erro
 }
 
 // 查询商家
-func (s *userService)GetBusinessById(id string) (int, *datamodels.User, error) {
+func (s *userService)GetBusinessById(id string) (int, *model.User, error) {
 	status, user, err := s.GetUserById(id)
 	if err != nil {
 		return status,nil,err
@@ -111,8 +111,8 @@ func (s *userService)GetBusinessById(id string) (int, *datamodels.User, error) {
 }
 
 // 查询
-func (s *userService)GetUserById(id string) (int, *datamodels.User, error) {
-	user := new(datamodels.User)
+func (s *userService)GetUserById(id string) (int, *model.User, error) {
+	user := new(model.User)
 	res, err := manager.DBEngine.Where(
 		fmt.Sprintf("%s=?",constant.NameID),id).Get(user)
 	if err != nil{
@@ -126,7 +126,7 @@ func (s *userService)GetUserById(id string) (int, *datamodels.User, error) {
 }
 
 // 设置token
-func setToken(user *datamodels.User, token string){
+func setToken(user *model.User, token string){
 	user.Token = token
 	_, err := manager.DBEngine.Id(user.Id).Update(user)
 	if err != nil {

@@ -1,12 +1,12 @@
 package services
 
 import (
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 )
 
 
 type MessageService interface {
-	PostBy(msg datamodels.Message) (bool ,error)
+	PostBy(msg model.Message) (bool ,error)
 }
 
 
@@ -18,7 +18,7 @@ type messageService struct {
 }
 
 /** 接收申请发送的消息 */
-func (s *messageService) PostBy(msg datamodels.Message) (bool,error) {
+func (s *messageService) PostBy(msg model.Message) (bool,error) {
 	return true ,nil
 
 }

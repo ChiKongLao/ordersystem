@@ -11,7 +11,7 @@ import (
 	"errors"
 	"strings"
 	"github.com/chikong/ordersystem/constant"
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 )
 
 const (
@@ -45,7 +45,7 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 })
 
 // 生成token
-func MakeToken(user *datamodels.User) (string,error){
+func MakeToken(user *model.User) (string,error){
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 7).Unix()

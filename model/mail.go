@@ -1,4 +1,4 @@
-package datamodels
+package model
 
 // 邮件
 type Mail struct {

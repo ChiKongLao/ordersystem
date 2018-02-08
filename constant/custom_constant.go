@@ -21,6 +21,7 @@ const (
 	NameMsg           = "msg"
 	NameDesc          = "desc"
 	NameSize          = "size"
+	NameCount          = "count"
 
 	NameFrom    = "From"
 	NameTo      = "To"

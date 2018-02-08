@@ -1,8 +1,8 @@
 package datasource
 
-import "github.com/chikong/ordersystem/datamodels"
+import "github.com/chikong/ordersystem/model"
 
-var Movies = map[int64]datamodels.Movie{
+var Movies = map[int64]model.Movie{
 	1: {
 		ID:     1,
 		Name:   "Casablanca",

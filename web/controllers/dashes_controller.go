@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
@@ -22,14 +22,14 @@ type DashesController struct {
 func (c *DashesController) GetBy(userId string) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 
-	var list []datamodels.Dashes
+	var list []model.Dashes
 	status, list, err = c.GetDashesList(userId)
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{
@@ -43,12 +43,12 @@ func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
-	var item *datamodels.Dashes
+	var item *model.Dashes
 	status, item, err = c.GetDashes(userId,dashId)
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{
@@ -60,13 +60,13 @@ func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
 func (c *DashesController) PostBy(userId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
-		return iris.StatusUnauthorized,datamodels.NewErrorResponse(err)
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
 	status, user, err := c.UserService.GetUserById(userId)
 
 	if err != nil {
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
@@ -82,7 +82,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 
 	userIdInt,_ := strconv.Atoi(userId)
 
-	status, err = c.InsertDashes(user,&datamodels.Dashes{
+	status, err = c.InsertDashes(user,&model.Dashes{
 		BusinessId:userIdInt,
 		Name:name,
 		Num:num,
@@ -93,7 +93,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 	} )
 
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{
@@ -105,13 +105,13 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
-		return iris.StatusUnauthorized,datamodels.NewErrorResponse(err)
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
 	status, user, err := c.UserService.GetUserById(userId)
 
 	if err != nil {
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
@@ -128,7 +128,7 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 	userIdInt,_ := strconv.Atoi(userId)
 	dashIdInt,_ := strconv.Atoi(dashId)
 
-	status, err = c.UpdateDashes(user,&datamodels.Dashes{
+	status, err = c.UpdateDashes(user,&model.Dashes{
 		Id:dashIdInt,
 		BusinessId:userIdInt,
 		Name:name,
@@ -140,7 +140,7 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 	} )
 
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{
@@ -153,13 +153,13 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
-		return iris.StatusUnauthorized,datamodels.NewErrorResponse(err)
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
 	status, user, err := c.UserService.GetUserById(userId)
 
 	if err != nil {
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
@@ -171,7 +171,7 @@ func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
 	status, err = c.DeleteDashes(user,dashIdInt)
 
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{

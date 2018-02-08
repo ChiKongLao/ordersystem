@@ -1,4 +1,4 @@
-package datamodels
+package model
 
 type User struct {
 	Id          int `json:"id" xorm:"not null pk autoincr unique INT(11)"`          // id

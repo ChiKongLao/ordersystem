@@ -2,12 +2,12 @@ package repositories
 
 import (
 	"sync"
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"errors"
 )
 
 // Query represents the visitor and action queries.
-type Query func(datamodels.Movie) bool
+type Query func(model.Movie) bool
 
 // MovieRepository handles the basic operations of a movie entity/model.
 // It's an interface in order to be testable, i.e a memory movie repository or
@@ -15,23 +15,23 @@ type Query func(datamodels.Movie) bool
 type MovieRepository interface {
 	Exec(query Query, action Query, limit int, mode int) (ok bool)
 
-	Select(query Query) (movie datamodels.Movie, found bool)
-	SelectMany(query Query, limit int) (results []datamodels.Movie)
+	Select(query Query) (movie model.Movie, found bool)
+	SelectMany(query Query, limit int) (results []model.Movie)
 
-	InsertOrUpdate(movie datamodels.Movie) (updatedMovie datamodels.Movie, err error)
+	InsertOrUpdate(movie model.Movie) (updatedMovie model.Movie, err error)
 	Delete(query Query, limit int) (deleted bool)
 }
 
 // NewMovieRepository returns a new movie memory-based repository,
 // the one and only repository type in our example.
-func NewMovieRepository(source map[int64]datamodels.Movie) MovieRepository {
+func NewMovieRepository(source map[int64]model.Movie) MovieRepository {
 	return &movieMemoryRepository{source: source}
 }
 
 // movieMemoryRepository is a "MovieRepository"
 // which manages the movies using the memory data source (map).
 type movieMemoryRepository struct {
-	source map[int64]datamodels.Movie
+	source map[int64]model.Movie
 	mu     sync.RWMutex
 }
 
@@ -80,15 +80,15 @@ func (r *movieMemoryRepository) Exec(query Query, action Query, actionLimit int,
 // It's actually a simple but very clever prototype function
 // I'm using everywhere since I firstly think of it,
 // hope you'll find it very useful as well.
-func (r *movieMemoryRepository) Select(query Query) (movie datamodels.Movie, found bool) {
-	found = r.Exec(query, func(m datamodels.Movie) bool {
+func (r *movieMemoryRepository) Select(query Query) (movie model.Movie, found bool) {
+	found = r.Exec(query, func(m model.Movie) bool {
 		movie = m
 		return true
 	}, 1, ReadOnlyMode)
 
 	// set an empty datamodels.Movie if not found at all.
 	if !found {
-		movie = datamodels.Movie{}
+		movie = model.Movie{}
 	}
 
 	return
@@ -96,8 +96,8 @@ func (r *movieMemoryRepository) Select(query Query) (movie datamodels.Movie, fou
 
 // SelectMany same as Select but returns one or more datamodels.Movie as a slice.
 // If limit <=0 then it returns everything.
-func (r *movieMemoryRepository) SelectMany(query Query, limit int) (results []datamodels.Movie) {
-	r.Exec(query, func(m datamodels.Movie) bool {
+func (r *movieMemoryRepository) SelectMany(query Query, limit int) (results []model.Movie) {
+	r.Exec(query, func(m model.Movie) bool {
 		results = append(results, m)
 		return true
 	}, limit, ReadOnlyMode)
@@ -108,7 +108,7 @@ func (r *movieMemoryRepository) SelectMany(query Query, limit int) (results []da
 // InsertOrUpdate adds or updates a movie to the (memory) storage.
 //
 // Returns the new movie and an error if any.
-func (r *movieMemoryRepository) InsertOrUpdate(movie datamodels.Movie) (datamodels.Movie, error) {
+func (r *movieMemoryRepository) InsertOrUpdate(movie model.Movie) (model.Movie, error) {
 	id := movie.ID
 
 	if id == 0 { // Create new action
@@ -140,12 +140,12 @@ func (r *movieMemoryRepository) InsertOrUpdate(movie datamodels.Movie) (datamode
 	// Alternatively we could do pure replace instead:
 	// r.source[id] = movie
 	// and comment the code below;
-	current, exists := r.Select(func(m datamodels.Movie) bool {
+	current, exists := r.Select(func(m model.Movie) bool {
 		return m.ID == id
 	})
 
 	if !exists { // ID is not a real one, return an error.
-		return datamodels.Movie{}, errors.New("failed to update a nonexistent movie")
+		return model.Movie{}, errors.New("failed to update a nonexistent movie")
 	}
 
 	// or comment these and r.source[id] = m for pure replace
@@ -166,7 +166,7 @@ func (r *movieMemoryRepository) InsertOrUpdate(movie datamodels.Movie) (datamode
 }
 
 func (r *movieMemoryRepository) Delete(query Query, limit int) bool {
-	return r.Exec(query, func(m datamodels.Movie) bool {
+	return r.Exec(query, func(m model.Movie) bool {
 		delete(r.source, m.ID)
 		return true
 	}, limit, ReadWriteMode)

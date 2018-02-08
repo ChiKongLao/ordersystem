@@ -2,13 +2,13 @@ package manager
 
 import (
 	"github.com/go-xorm/xorm"
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"github.com/sirupsen/logrus"
 )
 
 // 根据表生成model
 // xorm reverse mysql root:@/order_system?charset=utf8 /Users/chikong/go_workspace/src/github.com/go-xorm/cmd/xorm/templates/goxorm
-// xorm reverse mysql root:@/order_system?charset=utf8 H:\GOPATH\src\github.com\go-xorm\cmd\xorm\templates\goxorm
+// xorm reverse mysql root:@/order_system?charset=utf8 H:\GOPATH\src\github.com\go-xorm\cmd\xorm\templates\goxorm modeltmp
 
 
 
@@ -37,12 +37,16 @@ func sync(engine *xorm.Engine){
 		}
 	}()
 
-	if err = engine.Sync2(new(datamodels.User)); err != nil {
+	if err = engine.Sync2(new(model.User)); err != nil {
 		unSuccessTableName = "user"
 		return
 	}
-	if err = engine.Sync2(new(datamodels.Dashes)); err != nil {
+	if err = engine.Sync2(new(model.Dashes)); err != nil {
 		unSuccessTableName = "dashes"
+		return
+	}
+	if err = engine.Sync2(new(model.TableInfo)); err != nil {
+		unSuccessTableName = "table_info"
 		return
 	}
 

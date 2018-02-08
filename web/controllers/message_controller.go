@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/constant"
 )
@@ -24,7 +24,7 @@ func (c *MessageController) Post() (int,interface{}) {
 	if  status == iris.StatusOK{
 		return status,iris.Map{constant.NameIsOk:true}
 	} else{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 	return iris.StatusOK,""
 }

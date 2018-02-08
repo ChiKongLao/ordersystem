@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/chikong/ordersystem/datamodels"
+	"github.com/chikong/ordersystem/model"
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
@@ -24,7 +24,7 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	status,err := c.UserService.InsertUser(role,userName,password,nickName)
 
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{constant.NameIsOk:true}
@@ -38,7 +38,7 @@ func (c *UserController) PostLogin()(int,interface{}){
 
 	status, token, err := c.UserService.Login(c.Ctx,userName,password)
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,map[string]string{
@@ -51,11 +51,11 @@ func (c *UserController) PostLogin()(int,interface{}){
 func (c *UserController) Get()(int,interface{}){
 	userName,err := authentication.GetUserNameFormHeaderToken(c.Ctx)
 	if err != nil{
-		return iris.StatusInternalServerError,datamodels.NewErrorResponse(err)
+		return iris.StatusInternalServerError, model.NewErrorResponse(err)
 	}
 	status, user, err := c.UserService.GetUserByName(userName)
 	if err != nil{
-		return status,datamodels.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	return status,iris.Map{

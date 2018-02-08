@@ -1,4 +1,4 @@
-package datamodels
+package model
 
 // 菜式
 type Dashes struct {

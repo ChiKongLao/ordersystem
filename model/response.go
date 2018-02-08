@@ -1,4 +1,4 @@
-package datamodels
+package model
 
 import (
 	"github.com/kataras/iris"

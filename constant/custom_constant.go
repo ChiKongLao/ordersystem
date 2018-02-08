@@ -21,7 +21,12 @@ const (
 	NameMsg           = "msg"
 	NameDesc          = "desc"
 	NameSize          = "size"
-	NameCount          = "count"
+	NameCount         = "count"
+	NameBusinessID    = "businessId"
+	NameStatus        = "status"
+	NamePerson        = "person"
+	NamePersonNum     = "personNum"
+	NameCapacity      = "capacity"
 
 	NameFrom    = "From"
 	NameTo      = "To"
@@ -40,5 +45,10 @@ const (
 	RoleManager  = "1" // 管理员
 	RoleCustomer = "2" // 客户
 	RoleBusiness = "3" // 商家
+
+	TableStatusEmpty     = 0 // 闲置
+	TableStatusUsing     = 1 // 正在使用
+	TableStatusWaitClean = 2 // 待清理
+	TableStatusCleaning  = 3 // 清理中
 
 )

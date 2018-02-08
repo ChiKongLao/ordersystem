@@ -49,7 +49,7 @@ func (b *Bootstrapper) SetupViews(viewsDir string) {
 func (b *Bootstrapper) SetupErrorHandlers() {
 	b.OnAnyErrorCode(func(ctx iris.Context) {
 		err := iris.Map{
-			"app":     b.AppName,
+			//"app":     b.AppName,
 			"status":  ctx.GetStatusCode(),
 			"msg": ctx.Values().GetString("message"),
 		}

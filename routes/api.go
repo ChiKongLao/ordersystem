@@ -6,7 +6,7 @@ import (
 	"github.com/chikong/ordersystem/bootstrap"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/logger"
-	"github.com/chikong/ordersystem/web/controllers"
+	"github.com/chikong/ordersystem/controllers"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
@@ -43,6 +43,12 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			service := services.NewDashesService()
 			mvcApp.Register(service,userService)
 			mvcApp.Handle(new(controllers.DashesController))
+
+		})
+		mvc.Configure(v1.Party("/table",auth), func(mvcApp *mvc.Application) {
+			service := services.NewTableService()
+			mvcApp.Register(service,userService)
+			mvcApp.Handle(new(controllers.TableController))
 
 		})
 

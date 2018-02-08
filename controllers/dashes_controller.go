@@ -82,7 +82,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 
 	userIdInt,_ := strconv.Atoi(userId)
 
-	status, err = c.InsertDashes(user,&model.Dashes{
+	status, err = c.InsertDashes(&model.Dashes{
 		BusinessId:userIdInt,
 		Name:name,
 		Num:num,
@@ -128,7 +128,7 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 	userIdInt,_ := strconv.Atoi(userId)
 	dashIdInt,_ := strconv.Atoi(dashId)
 
-	status, err = c.UpdateDashes(user,&model.Dashes{
+	status, err = c.UpdateDashes(&model.Dashes{
 		Id:dashIdInt,
 		BusinessId:userIdInt,
 		Name:name,
@@ -168,7 +168,7 @@ func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
 
 	dashIdInt,_ := strconv.Atoi(dashId)
 
-	status, err = c.DeleteDashes(user,dashIdInt)
+	status, err = c.DeleteDashes(user.Id,dashIdInt)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

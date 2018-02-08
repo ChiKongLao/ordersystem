@@ -13,9 +13,9 @@ import (
 type DashesService interface {
 	GetDashesList(businessId string) (int, []model.Dashes, error)
 	GetDashes(businessId, dashId string) (int, *model.Dashes, error)
-	InsertDashes(user *model.User, dashes *model.Dashes) (int, error)
-	UpdateDashes(user *model.User, dashes *model.Dashes) (int, error)
-	DeleteDashes(user *model.User, dashId int) (int, error)
+	InsertDashes(dashes *model.Dashes) (int, error)
+	UpdateDashes(dashes *model.Dashes) (int, error)
+	DeleteDashes(businessId, dashId string) (int, error)
 }
 
 func NewDashesService() DashesService {
@@ -27,16 +27,16 @@ type dashesService struct {
 
 // 获取菜单
 func (s *dashesService) GetDashesList(businessId string) (int, []model.Dashes, error) {
-	if businessId == ""{
+	if businessId == "" {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
-	list := make([]model.Dashes,0)
+	list := make([]model.Dashes, 0)
 
 	err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=?",constant.ColumnBusinessId),businessId).Find(&list)
-	if err != nil{
-		logrus.Errorf("获取菜式失败: %s",err)
+		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
+	if err != nil {
+		logrus.Errorf("获取菜式失败: %s", err)
 		return iris.StatusInternalServerError, nil, err
 	}
 
@@ -45,22 +45,22 @@ func (s *dashesService) GetDashesList(businessId string) (int, []model.Dashes, e
 
 // 获取单个菜式
 func (s *dashesService) GetDashes(businessId, dashId string) (int, *model.Dashes, error) {
-	if businessId == ""{
+	if businessId == "" {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
-	if dashId == ""{
+	if dashId == "" {
 		return iris.StatusBadRequest, nil, errors.New("菜式id不能为空")
 	}
 	item := new(model.Dashes)
 
 	res, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?",constant.ColumnBusinessId,constant.NameID),businessId,dashId).Get(item)
-	if err != nil{
-		logrus.Errorf("获取菜式失败: %s",err)
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID), businessId, dashId).Get(item)
+	if err != nil {
+		logrus.Errorf("获取菜式失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取菜式失败")
 	}
-	if res == false{
-		logrus.Errorf("菜式不存在: %s",dashId)
+	if res == false {
+		logrus.Errorf("菜式不存在: %s", dashId)
 		return iris.StatusNotFound, nil, errors.New("菜式不存在")
 	}
 
@@ -68,49 +68,51 @@ func (s *dashesService) GetDashes(businessId, dashId string) (int, *model.Dashes
 }
 
 // 添加菜式
-func (s *dashesService) InsertDashes(user *model.User,dashes *model.Dashes) (int, error) {
+func (s *dashesService) InsertDashes(dashes *model.Dashes) (int, error) {
 
-	if dashes.Name == "" || dashes.Price == ""{
-		return iris.StatusBadRequest,errors.New("菜式信息不能为空")
+	if dashes.Name == "" || dashes.Price == "" {
+		return iris.StatusBadRequest, errors.New("菜式信息不能为空")
 	}
 
 	_, err := manager.DBEngine.InsertOne(dashes)
-	if err != nil{
-		logrus.Errorf("添加菜式失败: %s",err)
-		return iris.StatusInternalServerError,err
+	if err != nil {
+		logrus.Errorf("添加菜式失败: %s", err)
+		return iris.StatusInternalServerError, err
 	}
 	return iris.StatusOK, nil
 }
 
 // 修改菜式
-func (s *dashesService) UpdateDashes(user *model.User,dashes *model.Dashes) (int, error) {
-	if dashes.Id == 0 || dashes.Name == "" || dashes.Price == ""{
-		return iris.StatusBadRequest,errors.New("菜式信息不能为空")
+func (s *dashesService) UpdateDashes(dashes *model.Dashes) (int, error) {
+	if dashes.Id == 0 || dashes.Name == "" || dashes.Price == "" {
+		return iris.StatusBadRequest, errors.New("菜式信息不能为空")
 	}
 
 	_, err := manager.DBEngine.AllCols().Where(
-		fmt.Sprintf("%s=? and %s=?",constant.ColumnBusinessId,constant.NameID),
-		user.Id,dashes.Id).Update(dashes)
-	if err != nil{
-		logrus.Errorf("修改菜式失败: %s",err)
-		return iris.StatusInternalServerError,err
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
+		dashes.BusinessId, dashes.Id).Update(dashes)
+	if err != nil {
+		logrus.Errorf("修改菜式失败: %s", err)
+		return iris.StatusInternalServerError, err
 	}
 	return iris.StatusOK, nil
 }
 
 // 删除菜式
-func (s *dashesService) DeleteDashes(user *model.User, dashId int) (int, error) {
-	if dashId == 0 {
-		return iris.StatusBadRequest,errors.New("菜式id不能为空")
+func (s *dashesService) DeleteDashes(businessId, dashId string) (int, error) {
+	if businessId == "" {
+		return iris.StatusBadRequest, errors.New("商家id不能为空")
+	}
+	if dashId == "" {
+		return iris.StatusBadRequest, errors.New("菜式id不能为空")
 	}
 
 	_, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?",constant.ColumnBusinessId,constant.NameID),
-			user.Id,dashId).Delete(new (model.Dashes))
-	if err != nil{
-		logrus.Errorf("删除菜式失败: %s",err)
-		return iris.StatusInternalServerError,err
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
+		businessId, dashId).Delete(new(model.Dashes))
+	if err != nil {
+		logrus.Errorf("删除菜式失败: %s", err)
+		return iris.StatusInternalServerError, err
 	}
 	return iris.StatusOK, nil
 }
-

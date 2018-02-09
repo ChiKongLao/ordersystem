@@ -34,7 +34,7 @@ func (c *TableController) GetBy(userId string) (int,interface{}) {
 
 	return status,iris.Map{
 		constant.NameData:list,
-		constant.NameSize:len(list),
+		constant.NameCount:len(list),
 		}
 }
 
@@ -156,9 +156,7 @@ func (c *TableController) DeleteByBy(userId, tableId string) (int,interface{}) {
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	tableIdInt,_ := strconv.Atoi(tableId)
-
-	status, err = c.DeleteTable(user.Id,tableIdInt)
+	status, err = c.DeleteTable(userId,tableId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

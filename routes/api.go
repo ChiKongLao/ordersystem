@@ -28,10 +28,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//v1.Use(authentication.JWTHandler.Serve)
 	//v1.Use(crs)
 
-	auth := authentication.JWTHandler.Serve
+	userService := services.NewUserService()
 
+	//authentication.SetUserService(userService)
+	auth := authentication.JWTHandler.Serve
 	{
-		userService := services.NewUserService()
 
 		userParty := v1.Party("/user")
 		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
@@ -49,6 +50,12 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			service := services.NewTableService()
 			mvcApp.Register(service,userService)
 			mvcApp.Handle(new(controllers.TableController))
+
+		})
+		mvc.Configure(v1.Party("/order",auth), func(mvcApp *mvc.Application) {
+			service := services.NewOrderService()
+			mvcApp.Register(service,userService)
+			mvcApp.Handle(new(controllers.OrderController))
 
 		})
 

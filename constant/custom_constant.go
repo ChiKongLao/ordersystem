@@ -27,6 +27,8 @@ const (
 	NamePerson        = "person"
 	NamePersonNum     = "personNum"
 	NameCapacity      = "capacity"
+	NameTableName     = "tableName"
+	NameDashes        = "dashes"
 
 	NameFrom    = "From"
 	NameTo      = "To"
@@ -42,13 +44,19 @@ const (
 
 // 业务配置相关
 const (
-	RoleManager  = "1" // 管理员
-	RoleCustomer = "2" // 客户
-	RoleBusiness = "3" // 商家
+	RoleManager  = 1 // 管理员
+	RoleCustomer = 2 // 客户
+	RoleBusiness = 3 // 商家
 
 	TableStatusEmpty     = 0 // 闲置
 	TableStatusUsing     = 1 // 正在使用
 	TableStatusWaitClean = 2 // 待清理
 	TableStatusCleaning  = 3 // 清理中
+
+	OrderStatusUnKnown = 0 // 未知
+	OrderStatusWaitPay = 1 // 待付款
+	OrderStatusPaid    = 2 // 已付款
+	OrderStatusSure    = 3 // 已确认
+	OrderStatusFinish  = 4 // 已完成
 
 )

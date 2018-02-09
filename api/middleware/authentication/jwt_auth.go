@@ -12,17 +12,13 @@ import (
 	"strings"
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/model"
+	"fmt"
 )
 
 const (
 	SecretKey = "Hello World!!!"
 )
 
-//var JWTAuth = basicauth.Config{
-//	Users:   map[string]string{"userName": "password"},
-//	Realm:   basicauth.DefaultBasicAuthRealm,
-//	Expires: time.Duration(24) * time.Hour * 7,
-//}
 
 var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
@@ -61,7 +57,7 @@ func MakeToken(user *model.User) (string,error){
 		return "",errors.New("生成token失败")
 	}
 
-	return "Bearer "+signedString,nil
+	return fmt.Sprintf("Bearer %s",signedString),nil
 }
 
 // 从Context获取token
@@ -133,5 +129,4 @@ func IsOwnWithToken(ctx iris.Context, userId string) (bool, error){
 	return userId == id,nil
 
 }
-
 

@@ -31,8 +31,6 @@ func sync(engine *xorm.Engine){
 	defer func() {
 		if unSuccessTableName != "" {
 			logrus.Errorf("创建%s表失败: %v\n",unSuccessTableName, err)
-		}else{
-			logrus.Info("初始化数据表成功")
 
 		}
 	}()
@@ -47,6 +45,10 @@ func sync(engine *xorm.Engine){
 	}
 	if err = engine.Sync2(new(model.TableInfo)); err != nil {
 		unSuccessTableName = "table_info"
+		return
+	}
+	if err = engine.Sync2(new(model.Order)); err != nil {
+		unSuccessTableName = "order"
 		return
 	}
 

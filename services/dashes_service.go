@@ -13,7 +13,8 @@ import (
 type DashesService interface {
 	GetDashesList(businessId string) (int, []model.Dashes, error)
 	GetDashes(businessId, dashId string) (int, *model.Dashes, error)
-	InsertDashes(dashes *model.Dashes) (int, error)
+	InsertDashesOne(dashes *model.Dashes) (int, error)
+	InsertDashes(dashes []*model.Dashes) (int, error)
 	UpdateDashes(dashes *model.Dashes) (int, error)
 	DeleteDashes(businessId, dashId string) (int, error)
 }
@@ -68,7 +69,7 @@ func (s *dashesService) GetDashes(businessId, dashId string) (int, *model.Dashes
 }
 
 // 添加菜式
-func (s *dashesService) InsertDashes(dashes *model.Dashes) (int, error) {
+func (s *dashesService) InsertDashesOne(dashes *model.Dashes) (int, error) {
 
 	if dashes.Name == "" || dashes.Price == "" {
 		return iris.StatusBadRequest, errors.New("菜式信息不能为空")
@@ -77,7 +78,24 @@ func (s *dashesService) InsertDashes(dashes *model.Dashes) (int, error) {
 	_, err := manager.DBEngine.InsertOne(dashes)
 	if err != nil {
 		logrus.Errorf("添加菜式失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("添加菜式失败")
+	}
+	return iris.StatusOK, nil
+}
+
+// 添加菜式
+func (s *dashesService) InsertDashes(list []*model.Dashes) (int, error) {
+
+	for i, subItem := range list  {
+		if subItem.Name == "" || subItem.Price == "" {
+			return iris.StatusBadRequest, errors.New(
+				fmt.Sprintf("菜式信息不能为空: %s",i))
+		}
+	}
+	_, err := manager.DBEngine.Insert(list)
+	if err != nil {
+		logrus.Errorf("添加菜式失败: %s", err)
+		return iris.StatusInternalServerError, errors.New("添加菜式失败")
 	}
 	return iris.StatusOK, nil
 }
@@ -93,7 +111,7 @@ func (s *dashesService) UpdateDashes(dashes *model.Dashes) (int, error) {
 		dashes.BusinessId, dashes.Id).Update(dashes)
 	if err != nil {
 		logrus.Errorf("修改菜式失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("修改菜式失败")
 	}
 	return iris.StatusOK, nil
 }
@@ -112,7 +130,7 @@ func (s *dashesService) DeleteDashes(businessId, dashId string) (int, error) {
 		businessId, dashId).Delete(new(model.Dashes))
 	if err != nil {
 		logrus.Errorf("删除菜式失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("删除菜式失败")
 	}
 	return iris.StatusOK, nil
 }

@@ -38,7 +38,7 @@ func (s *tableService) GetTableList(businessId string) (int, []model.TableInfo, 
 		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
 	if err != nil {
 		logrus.Errorf("获取餐桌失败: %s", err)
-		return iris.StatusInternalServerError, nil, err
+		return iris.StatusInternalServerError, nil, errors.New("获取餐桌失败")
 	}
 
 	return iris.StatusOK, list, nil
@@ -81,7 +81,7 @@ func (s *tableService) InsertTable(dashes *model.TableInfo) (int, error) {
 	_, err := manager.DBEngine.InsertOne(dashes)
 	if err != nil {
 		logrus.Errorf("添加餐桌失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("添加餐桌失败")
 	}
 	return iris.StatusOK, nil
 }
@@ -116,7 +116,7 @@ func (s *tableService) UpdateTable(dashes *model.TableInfo) (int, error) {
 		dashes.BusinessId, dashes.Id).Update(dbItem)
 	if err != nil {
 		logrus.Errorf("修改餐桌失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("修改餐桌失败")
 	}
 
 	return iris.StatusOK, nil
@@ -136,7 +136,7 @@ func (s *tableService) DeleteTable(businessId, dashId string) (int, error) {
 		businessId, dashId).Delete(new(model.TableInfo))
 	if err != nil {
 		logrus.Errorf("删除餐桌失败: %s", err)
-		return iris.StatusInternalServerError, err
+		return iris.StatusInternalServerError, errors.New("删除餐桌失败")
 	}
 	return iris.StatusOK, nil
 }

@@ -8,26 +8,28 @@ import (
 	"strconv"
 	"errors"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
+	"github.com/tidwall/gjson"
+	"github.com/sirupsen/logrus"
 )
 
-// 菜式
-type DashesController struct {
+// 订单
+type OrderController struct {
 	Ctx iris.Context
-	services.DashesService
+	services.OrderService
 	UserService services.UserService
 
 }
 
-// 获取菜单
-func (c *DashesController) GetBy(userId string) (int,interface{}) {
+// 获取订单
+func (c *OrderController) GetBy(userId string) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 
-	var list []model.Dashes
-	status, list, err = c.GetDashesList(userId)
+	var list []model.Order
+	status, list, err = c.GetOrderList(userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -38,15 +40,15 @@ func (c *DashesController) GetBy(userId string) (int,interface{}) {
 		}
 }
 
-// 获取菜式详情
-func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
+// 获取订单详情
+func (c *OrderController) GetByBy(userId, orderId string) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	var item *model.Dashes
-	status, item, err = c.GetDashes(userId,dashId)
+	var item *model.Order
+	status, item, err = c.GetOrder(userId,orderId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -56,40 +58,33 @@ func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
 		}
 }
 
-// 添加菜式
-func (c *DashesController) PostBy(userId string) (int,interface{}) {
+// 添加订单, 商家不能自己下单,只能客户下
+func (c *OrderController) PostBy(userId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
+	businessId := c.Ctx.FormValue(constant.NameBusinessID)
+	name := c.Ctx.FormValue(constant.NameTableName)
+	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
+	result := gjson.Parse(c.Ctx.FormValue(constant.NameDashes))
+	logrus.Infof("菜半日 : %s",result)
 
-	if err != nil {
-		return status, model.NewErrorResponse(err)
+	if !result.Bool(){
+		return iris.StatusBadRequest,iris.Map{constant.NameMsg:"菜单格式错误"}
 	}
-
-	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
-	}
-
-	name := c.Ctx.FormValue(constant.Name)
-	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
-	pic := c.Ctx.FormValue(constant.NamePic)
-	price := c.Ctx.FormValue(constant.NamePrice)
-	dashesType := c.Ctx.FormValue(constant.NameType)
-	desc := c.Ctx.FormValue(constant.NameDesc)
 
 	userIdInt,_ := strconv.Atoi(userId)
+	businessIdInt,_ := strconv.Atoi(businessId)
 
-	status, err = c.InsertDashesOne(&model.Dashes{
-		BusinessId:userIdInt,
-		Name:name,
-		Num:num,
-		Pic:pic,
-		Price:price,
-		Type:dashesType,
-		Desc:desc,
+	var status int
+	status, err = c.InsertOrder(&model.Order{
+		BusinessId:businessIdInt,
+		UserId:userIdInt,
+		TableName:name,
+		PersonNum:personNum,
+		//DashesList:(result.Array()),
 	} )
 
 	if err != nil{
@@ -101,8 +96,8 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 		}
 }
 
-// 修改菜式
-func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
+// 修改订单,只能商家操作
+func (c *OrderController) PutByBy(userId, orderId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -114,30 +109,25 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	if !user.IsManager() && !user.IsBusiness(){
+	if !user.IsManagerOrBusiness(){
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	name := c.Ctx.FormValue(constant.Name)
-	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
-	pic := c.Ctx.FormValue(constant.NamePic)
-	price := c.Ctx.FormValue(constant.NamePrice)
-	dashesType := c.Ctx.FormValue(constant.NameType)
-	desc := c.Ctx.FormValue(constant.NameDesc)
+	tableName := c.Ctx.FormValue(constant.NameTableName)
+	orderStatus, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameStatus))
+	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
 
 	userIdInt,_ := strconv.Atoi(userId)
-	dashIdInt,_ := strconv.Atoi(dashId)
+	orderIdInt,_ := strconv.Atoi(orderId)
 
-	status, err = c.UpdateDashes(&model.Dashes{
-		Id:dashIdInt,
+	status, err = c.UpdateOrder(&model.Order{
+		Id:orderIdInt,
 		BusinessId:userIdInt,
-		Name:name,
-		Num:num,
-		Pic:pic,
-		Price:price,
-		Type:dashesType,
-		Desc:desc,
+		TableName:tableName,
+		Status:orderStatus,
+		PersonNum:personNum,
 	} )
+
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -149,8 +139,8 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 }
 
 
-// 删除菜式
-func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
+// 删除订单
+func (c *OrderController) DeleteByBy(userId, orderId string) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -166,7 +156,7 @@ func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	status, err = c.DeleteDashes(userId,dashId)
+	status, err = c.DeleteOrder(userId,orderId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

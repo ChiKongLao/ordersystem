@@ -28,6 +28,7 @@ const (
 	NamePersonNum     = "personNum"
 	NameCapacity      = "capacity"
 	NameTableName     = "tableName"
+	NameTableId       = "tableId"
 	NameDashes        = "dashes"
 
 	NameFrom    = "From"
@@ -45,8 +46,8 @@ const (
 // 业务配置相关
 const (
 	RoleManager  = 1 // 管理员
-	RoleCustomer = 2 // 客户
-	RoleBusiness = 3 // 商家
+	RoleBusiness = 2 // 商家
+	RoleCustomer = 3 // 客户
 
 	TableStatusEmpty     = 0 // 闲置
 	TableStatusUsing     = 1 // 正在使用

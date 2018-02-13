@@ -60,6 +60,10 @@ func (b *Bootstrapper) SetupErrorHandlers() {
 // SetupDatabase engine default use MySQL for xorm.io
 func (b *Bootstrapper) SetupDatabaseEngine() {
 	// 创建 ORM 引擎与数据库
+	initDBEngine(b)
+}
+func initDBEngine(b *Bootstrapper){
+	// 创建 ORM 引擎与数据库
 	engine, err := xorm.NewEngine(constant.DBDriverName,
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8",
 			constant.DBUserName,constant.DBPassword,constant.DBHOST,constant.DBName))

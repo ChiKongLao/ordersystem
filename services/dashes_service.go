@@ -12,11 +12,11 @@ import (
 
 type DashesService interface {
 	GetDashesList(businessId string) (int, []model.Dashes, error)
-	GetDashes(businessId, dashId string) (int, *model.Dashes, error)
+	GetDashes(dashId string) (int, *model.Dashes, error)
 	InsertDashesOne(dashes *model.Dashes) (int, error)
 	InsertDashes(dashes []*model.Dashes) (int, error)
 	UpdateDashes(dashes *model.Dashes) (int, error)
-	DeleteDashes(businessId, dashId string) (int, error)
+	DeleteDashes(dashId string) (int, error)
 }
 
 func NewDashesService() DashesService {
@@ -45,17 +45,14 @@ func (s *dashesService) GetDashesList(businessId string) (int, []model.Dashes, e
 }
 
 // 获取单个菜式
-func (s *dashesService) GetDashes(businessId, dashId string) (int, *model.Dashes, error) {
-	if businessId == "" {
-		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
-	}
+func (s *dashesService) GetDashes(dashId string) (int, *model.Dashes, error) {
 	if dashId == "" {
 		return iris.StatusBadRequest, nil, errors.New("菜式id不能为空")
 	}
 	item := new(model.Dashes)
 
 	res, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID), businessId, dashId).Get(item)
+		fmt.Sprintf("%s=?", constant.NameID), dashId).Get(item)
 	if err != nil {
 		logrus.Errorf("获取菜式失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取菜式失败")
@@ -117,17 +114,13 @@ func (s *dashesService) UpdateDashes(dashes *model.Dashes) (int, error) {
 }
 
 // 删除菜式
-func (s *dashesService) DeleteDashes(businessId, dashId string) (int, error) {
-	if businessId == "" {
-		return iris.StatusBadRequest, errors.New("商家id不能为空")
-	}
+func (s *dashesService) DeleteDashes(dashId string) (int, error) {
 	if dashId == "" {
 		return iris.StatusBadRequest, errors.New("菜式id不能为空")
 	}
 
 	_, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
-		businessId, dashId).Delete(new(model.Dashes))
+		fmt.Sprintf("%s=?", constant.NameID),dashId).Delete(new(model.Dashes))
 	if err != nil {
 		logrus.Errorf("删除菜式失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("删除菜式失败")

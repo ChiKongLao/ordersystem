@@ -15,13 +15,14 @@ import (
 )
 
 type UserService interface {
-	InsertUser(int, string, string, string) (int, error)
-	Login(context iris.Context,userName, password string) (int, string, error)
+	InsertUser(role int, userName, password, nickName string) (int, error)
+	Login(userName, password string) (int, string, error)
 	GetUserByName(userName string) (int, *model.User, error)
-	GetUserById(string) (int, *model.User, error)
-	GetBusinessById(string) (int, *model.User, error)
+	GetUserById(id string) (int, *model.User, error)
+	GetBusinessById(id string) (int, *model.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
+    GetUserList() ([]model.User, error)
 }
 
 func NewUserService() UserService {
@@ -58,7 +59,7 @@ func (s *userService) InsertUser(role int, userName, password, nickName string) 
 }
 
 // 登录
-func (s *userService) Login(ctx iris.Context, userName, password string) (int, string, error) {
+func (s *userService) Login(userName, password string) (int, string, error) {
 	if userName == "" || password == ""{
 		return iris.StatusBadRequest,"",errors.New("用户名或密码不能为空")
 	}
@@ -123,6 +124,17 @@ func (s *userService)GetUserById(id string) (int, *model.User, error) {
 		return iris.StatusNotFound,nil,errors.New("没有找到该用户")
 	}
 	return iris.StatusOK,user,nil
+}
+
+// 获取所有用户
+func (s *userService) GetUserList() ([]model.User, error) {
+	list := make([]model.User,0)
+	err := manager.DBEngine.Find(&list)
+	if err != nil {
+		logrus.Errorf("获取所有用户失败:%s",err)
+		return nil, errors.New("获取所有用户失败")
+	}
+	return list,nil
 }
 
 // 设置token

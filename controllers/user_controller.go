@@ -36,7 +36,7 @@ func (c *UserController) PostLogin()(int,interface{}){
 	userName := c.Ctx.FormValue(constant.NameUserName)
 	password := c.Ctx.FormValue(constant.NamePassword)
 
-	status, token, err := c.UserService.Login(c.Ctx,userName,password)
+	status, token, err := c.UserService.Login(userName,password)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}

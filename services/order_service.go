@@ -20,11 +20,14 @@ type OrderService interface {
 	DeleteOrder(businessId, orderId string) (int, error)
 }
 
-func NewOrderService() OrderService {
-	return &orderService{}
+func NewOrderService(DashesService DashesService) OrderService {
+	return &orderService{
+		DashesService:DashesService,
+	}
 }
 
 type orderService struct {
+	DashesService DashesService
 }
 
 // 获取订单列表
@@ -35,8 +38,10 @@ func (s *orderService) GetOrderList(businessId string) (int, []model.Order, erro
 
 	list := make([]model.Order, 0)
 
-	err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
+	//err := manager.DBEngine.Where(
+	//	fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
+	sql := ""
+	err := manager.DBEngine.SQL(sql).Find(&list)
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
@@ -75,17 +80,30 @@ func (s *orderService) InsertOrder(order *model.Order) (int, error) {
 	if order.TableName == "" || order.PersonNum == 0{
 		return iris.StatusBadRequest, errors.New("订单信息不能为空")
 	}
-	var price int  // 计算订单金额
-	for _, subItem := range order.DashesList  {
-		res, _ := strconv.Atoi(subItem.Price)
-		price += res
-	}
-
-	order.Time = string(time.Now().Unix())
+	order.Time = strconv.FormatInt(time.Now().Unix(),10)
 	order.Status = constant.OrderStatusWaitPay
-	order.Price = price
 
-	_, err := manager.DBEngine.InsertOne(order)
+	// 设置菜单信息
+	dashesList := order.DashesList
+	for i, subItem := range dashesList {
+		status,dbItem, err := s.DashesService.GetDashes(strconv.Itoa(subItem.Id))
+		if err != nil{
+			return status,err
+		}
+		subItem.Price = dbItem.Price
+		subItem.Name = dbItem.Name
+		subItem.Type = dbItem.Type
+		dashesList[i] = subItem
+	}
+	order.DashesList = dashesList
+
+	sumPrice, err := s.getOrderSumPrice(order.BusinessId,order.DashesList)
+	if err != nil {
+		return iris.StatusInternalServerError,err
+	}
+	order.Price = sumPrice
+
+	_, err = manager.DBEngine.InsertOne(order)
 	if err != nil {
 		logrus.Errorf("添加订单失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("添加订单失败")
@@ -108,15 +126,13 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	dbItem.TableName = order.TableName
 	dbItem.Status = order.Status
 	dbItem.PersonNum = order.PersonNum
-	dbItem.Time = string(time.Now().Unix())
-
-	var price int  // 计算订单金额
-	for _, subItem := range order.DashesList  {
-		res, _ := strconv.Atoi(subItem.Price)
-		price += res
+	dbItem.Time = strconv.FormatInt(time.Now().Unix(),10)
+	var sumPrice float32
+	sumPrice, err = s.getOrderSumPrice(order.BusinessId,order.DashesList)
+	if err != nil {
+		return iris.StatusInternalServerError,err
 	}
-
-	dbItem.Price = price
+	order.Price = sumPrice
 
 	_, err = manager.DBEngine.AllCols().Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
@@ -146,4 +162,31 @@ func (s *orderService) DeleteOrder(businessId, orderId string) (int, error) {
 		return iris.StatusInternalServerError, errors.New("删除订单失败")
 	}
 	return iris.StatusOK, nil
+}
+
+// 计算订单总价
+func (s *orderService)getOrderSumPrice(businessId int, dashesList []model.Dashes) (float32, error){
+	priceMap := make(map[int]float32)
+	for _, subItem := range dashesList {
+		value,ok := priceMap[subItem.Id]
+		if ok {
+			priceMap[subItem.Id] = value +1
+		}else{
+			priceMap[subItem.Id] = 1
+		}
+	}
+	var sum float32
+	for key, value := range priceMap {
+		_, dashes, err := s.DashesService.GetDashes(strconv.Itoa(key))
+		if err != nil{
+			return 0,err
+		}
+		res, err :=  strconv.ParseFloat(dashes.Price,10)
+		if err !=nil {
+			return 0,errors.New("价格格式出错")
+		}
+		sum += float32(res) * value
+	}
+	return sum,nil
+
 }

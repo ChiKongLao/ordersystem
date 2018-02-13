@@ -8,8 +8,7 @@ import (
 	"strconv"
 	"errors"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"github.com/tidwall/gjson"
-	"github.com/sirupsen/logrus"
+	"encoding/json"
 )
 
 // 订单
@@ -59,19 +58,18 @@ func (c *OrderController) GetByBy(userId, orderId string) (int,interface{}) {
 }
 
 // 添加订单, 商家不能自己下单,只能客户下
-func (c *OrderController) PostBy(userId string) (int,interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
-	if !isOwn {
+func (c *OrderController) PostBy(businessId string) (int,interface{}) {
+	userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	businessId := c.Ctx.FormValue(constant.NameBusinessID)
-	name := c.Ctx.FormValue(constant.NameTableName)
+	tableName := c.Ctx.FormValue(constant.NameTableName)
 	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
-	result := gjson.Parse(c.Ctx.FormValue(constant.NameDashes))
-	logrus.Infof("菜半日 : %s",result)
+	var list = new([]model.Dashes)
+	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameDashes)),&list)
 
-	if !result.Bool(){
+	if err != nil {
 		return iris.StatusBadRequest,iris.Map{constant.NameMsg:"菜单格式错误"}
 	}
 
@@ -82,9 +80,9 @@ func (c *OrderController) PostBy(userId string) (int,interface{}) {
 	status, err = c.InsertOrder(&model.Order{
 		BusinessId:businessIdInt,
 		UserId:userIdInt,
-		TableName:name,
+		TableName:tableName,
 		PersonNum:personNum,
-		//DashesList:(result.Array()),
+		DashesList:*list,
 	} )
 
 	if err != nil{

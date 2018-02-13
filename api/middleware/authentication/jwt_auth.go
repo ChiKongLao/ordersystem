@@ -13,6 +13,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/model"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -101,8 +102,8 @@ func GetUserIDFormHeaderToken(ctx iris.Context) (string,error){
 	if err != nil {
 		return "",err
 	}
-
-	return claim[constant.NameID].(string),nil
+	res := strconv.Itoa(int(claim[constant.NameID].(float64)))
+	return res,nil
 }
 
 // 从请求头获取token对应的信息

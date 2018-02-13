@@ -46,7 +46,7 @@ func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 	var item *model.Dashes
-	status, item, err = c.GetDashes(userId,dashId)
+	status, item, err = c.GetDashes(dashId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -74,7 +74,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
-	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
+	//num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum)) // 暂时不用数量
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price := c.Ctx.FormValue(constant.NamePrice)
 	dashesType := c.Ctx.FormValue(constant.NameType)
@@ -85,7 +85,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 	status, err = c.InsertDashesOne(&model.Dashes{
 		BusinessId:userIdInt,
 		Name:name,
-		Num:num,
+		Num:100,
 		Pic:pic,
 		Price:price,
 		Type:dashesType,
@@ -166,7 +166,7 @@ func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	status, err = c.DeleteDashes(userId,dashId)
+	status, err = c.DeleteDashes(dashId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

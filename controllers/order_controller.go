@@ -33,9 +33,18 @@ func (c *OrderController) GetBy(userId string) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
+	var personCount int
+	var priceCount float32
+	for _, subItem := range list{
+		priceCount += subItem.Price
+		personCount += subItem.PersonNum
+	}
+
 	return status,iris.Map{
+		constant.NameTotalPerson:personCount,
+		constant.NameTotalPrice:priceCount,
 		constant.NameData:list,
-		constant.NameCount:len(list),
+		constant.NameTotalCount:len(list),
 		}
 }
 

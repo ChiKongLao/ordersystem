@@ -31,6 +31,8 @@ func (c *HomeController) GetBy(userId string) (int,interface{}) {
 	var data interface{}
 	if user.IsManagerOrBusiness() {
 		status, data, err = c.GetBusinessHome(userId)
+	}else{
+		status, data, err = c.GetCustomerHome(userId)
 	}
 	if err != nil {
 		return status, model.NewErrorResponse(err)

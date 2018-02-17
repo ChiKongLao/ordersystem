@@ -12,6 +12,7 @@ import (
 
 type HomeService interface {
 	GetBusinessHome(userId string) (int, interface{}, error)
+	GetCustomerHome(userId string) (int, interface{}, error)
 }
 
 func NewHomeService(userService UserService, dashesService DashesService,
@@ -31,7 +32,7 @@ type homeService struct {
 	OrderService  OrderService
 }
 
-// 获取商家首页
+// 获取商家端首页
 func (s *homeService) GetBusinessHome(userId string) (int, interface{}, error) {
 	status, tableList, err := s.TableService.GetTableList(userId)
 	if err != nil {
@@ -49,9 +50,9 @@ func (s *homeService) GetBusinessHome(userId string) (int, interface{}, error) {
 		}
 	}
 
-	_,err = manager.DBEngine.Table("dashes").
+	_, err = manager.DBEngine.Table("dashes").
 		Select("Count(num) AS saleOutNum").
-		Where(fmt.Sprintf("%s=0",constant.ColumnNum)).
+		Where(fmt.Sprintf("%s=0", constant.ColumnNum)).
 		Get(&saleOutNum)
 
 	if err != nil {
@@ -73,5 +74,27 @@ func (s *homeService) GetBusinessHome(userId string) (int, interface{}, error) {
 		EatingPerson: eatingPerson,
 		EmptyTable:   emptyTable,
 		SaleOutNum:   saleOutNum,
+	}, nil
+}
+
+// 获取用户端首页
+func (s *homeService) GetCustomerHome(userId string) (int, interface{}, error) {
+	status, dashesList, err := s.DashesService.GetDashesList(userId)
+	if err != nil {
+		return status, nil, err
+	}
+	status, user, err := s.UserService.GetUserById(userId)
+	if err != nil {
+		return status, nil, err
+	}
+	type Home struct {
+		Name string         `json:"name"`
+		Desc string         `json:"desc"`
+		Data []model.Dashes `json:"data"`
+	}
+
+	return iris.StatusOK, &Home{
+		Data: dashesList,
+		Name:user.NickName,
 	}, nil
 }

@@ -9,6 +9,7 @@ type User struct {
 	NickName    string `json:"nickName" xorm:"VARCHAR(30)"`                            // 昵称
 	CreatedTime int64  `json:"createdTime" xorm:"INT(11) "`                            // 创建时间
 	Token       string `json:"token" orm:"VARCHAR(255)"`                               // token
+	Head        string `json:"head" orm:"VARCHAR(255)"`                                // 头像
 	Role        int    `xorm:"not null INT(11)"`                                       //角色
 }
 

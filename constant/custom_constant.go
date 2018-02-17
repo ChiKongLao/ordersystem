@@ -33,6 +33,8 @@ const (
 	NameTableName     = "tableName"
 	NameTableId       = "tableId"
 	NameDashes        = "dashes"
+	NameOrderId        = "orderId"
+	NameHead        = "head"
 
 	NameFrom    = "From"
 	NameTo      = "To"
@@ -44,6 +46,8 @@ const (
 const (
 	ColumnUserName   = "user_name"
 	ColumnBusinessId = "business_id"
+	ColumnStatus = "status"
+	ColumnNum = "num"
 )
 
 // 业务配置相关

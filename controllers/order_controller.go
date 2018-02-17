@@ -66,6 +66,25 @@ func (c *OrderController) GetByBy(userId, orderId string) (int,interface{}) {
 		}
 }
 
+// 获取商家的老用户列表
+func (c *OrderController) GetCustomer() (int,interface{}) {
+	userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+	}
+	status, user, err := c.UserService.GetUserById(userId)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+	if !user.IsManagerOrBusiness(){
+		return iris.StatusUnauthorized,errors.New("没有该权限")
+	}
+	status, userList, err := c.OrderService.GetOldCustomer(userId)
+	return status,iris.Map{
+		constant.NameData:userList,
+		}
+}
+
 // 添加订单, 商家不能自己下单,只能客户下
 func (c *OrderController) PostBy(businessId string) (int,interface{}) {
 	userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
@@ -85,8 +104,9 @@ func (c *OrderController) PostBy(businessId string) (int,interface{}) {
 	userIdInt,_ := strconv.Atoi(userId)
 	businessIdInt,_ := strconv.Atoi(businessId)
 
-	var status int
-	status, err = c.InsertOrder(&model.Order{
+	var status,orderId int
+
+	status,orderId,err = c.InsertOrder(&model.Order{
 		BusinessId:businessIdInt,
 		UserId:userIdInt,
 		TableName:tableName,
@@ -100,6 +120,7 @@ func (c *OrderController) PostBy(businessId string) (int,interface{}) {
 
 	return status,iris.Map{
 			constant.NameIsOk:true,
+			constant.NameID: orderId,
 		}
 }
 

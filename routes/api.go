@@ -37,12 +37,15 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//	addTestData()
 
 
-	userService := services.NewUserService()
-	dashesService := services.NewDashesService()
 
 
 	auth := authentication.JWTHandler.Serve
 	{
+
+		userService := services.NewUserService()
+		dashesService := services.NewDashesService()
+		tableService := services.NewTableService()
+		orderService := services.NewOrderService(userService, dashesService)
 
 		userParty := v1.Party("/user")
 		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
@@ -50,20 +53,24 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			mvcApp.Handle(new(controllers.UserController))
 		})
 		mvc.Configure(v1.Party("/menu",auth), func(mvcApp *mvc.Application) {
-			mvcApp.Register(dashesService,userService)
+			mvcApp.Register(userService, dashesService)
 			mvcApp.Handle(new(controllers.DashesController))
 
 		})
 		mvc.Configure(v1.Party("/table",auth), func(mvcApp *mvc.Application) {
-			service := services.NewTableService()
-			mvcApp.Register(service,userService)
+			mvcApp.Register(userService, tableService)
 			mvcApp.Handle(new(controllers.TableController))
 
 		})
 		mvc.Configure(v1.Party("/order",auth), func(mvcApp *mvc.Application) {
-			service := services.NewOrderService(dashesService)
-			mvcApp.Register(service,userService)
+			mvcApp.Register(userService, orderService)
 			mvcApp.Handle(new(controllers.OrderController))
+
+		})
+		mvc.Configure(v1.Party("/home",auth), func(mvcApp *mvc.Application) {
+			service := services.NewHomeService(userService, dashesService,tableService,orderService)
+			mvcApp.Register(userService, service)
+			mvcApp.Handle(new(controllers.HomeController))
 
 		})
 
@@ -89,16 +96,16 @@ func addTestData()  {
 }
 
 func addUser(userService services.UserService)  {
-	userService.InsertUser(constant.RoleManager,"admin","admin","admin")
+	userService.InsertUser(constant.RoleManager,"admin","admin","admin","")
 	for i := 0; i < 10 ; i = i + 1 {
 		userService.InsertUser(constant.RoleBusiness,
 			"business"+strconv.Itoa(i),"111",
-			fmt.Sprintf("商家%v",i))
+			fmt.Sprintf("商家%v",i),"")
 	}
 	for i := 0; i < 100 ; i = i + 1 {
 		userService.InsertUser(constant.RoleCustomer,
 			"customer"+strconv.Itoa(i),"111",
-			fmt.Sprintf("客户%v",i))
+			fmt.Sprintf("客户%v",i),"")
 
 	}
 }

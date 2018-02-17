@@ -15,7 +15,7 @@ import (
 )
 
 type UserService interface {
-	InsertUser(role int, userName, password, nickName string) (int, error)
+	InsertUser(role int, userName, password, nickName, head string) (int, error)
 	Login(userName, password string) (int, string, error)
 	GetUserByName(userName string) (int, *model.User, error)
 	GetUserById(id string) (int, *model.User, error)
@@ -34,7 +34,7 @@ type userService struct {
 }
 
 // 注册
-func (s *userService) InsertUser(role int, userName, password, nickName string) (int, error) {
+func (s *userService) InsertUser(role int, userName, password, nickName,head string) (int, error) {
 	if userName == "" || password == ""{
 		return iris.StatusBadRequest,errors.New("用户名或密码不能为空")
 	}
@@ -46,6 +46,7 @@ func (s *userService) InsertUser(role int, userName, password, nickName string) 
 		Password:    password,
 		NickName:    nickName,
 		Role:        role,
+		Head:		 head,
 		CreatedTime: time.Now().Unix(),
 	}
 	_, err := manager.DBEngine.InsertOne(*user)

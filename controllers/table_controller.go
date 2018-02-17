@@ -82,6 +82,7 @@ func (c *TableController) PostBy(userId string) (int,interface{}) {
 		BusinessId:userIdInt,
 		Name:name,
 		Capacity:capacity,
+		Status:constant.TableStatusEmpty,
 
 	} )
 

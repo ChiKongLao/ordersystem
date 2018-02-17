@@ -19,9 +19,10 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	userName := c.Ctx.FormValue(constant.NameUserName)
 	password := c.Ctx.FormValue(constant.NamePassword)
 	nickName := c.Ctx.FormValue(constant.NameNickName)
+	head := c.Ctx.FormValue(constant.NameHead)
 	role,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameRole))
 
-	status,err := c.UserService.InsertUser(role,userName,password,nickName)
+	status,err := c.UserService.InsertUser(role,userName,password,nickName,head)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

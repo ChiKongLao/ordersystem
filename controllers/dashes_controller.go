@@ -13,13 +13,13 @@ import (
 // 菜式
 type DashesController struct {
 	Ctx iris.Context
-	services.DashesService
+	services.MenuService
 	UserService services.UserService
 
 }
 
 // 获取菜单
-func (c *DashesController) GetBy(userId string) (int,interface{}) {
+func (c *DashesController) GetBy(userId int) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -39,7 +39,7 @@ func (c *DashesController) GetBy(userId string) (int,interface{}) {
 }
 
 // 获取菜式详情
-func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
+func (c *DashesController) GetByBy(userId, dashId int) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *DashesController) GetByBy(userId, dashId string) (int,interface{}) {
 }
 
 // 添加菜式
-func (c *DashesController) PostBy(userId string) (int,interface{}) {
+func (c *DashesController) PostBy(userId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -76,18 +76,17 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 	name := c.Ctx.FormValue(constant.Name)
 	//num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum)) // 暂时不用数量
 	pic := c.Ctx.FormValue(constant.NamePic)
-	price := c.Ctx.FormValue(constant.NamePrice)
+	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	dashesType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
-	userIdInt,_ := strconv.Atoi(userId)
 
 	status, err = c.InsertDashesOne(&model.Dashes{
-		BusinessId:userIdInt,
+		BusinessId:userId,
 		Name:name,
 		Num:100,
 		Pic:pic,
-		Price:price,
+		Price:float32(price),
 		Type:dashesType,
 		Desc:desc,
 	} )
@@ -102,7 +101,7 @@ func (c *DashesController) PostBy(userId string) (int,interface{}) {
 }
 
 // 修改菜式
-func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
+func (c *DashesController) PutByBy(userId, dashId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -121,20 +120,18 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
 	pic := c.Ctx.FormValue(constant.NamePic)
-	price := c.Ctx.FormValue(constant.NamePrice)
+	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	dashesType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
-	userIdInt,_ := strconv.Atoi(userId)
-	dashIdInt,_ := strconv.Atoi(dashId)
 
 	status, err = c.UpdateDashes(&model.Dashes{
-		Id:dashIdInt,
-		BusinessId:userIdInt,
+		Id:dashId,
+		BusinessId:userId,
 		Name:name,
 		Num:num,
 		Pic:pic,
-		Price:price,
+		Price:float32(price),
 		Type:dashesType,
 		Desc:desc,
 	} )
@@ -150,7 +147,7 @@ func (c *DashesController) PutByBy(userId, dashId string) (int,interface{}) {
 
 
 // 删除菜式
-func (c *DashesController) DeleteByBy(userId, dashId string) (int,interface{}) {
+func (c *DashesController) DeleteByBy(userId, dashId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)

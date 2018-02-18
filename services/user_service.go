@@ -18,8 +18,8 @@ type UserService interface {
 	InsertUser(role int, userName, password, nickName, head string) (int, error)
 	Login(userName, password string) (int, string, error)
 	GetUserByName(userName string) (int, *model.User, error)
-	GetUserById(id string) (int, *model.User, error)
-	GetBusinessById(id string) (int, *model.User, error)
+	GetUserById(id int) (int, *model.User, error)
+	GetBusinessById(id int) (int, *model.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
     GetUserList() ([]model.User, error)
@@ -101,7 +101,7 @@ func (s *userService)GetUserByName(userName string) (int, *model.User, error) {
 }
 
 // 查询商家
-func (s *userService)GetBusinessById(id string) (int, *model.User, error) {
+func (s *userService)GetBusinessById(id int) (int, *model.User, error) {
 	status, user, err := s.GetUserById(id)
 	if err != nil {
 		return status,nil,err
@@ -113,7 +113,7 @@ func (s *userService)GetBusinessById(id string) (int, *model.User, error) {
 }
 
 // 查询
-func (s *userService)GetUserById(id string) (int, *model.User, error) {
+func (s *userService)GetUserById(id int) (int, *model.User, error) {
 	user := new(model.User)
 	res, err := manager.DBEngine.Where(
 		fmt.Sprintf("%s=?",constant.NameID),id).Get(user)

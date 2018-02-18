@@ -20,7 +20,7 @@ type OrderController struct {
 }
 
 // 获取订单
-func (c *OrderController) GetBy(userId string) (int,interface{}) {
+func (c *OrderController) GetBy(userId int) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -49,7 +49,7 @@ func (c *OrderController) GetBy(userId string) (int,interface{}) {
 }
 
 // 获取订单详情
-func (c *OrderController) GetByBy(userId, orderId string) (int,interface{}) {
+func (c *OrderController) GetByBy(userId, orderId int) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
@@ -68,9 +68,9 @@ func (c *OrderController) GetByBy(userId, orderId string) (int,interface{}) {
 
 // 获取商家的老用户列表
 func (c *OrderController) GetCustomer() (int,interface{}) {
-	userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	status,userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
-		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 	status, user, err := c.UserService.GetUserById(userId)
 	if err != nil {
@@ -86,10 +86,10 @@ func (c *OrderController) GetCustomer() (int,interface{}) {
 }
 
 // 添加订单, 商家不能自己下单,只能客户下
-func (c *OrderController) PostBy(businessId string) (int,interface{}) {
-	userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+func (c *OrderController) PostBy(businessId int) (int,interface{}) {
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
-		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
 
 	tableName := c.Ctx.FormValue(constant.NameTableName)
@@ -101,14 +101,11 @@ func (c *OrderController) PostBy(businessId string) (int,interface{}) {
 		return iris.StatusBadRequest,iris.Map{constant.NameMsg:"菜单格式错误"}
 	}
 
-	userIdInt,_ := strconv.Atoi(userId)
-	businessIdInt,_ := strconv.Atoi(businessId)
-
-	var status,orderId int
+	var orderId int
 
 	status,orderId,err = c.InsertOrder(&model.Order{
-		BusinessId:businessIdInt,
-		UserId:userIdInt,
+		BusinessId:businessId,
+		UserId:userId,
 		TableName:tableName,
 		PersonNum:personNum,
 		DashesList:*list,
@@ -125,7 +122,7 @@ func (c *OrderController) PostBy(businessId string) (int,interface{}) {
 }
 
 // 修改订单,只能商家操作
-func (c *OrderController) PutByBy(userId, orderId string) (int,interface{}) {
+func (c *OrderController) PutByBy(userId, orderId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -145,12 +142,9 @@ func (c *OrderController) PutByBy(userId, orderId string) (int,interface{}) {
 	orderStatus, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameStatus))
 	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
 
-	userIdInt,_ := strconv.Atoi(userId)
-	orderIdInt,_ := strconv.Atoi(orderId)
-
 	status, err = c.UpdateOrder(&model.Order{
-		Id:orderIdInt,
-		BusinessId:userIdInt,
+		Id:orderId,
+		BusinessId:userId,
 		TableName:tableName,
 		Status:orderStatus,
 		PersonNum:personNum,
@@ -168,7 +162,7 @@ func (c *OrderController) PutByBy(userId, orderId string) (int,interface{}) {
 
 
 // 删除订单
-func (c *OrderController) DeleteByBy(userId, orderId string) (int,interface{}) {
+func (c *OrderController) DeleteByBy(userId, orderId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)

@@ -19,7 +19,7 @@ type TableController struct {
 }
 
 // 获取餐桌
-func (c *TableController) GetBy(userId string) (int,interface{}) {
+func (c *TableController) GetBy(userId int) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -39,7 +39,7 @@ func (c *TableController) GetBy(userId string) (int,interface{}) {
 }
 
 // 获取餐桌详情
-func (c *TableController) GetByBy(userId, tableId string) (int,interface{}) {
+func (c *TableController) GetByBy(userId, tableId int) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *TableController) GetByBy(userId, tableId string) (int,interface{}) {
 }
 
 // 添加餐桌
-func (c *TableController) PostBy(userId string) (int,interface{}) {
+func (c *TableController) PostBy(userId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -76,10 +76,8 @@ func (c *TableController) PostBy(userId string) (int,interface{}) {
 	name := c.Ctx.FormValue(constant.Name)
 	capacity, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameCapacity))
 
-	userIdInt,_ := strconv.Atoi(userId)
-
 	status, err = c.InsertTable(&model.TableInfo{
-		BusinessId:userIdInt,
+		BusinessId:userId,
 		Name:name,
 		Capacity:capacity,
 		Status:constant.TableStatusEmpty,
@@ -96,7 +94,7 @@ func (c *TableController) PostBy(userId string) (int,interface{}) {
 }
 
 // 修改餐桌
-func (c *TableController) PutByBy(userId, tableId string) (int,interface{}) {
+func (c *TableController) PutByBy(userId, tableId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -116,12 +114,9 @@ func (c *TableController) PutByBy(userId, tableId string) (int,interface{}) {
 	tableStatus, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameStatus))
 	capacity, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameCapacity))
 
-	userIdInt,_ := strconv.Atoi(userId)
-	tableIdInt,_ := strconv.Atoi(tableId)
-
 	status, err = c.UpdateTable(&model.TableInfo{
-		Id:tableIdInt,
-		BusinessId:userIdInt,
+		Id:tableId,
+		BusinessId:userId,
 		Name:name,
 		Status:tableStatus,
 		Capacity:capacity,
@@ -141,7 +136,7 @@ func (c *TableController) PutByBy(userId, tableId string) (int,interface{}) {
 
 
 // 删除餐桌
-func (c *TableController) DeleteByBy(userId, tableId string) (int,interface{}) {
+func (c *TableController) DeleteByBy(userId, tableId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)

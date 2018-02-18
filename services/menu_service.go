@@ -10,25 +10,26 @@ import (
 	"github.com/chikong/ordersystem/constant"
 )
 
-type DashesService interface {
-	GetDashesList(businessId string) (int, []model.Dashes, error)
-	GetDashes(dashId string) (int, *model.Dashes, error)
+type MenuService interface {
+	GetDashesList(businessId int) (int, []model.Dashes, error)
+	GetDashes(dashId int) (int, *model.Dashes, error)
 	InsertDashesOne(dashes *model.Dashes) (int, error)
 	InsertDashes(dashes []*model.Dashes) (int, error)
 	UpdateDashes(dashes *model.Dashes) (int, error)
-	DeleteDashes(dashId string) (int, error)
+	DeleteDashes(dashId int) (int, error)
+	GetOrderSumPrice(dashesList []model.Dashes) (float32, error)
 }
 
-func NewDashesService() DashesService {
-	return &dashesService{}
+func NewMenuService() MenuService {
+	return &menuService{}
 }
 
-type dashesService struct {
+type menuService struct {
 }
 
 // 获取菜单
-func (s *dashesService) GetDashesList(businessId string) (int, []model.Dashes, error) {
-	if businessId == "" {
+func (s *menuService) GetDashesList(businessId int) (int, []model.Dashes, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
@@ -45,8 +46,8 @@ func (s *dashesService) GetDashesList(businessId string) (int, []model.Dashes, e
 }
 
 // 获取单个菜式
-func (s *dashesService) GetDashes(dashId string) (int, *model.Dashes, error) {
-	if dashId == "" {
+func (s *menuService) GetDashes(dashId int) (int, *model.Dashes, error) {
+	if dashId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("菜式id不能为空")
 	}
 	item := new(model.Dashes)
@@ -66,9 +67,9 @@ func (s *dashesService) GetDashes(dashId string) (int, *model.Dashes, error) {
 }
 
 // 添加菜式
-func (s *dashesService) InsertDashesOne(dashes *model.Dashes) (int, error) {
+func (s *menuService) InsertDashesOne(dashes *model.Dashes) (int, error) {
 
-	if dashes.Name == "" || dashes.Price == "" {
+	if dashes.Name == "" || dashes.Price == 0 {
 		return iris.StatusBadRequest, errors.New("菜式信息不能为空")
 	}
 
@@ -81,10 +82,10 @@ func (s *dashesService) InsertDashesOne(dashes *model.Dashes) (int, error) {
 }
 
 // 添加菜式
-func (s *dashesService) InsertDashes(list []*model.Dashes) (int, error) {
+func (s *menuService) InsertDashes(list []*model.Dashes) (int, error) {
 
 	for i, subItem := range list  {
-		if subItem.Name == "" || subItem.Price == "" {
+		if subItem.Name == "" || subItem.Price == 0 {
 			return iris.StatusBadRequest, errors.New(
 				fmt.Sprintf("菜式信息不能为空: %s",i))
 		}
@@ -98,8 +99,8 @@ func (s *dashesService) InsertDashes(list []*model.Dashes) (int, error) {
 }
 
 // 修改菜式
-func (s *dashesService) UpdateDashes(dashes *model.Dashes) (int, error) {
-	if dashes.Id == 0 || dashes.Name == "" || dashes.Price == "" {
+func (s *menuService) UpdateDashes(dashes *model.Dashes) (int, error) {
+	if dashes.Id == 0 || dashes.Name == "" || dashes.Price == 0 {
 		return iris.StatusBadRequest, errors.New("菜式信息不能为空")
 	}
 
@@ -114,8 +115,8 @@ func (s *dashesService) UpdateDashes(dashes *model.Dashes) (int, error) {
 }
 
 // 删除菜式
-func (s *dashesService) DeleteDashes(dashId string) (int, error) {
-	if dashId == "" {
+func (s *menuService) DeleteDashes(dashId int) (int, error) {
+	if dashId == 0 {
 		return iris.StatusBadRequest, errors.New("菜式id不能为空")
 	}
 
@@ -127,3 +128,17 @@ func (s *dashesService) DeleteDashes(dashId string) (int, error) {
 	}
 	return iris.StatusOK, nil
 }
+
+
+// 计算订单总价
+func (s *menuService)GetOrderSumPrice(dashesList []model.Dashes) (float32, error) {
+	var sum float32
+	for _, item := range dashesList {
+		sum += item.Price * float32(item.Num)
+	}
+	return sum, nil
+
+}
+
+
+

@@ -11,29 +11,29 @@ import (
 )
 
 type HomeService interface {
-	GetBusinessHome(userId string) (int, interface{}, error)
-	GetCustomerHome(userId string) (int, interface{}, error)
+	GetBusinessHome(userId int) (int, interface{}, error)
+	GetCustomerHome(userId int) (int, interface{}, error)
 }
 
-func NewHomeService(userService UserService, dashesService DashesService,
+func NewHomeService(userService UserService, dashesService MenuService,
 	tableService TableService, orderService OrderService) HomeService {
 	return &homeService{
 		UserService:   userService,
-		DashesService: dashesService,
+		MenuService: dashesService,
 		TableService:  tableService,
 		OrderService:  orderService,
 	}
 }
 
 type homeService struct {
-	DashesService DashesService
+	MenuService MenuService
 	UserService   UserService
 	TableService  TableService
 	OrderService  OrderService
 }
 
 // 获取商家端首页
-func (s *homeService) GetBusinessHome(userId string) (int, interface{}, error) {
+func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 	status, tableList, err := s.TableService.GetTableList(userId)
 	if err != nil {
 		return status, nil, err
@@ -78,8 +78,8 @@ func (s *homeService) GetBusinessHome(userId string) (int, interface{}, error) {
 }
 
 // 获取用户端首页
-func (s *homeService) GetCustomerHome(userId string) (int, interface{}, error) {
-	status, dashesList, err := s.DashesService.GetDashesList(userId)
+func (s *homeService) GetCustomerHome(userId int) (int, interface{}, error) {
+	status, dashesList, err := s.MenuService.GetDashesList(userId)
 	if err != nil {
 		return status, nil, err
 	}

@@ -8,15 +8,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
-	"strconv"
 )
 
 type TableService interface {
-	GetTableList(businessId string) (int, []model.TableInfo, error)
-	GetTable(businessId, dashId string) (int, *model.TableInfo, error)
+	GetTableList(businessId int) (int, []model.TableInfo, error)
+	GetTable(businessId, dashId int) (int, *model.TableInfo, error)
 	InsertTable(dashes *model.TableInfo) (int, error)
 	UpdateTable(dashes *model.TableInfo) (int, error)
-	DeleteTable(businessId, dashId string) (int, error)
+	DeleteTable(businessId, dashId int) (int, error)
 }
 
 func NewTableService() TableService {
@@ -27,8 +26,8 @@ type tableService struct {
 }
 
 // 获取餐桌列表
-func (s *tableService) GetTableList(businessId string) (int, []model.TableInfo, error) {
-	if businessId == "" {
+func (s *tableService) GetTableList(businessId int) (int, []model.TableInfo, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
@@ -45,11 +44,11 @@ func (s *tableService) GetTableList(businessId string) (int, []model.TableInfo, 
 }
 
 // 获取单个餐桌
-func (s *tableService) GetTable(businessId, dashId string) (int, *model.TableInfo, error) {
-	if businessId == "" {
+func (s *tableService) GetTable(businessId, dashId int) (int, *model.TableInfo, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
-	if dashId == "" {
+	if dashId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("餐桌id不能为空")
 	}
 	item := new(model.TableInfo)
@@ -97,7 +96,7 @@ func (s *tableService) UpdateTable(dashes *model.TableInfo) (int, error) {
 	if dashes.Capacity < dashes.PersonNum {
 		return iris.StatusBadRequest, errors.New("餐桌人数大于可容纳人数")
 	}
-	status, dbItem, err := s.GetTable(strconv.Itoa(dashes.BusinessId),strconv.Itoa(dashes.Id))
+	status, dbItem, err := s.GetTable(dashes.BusinessId,dashes.Id)
 	if err != nil {
 		return status, err
 	}
@@ -123,11 +122,11 @@ func (s *tableService) UpdateTable(dashes *model.TableInfo) (int, error) {
 }
 
 // 删除餐桌
-func (s *tableService) DeleteTable(businessId, dashId string) (int, error) {
-	if businessId == "" {
+func (s *tableService) DeleteTable(businessId, dashId int) (int, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, errors.New("商家id不能为空")
 	}
-	if dashId == "" {
+	if dashId == 0 {
 		return iris.StatusBadRequest, errors.New("餐桌id不能为空")
 	}
 

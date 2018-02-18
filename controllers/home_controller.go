@@ -15,12 +15,12 @@ type HomeController struct {
 }
 
 // 获取首页,自动识别为用户身份,再获取不同数据
-func (c *HomeController) GetBy(userId string) (int,interface{}) {
+func (c *HomeController) GetBy(userId int) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	id, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	status,id, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}

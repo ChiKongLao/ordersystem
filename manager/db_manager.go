@@ -51,6 +51,10 @@ func sync(engine *xorm.Engine){
 		unSuccessTableName = "order"
 		return
 	}
+	if err = engine.Sync2(new(model.ShoppingCart)); err != nil {
+		unSuccessTableName = "shopping_cart"
+		return
+	}
 
 }
 

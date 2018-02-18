@@ -13,29 +13,29 @@ import (
 )
 
 type OrderService interface {
-	GetOrderList(businessId string) (int, []model.Order, error)
-	GetOrder(businessId, orderId string) (int, *model.Order, error)
+	GetOrderList(businessId int) (int, []model.Order, error)
+	GetOrder(businessId, orderId int) (int, *model.Order, error)
 	InsertOrder(order *model.Order) (int, int, error)
 	UpdateOrder(order *model.Order) (int, error)
-	DeleteOrder(businessId, orderId string) (int, error)
-	GetOldCustomer(businessId string) (int, interface{}, error)
+	DeleteOrder(businessId, orderId int) (int, error)
+	GetOldCustomer(businessId int) (int, interface{}, error)
 }
 
-func NewOrderService(UserService UserService, DashesService DashesService) OrderService {
+func NewOrderService(UserService UserService, MenuService MenuService) OrderService {
 	return &orderService{
-		DashesService: DashesService,
+		MenuService: MenuService,
 		UserService:   UserService,
 	}
 }
 
 type orderService struct {
-	DashesService DashesService
+	MenuService MenuService
 	UserService   UserService
 }
 
 // 获取订单列表
-func (s *orderService) GetOrderList(businessId string) (int, []model.Order, error) {
-	if businessId == "" {
+func (s *orderService) GetOrderList(businessId int) (int, []model.Order, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
@@ -54,11 +54,11 @@ func (s *orderService) GetOrderList(businessId string) (int, []model.Order, erro
 }
 
 // 获取单个订单
-func (s *orderService) GetOrder(businessId, orderId string) (int, *model.Order, error) {
-	if businessId == "" {
+func (s *orderService) GetOrder(businessId, orderId int) (int, *model.Order, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
-	if orderId == "" {
+	if orderId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("订单id不能为空")
 	}
 	item := new(model.Order)
@@ -89,7 +89,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	// 设置菜单信息
 	dashesList := order.DashesList
 	for i, subItem := range dashesList {
-		status, dbItem, err := s.DashesService.GetDashes(strconv.Itoa(subItem.Id))
+		status, dbItem, err := s.MenuService.GetDashes(subItem.Id)
 		if err != nil {
 			return status, 0, err
 		}
@@ -100,7 +100,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	}
 	order.DashesList = dashesList
 
-	sumPrice, err := s.getOrderSumPrice(order.BusinessId, order.DashesList)
+	sumPrice, err := s.MenuService.GetOrderSumPrice(order.DashesList)
 	if err != nil {
 		return iris.StatusInternalServerError, 0, err
 	}
@@ -122,7 +122,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 		order.BusinessId == 0 {
 		return iris.StatusBadRequest, errors.New("订单信息不能为空")
 	}
-	status, dbItem, err := s.GetOrder(strconv.Itoa(order.BusinessId), strconv.Itoa(order.Id))
+	status, dbItem, err := s.GetOrder(order.BusinessId, order.Id)
 	if err != nil {
 		return status, err
 	}
@@ -132,7 +132,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	dbItem.PersonNum = order.PersonNum
 	dbItem.Time = strconv.FormatInt(time.Now().Unix(), 10)
 	var sumPrice float32
-	sumPrice, err = s.getOrderSumPrice(order.BusinessId, order.DashesList)
+	sumPrice, err = s.MenuService.GetOrderSumPrice(order.DashesList)
 	if err != nil {
 		return iris.StatusInternalServerError, err
 	}
@@ -150,11 +150,11 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 }
 
 // 删除订单
-func (s *orderService) DeleteOrder(businessId, orderId string) (int, error) {
-	if businessId == "" {
+func (s *orderService) DeleteOrder(businessId, orderId int) (int, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, errors.New("商家id不能为空")
 	}
-	if orderId == "" {
+	if orderId == 0 {
 		return iris.StatusBadRequest, errors.New("订单id不能为空")
 	}
 
@@ -169,8 +169,8 @@ func (s *orderService) DeleteOrder(businessId, orderId string) (int, error) {
 }
 
 // 获取商家的老用户列表
-func (s *orderService) GetOldCustomer(businessId string) (int, interface{}, error) {
-	if businessId == "" {
+func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) {
+	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
@@ -192,29 +192,3 @@ func (s *orderService) GetOldCustomer(businessId string) (int, interface{}, erro
 	return iris.StatusOK, userList, nil
 }
 
-// 计算订单总价
-func (s *orderService) getOrderSumPrice(businessId int, dashesList []model.Dashes) (float32, error) {
-	priceMap := make(map[int]float32)
-	for _, subItem := range dashesList {
-		value, ok := priceMap[subItem.Id]
-		if ok {
-			priceMap[subItem.Id] = value + 1
-		} else {
-			priceMap[subItem.Id] = 1
-		}
-	}
-	var sum float32
-	for key, value := range priceMap {
-		_, dashes, err := s.DashesService.GetDashes(strconv.Itoa(key))
-		if err != nil {
-			return 0, err
-		}
-		res, err := strconv.ParseFloat(dashes.Price, 10)
-		if err != nil {
-			return 0, errors.New("价格格式出错")
-		}
-		sum += float32(res) * value
-	}
-	return sum, nil
-
-}

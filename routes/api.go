@@ -43,9 +43,9 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	{
 
 		userService := services.NewUserService()
-		dashesService := services.NewDashesService()
+		menuService := services.NewMenuService()
 		tableService := services.NewTableService()
-		orderService := services.NewOrderService(userService, dashesService)
+		orderService := services.NewOrderService(userService, menuService)
 
 		userParty := v1.Party("/user")
 		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
@@ -53,7 +53,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			mvcApp.Handle(new(controllers.UserController))
 		})
 		mvc.Configure(v1.Party("/menu",auth), func(mvcApp *mvc.Application) {
-			mvcApp.Register(userService, dashesService)
+			mvcApp.Register(userService, menuService)
 			mvcApp.Handle(new(controllers.DashesController))
 
 		})
@@ -68,10 +68,14 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 		})
 		mvc.Configure(v1.Party("/home",auth), func(mvcApp *mvc.Application) {
-			service := services.NewHomeService(userService, dashesService,tableService,orderService)
+			service := services.NewHomeService(userService, menuService,tableService,orderService)
 			mvcApp.Register(userService, service)
 			mvcApp.Handle(new(controllers.HomeController))
-
+		})
+		mvc.Configure(v1.Party("/shopping",auth), func(mvcApp *mvc.Application) {
+			service := services.NewShoppingService(userService, menuService)
+			mvcApp.Register(userService, service)
+			mvcApp.Handle(new(controllers.ShoppingController))
 		})
 
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))
@@ -82,7 +86,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 func addTestData()  {
 
 	userService := services.NewUserService()
-	dashesService := services.NewDashesService()
+	dashesService := services.NewMenuService()
 	tableService := services.NewTableService()
 
 	addUser(userService)
@@ -110,7 +114,7 @@ func addUser(userService services.UserService)  {
 	}
 }
 
-func addDashes(userService services.UserService, dashesService services.DashesService){
+func addDashes(userService services.UserService, dashesService services.MenuService){
 	userList, err := userService.GetUserList()
 	if err != nil {
 		return
@@ -127,7 +131,7 @@ func addDashes(userService services.UserService, dashesService services.DashesSe
 				Name:fmt.Sprintf("菜式%v",j),
 				Num:100,
 				Pic:"https://www.baidu.com/img/bd_logo1.png",
-				Price:strconv.Itoa(j),
+				Price:float32(j),
 				Desc:fmt.Sprintf("%s的菜式%v",user.NickName,j),
 
 			}

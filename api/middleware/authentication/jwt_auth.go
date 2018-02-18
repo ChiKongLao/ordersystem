@@ -13,7 +13,6 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/model"
 	"fmt"
-	"strconv"
 )
 
 const (
@@ -97,13 +96,13 @@ func GetUserNameFormHeaderToken(ctx iris.Context) (string,error){
 }
 
 // 从请求头获取token对应的用户ID
-func GetUserIDFormHeaderToken(ctx iris.Context) (string,error){
+func GetUserIDFormHeaderToken(ctx iris.Context) (int,int,error){
 	claim, err := getClaims(ctx)
 	if err != nil {
-		return "",err
+		return iris.StatusUnauthorized,0,err
 	}
-	res := strconv.Itoa(int(claim[constant.NameID].(float64)))
-	return res,nil
+	res := int(claim[constant.NameID].(float64))
+	return iris.StatusOK,res,nil
 }
 
 // 从请求头获取token对应的信息
@@ -118,8 +117,8 @@ func getClaims(ctx iris.Context) (jwt.MapClaims,error){
 }
 
 // 从userId和token的id对比是不为自己
-func IsOwnWithToken(ctx iris.Context, userId string) (bool, error){
-	id, err := GetUserIDFormHeaderToken(ctx)
+func IsOwnWithToken(ctx iris.Context, userId int) (bool, error){
+	_,id, err := GetUserIDFormHeaderToken(ctx)
 	if err != nil {
 		return false, err
 	}

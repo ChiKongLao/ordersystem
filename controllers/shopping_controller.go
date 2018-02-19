@@ -38,11 +38,11 @@ func (c *ShoppingController) PutBy(businessId int) (int,interface{}) {
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	dashesType := c.Ctx.FormValue(constant.NameType)
-	dashesId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameDashesId))
+	dishesType := c.Ctx.FormValue(constant.NameType)
+	dishesId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameDishesId))
 	num, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
 
-	status,err = c.UpdateShopping(userId,businessId, dashesId,num,dashesType)
+	status,err = c.UpdateShopping(userId,businessId, dishesId,num,dishesType)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}

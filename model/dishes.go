@@ -1,7 +1,7 @@
 package model
 
 // 菜式
-type Dashes struct {
+type Dishes struct {
 	Id          int     `json:"id" xorm:"not null pk autoincr unique INT"` // 菜式id
 	BusinessId  int     `json:"-" xorm:"not null index INT(11)"`           // 商家id
 	Name        string  `json:"name" xorm:"not null VARCHAR(255)"`
@@ -15,7 +15,7 @@ type Dashes struct {
 }
 
 // 是否为同一道菜. 包含同样的味道
-func (item *Dashes) IsSameDashes(targetItem *Dashes) bool {
+func (item *Dishes) IsSameDishes(targetItem *Dishes) bool {
 	return item.Id == targetItem.Id &&
 		item.Type == targetItem.Type
 }

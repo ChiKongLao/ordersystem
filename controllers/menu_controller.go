@@ -11,7 +11,7 @@ import (
 )
 
 // 菜式
-type DashesController struct {
+type MenuController struct {
 	Ctx iris.Context
 	services.MenuService
 	UserService services.UserService
@@ -19,15 +19,15 @@ type DashesController struct {
 }
 
 // 获取菜单
-func (c *DashesController) GetBy(userId int) (int,interface{}) {
+func (c *MenuController) GetBy(userId int) (int,interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 
-	var list []model.Dashes
-	status, list, err = c.GetDashesList(userId)
+	var list []model.Dishes
+	status, list, err = c.GetDishesList(userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -39,14 +39,14 @@ func (c *DashesController) GetBy(userId int) (int,interface{}) {
 }
 
 // 获取菜式详情
-func (c *DashesController) GetByBy(userId, dashId int) (int,interface{}) {
+func (c *MenuController) GetByBy(userId, dishId int) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	var item *model.Dashes
-	status, item, err = c.GetDashes(dashId)
+	var item *model.Dishes
+	status, item, err = c.GetDishes(dishId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -57,7 +57,7 @@ func (c *DashesController) GetByBy(userId, dashId int) (int,interface{}) {
 }
 
 // 添加菜式
-func (c *DashesController) PostBy(userId int) (int,interface{}) {
+func (c *MenuController) PostBy(userId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -77,17 +77,17 @@ func (c *DashesController) PostBy(userId int) (int,interface{}) {
 	//num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum)) // 暂时不用数量
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	dashesType := c.Ctx.FormValue(constant.NameType)
+	dishesType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
 
-	status, err = c.InsertDashesOne(&model.Dashes{
+	status, err = c.InsertDishesOne(&model.Dishes{
 		BusinessId:userId,
 		Name:name,
 		Num:100,
 		Pic:pic,
 		Price:float32(price),
-		Type:dashesType,
+		Type:dishesType,
 		Desc:desc,
 	} )
 
@@ -101,7 +101,7 @@ func (c *DashesController) PostBy(userId int) (int,interface{}) {
 }
 
 // 修改菜式
-func (c *DashesController) PutByBy(userId, dashId int) (int,interface{}) {
+func (c *MenuController) PutByBy(userId, dishId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -121,18 +121,18 @@ func (c *DashesController) PutByBy(userId, dashId int) (int,interface{}) {
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	dashesType := c.Ctx.FormValue(constant.NameType)
+	dishesType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
 
-	status, err = c.UpdateDashes(&model.Dashes{
-		Id:dashId,
+	status, err = c.UpdateDishes(&model.Dishes{
+		Id:dishId,
 		BusinessId:userId,
 		Name:name,
 		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		Type:dashesType,
+		Type:dishesType,
 		Desc:desc,
 	} )
 
@@ -147,7 +147,7 @@ func (c *DashesController) PutByBy(userId, dashId int) (int,interface{}) {
 
 
 // 删除菜式
-func (c *DashesController) DeleteByBy(userId, dashId int) (int,interface{}) {
+func (c *MenuController) DeleteByBy(userId, dishId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -163,7 +163,7 @@ func (c *DashesController) DeleteByBy(userId, dashId int) (int,interface{}) {
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	status, err = c.DeleteDashes(dashId)
+	status, err = c.DeleteDishes(dishId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -174,4 +174,39 @@ func (c *DashesController) DeleteByBy(userId, dashId int) (int,interface{}) {
 		}
 }
 
+// 获取用户收藏的菜单
+func (c *MenuController) GetCollectBy(businessId int) (int,interface{}) {
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
+	status, item, err := c.GetCollectList(userId,businessId)
+
+	return status,iris.Map{
+		constant.NameData:item,
+		constant.NameCount:len(item),
+	}
+
+}
+
+// 修改用户收藏的菜单
+func (c *MenuController) PutCollectBy(businessId int) (int,interface{}) {
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+	dishesId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameDishesId))
+	//isCollect := c.Ctx.FormValue(constant.NameIsCollect)
+	isCollect,_ := c.Ctx.PostValueBool(constant.NameIsCollect)
+	status, err = c.UpdateCollectList(userId,businessId,dishesId,isCollect)
+	if err != nil{
+		return status,model.NewErrorResponse(err)
+	}
+
+	return status,iris.Map{
+		constant.NameIsOk:true,
+	}
+
+}
 

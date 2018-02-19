@@ -54,7 +54,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		})
 		mvc.Configure(v1.Party("/menu",auth), func(mvcApp *mvc.Application) {
 			mvcApp.Register(userService, menuService)
-			mvcApp.Handle(new(controllers.DashesController))
+			mvcApp.Handle(new(controllers.MenuController))
 
 		})
 		mvc.Configure(v1.Party("/table",auth), func(mvcApp *mvc.Application) {
@@ -86,11 +86,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 func addTestData()  {
 
 	userService := services.NewUserService()
-	dashesService := services.NewMenuService()
+	dishesService := services.NewMenuService()
 	tableService := services.NewTableService()
 
 	addUser(userService)
-	addDashes(userService,dashesService)
+	addDishes(userService,dishesService)
 	addTable(userService,tableService)
 
 
@@ -114,7 +114,7 @@ func addUser(userService services.UserService)  {
 	}
 }
 
-func addDashes(userService services.UserService, dashesService services.MenuService){
+func addDishes(userService services.UserService, dishesService services.MenuService){
 	userList, err := userService.GetUserList()
 	if err != nil {
 		return
@@ -123,10 +123,10 @@ func addDashes(userService services.UserService, dashesService services.MenuServ
 		if user.Role != constant.RoleBusiness{
 			continue
 		}
-		list := make([]*model.Dashes,100)
+		list := make([]*model.Dishes,100)
 
 		for j := 0; j < len(list) ; j = j+1  {
-			list[j] = &model.Dashes{
+			list[j] = &model.Dishes{
 				BusinessId:user.Id,
 				Name:fmt.Sprintf("菜式%v",j),
 				Num:100,
@@ -136,7 +136,7 @@ func addDashes(userService services.UserService, dashesService services.MenuServ
 
 			}
 		}
-		dashesService.InsertDashes(list)
+		dishesService.InsertDishes(list)
 
 	}
 

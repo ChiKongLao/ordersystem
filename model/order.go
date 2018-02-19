@@ -10,5 +10,5 @@ type Order struct {
 	Time       string   `json:"time" xorm:"not null VARCHAR(25)"`
 	BusinessId int      `json:"-" xorm:"not null index INT(11)"`
 	UserId     int      `json:"userId" xorm:"not null index INT(11)"` // 下单的用户id
-	DashesList []Dashes `json:"dashesList" xorm:"not null"`           // 菜单
+	DishesList []Dishes `json:"dishesList" xorm:"not null"`           // 菜单
 }

@@ -12,7 +12,7 @@ import (
 
 type ShoppingService interface {
 	GetShopping(businessId, userId int) (int, *model.ShoppingCart, error)
-	UpdateShopping(userId int, businessId int, dashesId int, num int, dashesType string) (int, error)
+	UpdateShopping(userId int, businessId int, dishesId int, num int, dishesType string) (int, error)
 	//DeleteShopping(id int) (int, error)
 }
 
@@ -49,13 +49,13 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 		return iris.StatusNotFound, nil, errors.New("购物车为空")
 	}
 
-	price, err := s.MenuService.GetOrderSumPrice(item.DashesList)
+	price, err := s.MenuService.GetOrderSumPrice(item.DishesList)
 	if err != nil {
 		return iris.StatusInternalServerError, nil, err
 	}
 
 	var count int
-	for _, subItem := range item.DashesList {
+	for _, subItem := range item.DishesList {
 		count += subItem.Num
 	}
 
@@ -67,13 +67,13 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 
 // 修改购物车
 func (s *shoppingService) UpdateShopping(userId int, businessId int,
-	dashesId int, num int, dashesType string) (int, error) {
+	dishesId int, num int, dishesType string) (int, error) {
 	status, shoppingCart, err := s.GetShopping(businessId, userId)
 	if status == iris.StatusInternalServerError {
 		return status, err
 	}
 
-	status,dashes, err := s.MenuService.GetDashes(dashesId)
+	status,dishes, err := s.MenuService.GetDishes(dishesId)
 	if err != nil {
 		return status,err
 	}
@@ -81,16 +81,16 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 	if shoppingCart != nil {
 		isExist := false
 		// 设置修改信息
-		for i, subItem := range shoppingCart.DashesList {
+		for i, subItem := range shoppingCart.DishesList {
 			// 发生变化才更新
-			if subItem.Id == dashesId && subItem.Type == subItem.Type {
+			if subItem.Id == dishesId && subItem.Type == subItem.Type {
 				isExist = true
 				if subItem.Num != num {
 					if num == 0 { // 删除菜式
-						shoppingCart.DashesList = append(shoppingCart.DashesList[:i],shoppingCart.DashesList[i+1:]...)
+						shoppingCart.DishesList = append(shoppingCart.DishesList[:i],shoppingCart.DishesList[i+1:]...)
 					}else {
 						subItem.Num = num
-						shoppingCart.DashesList[i] = subItem
+						shoppingCart.DishesList[i] = subItem
 					}
 					_, err = manager.DBEngine.AllCols().Where(
 						fmt.Sprintf("%s=?", constant.NameID), shoppingCart.Id).Update(shoppingCart)
@@ -104,10 +104,10 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 			}
 		}
 		if !isExist {
-			mySlice := shoppingCart.DashesList[:]
-			dashes.Num = num
-			list := append(mySlice,*dashes)
-			shoppingCart.DashesList = list
+			mySlice := shoppingCart.DishesList[:]
+			dishes.Num = num
+			list := append(mySlice,*dishes)
+			shoppingCart.DishesList = list
 			_, err = manager.DBEngine.AllCols().Where(
 				fmt.Sprintf("%s=?", constant.NameID), shoppingCart.Id).Update(shoppingCart)
 			if err != nil {
@@ -117,14 +117,14 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 
 		}
 	} else {
-		dashes.Num = num
-		list := []model.Dashes{
-			*dashes,
+		dishes.Num = num
+		list := []model.Dishes{
+			*dishes,
 		}
 		_, err = manager.DBEngine.Insert(&model.ShoppingCart{
 			UserId:     userId,
 			BusinessId: businessId,
-			DashesList: list,
+			DishesList: list,
 		})
 		if err != nil {
 			logrus.Errorf("添加菜式到购物车失败: %s", err)
@@ -136,7 +136,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 }
 
 //// 删除购物车
-//func (s *shoppingService) DeleteShopping(businessId, userId, dashesId int) (int, error) {
+//func (s *shoppingService) DeleteShopping(businessId, userId, dishesId int) (int, error) {
 //	if businessId == 0 {
 //		return iris.StatusBadRequest, errors.New("商家id不能为空")
 //	}

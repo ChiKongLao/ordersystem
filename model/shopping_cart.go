@@ -5,7 +5,7 @@ type ShoppingCart struct {
 	Id         int      `json:"id" xorm:"not null pk autoincr unique INT(11)"`
 	UserId     int      `json:"userId" xorm:"not null INT(11)"`
 	BusinessId int      `json:"businessId" xorm:"not null INT(11)"`
-	DashesList []Dashes `json:"dashesList" xorm:"not null TEXT"`
+	DishesList []Dishes `json:"dishesList" xorm:"not null TEXT"`
 	Price      float32  `json:"price"`
 	Count      int      `json:"count"`
 }

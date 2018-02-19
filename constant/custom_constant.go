@@ -32,10 +32,11 @@ const (
 	NameCapacity      = "capacity"
 	NameTableName     = "tableName"
 	NameTableId       = "tableId"
-	NameDashes        = "dashes"
-	NameDashesId      = "dashesId"
+	NameDishes        = "dishes"
+	NameDishesId      = "dishesId"
 	NameOrderId       = "orderId"
 	NameHead          = "head"
+	NameIsCollect     = "isCollect"
 
 	NameFrom    = "From"
 	NameTo      = "To"

@@ -15,11 +15,11 @@ type HomeService interface {
 	GetCustomerHome(userId int) (int, interface{}, error)
 }
 
-func NewHomeService(userService UserService, dashesService MenuService,
+func NewHomeService(userService UserService, dishesService MenuService,
 	tableService TableService, orderService OrderService) HomeService {
 	return &homeService{
 		UserService:   userService,
-		MenuService: dashesService,
+		MenuService: dishesService,
 		TableService:  tableService,
 		OrderService:  orderService,
 	}
@@ -50,7 +50,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		}
 	}
 
-	_, err = manager.DBEngine.Table("dashes").
+	_, err = manager.DBEngine.Table("dishes").
 		Select("Count(num) AS saleOutNum").
 		Where(fmt.Sprintf("%s=0", constant.ColumnNum)).
 		Get(&saleOutNum)
@@ -79,7 +79,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 
 // 获取用户端首页
 func (s *homeService) GetCustomerHome(userId int) (int, interface{}, error) {
-	status, dashesList, err := s.MenuService.GetDashesList(userId)
+	status, dishesList, err := s.MenuService.GetDishesList(userId)
 	if err != nil {
 		return status, nil, err
 	}
@@ -90,11 +90,11 @@ func (s *homeService) GetCustomerHome(userId int) (int, interface{}, error) {
 	type Home struct {
 		Name string         `json:"name"`
 		Desc string         `json:"desc"`
-		Data []model.Dashes `json:"data"`
+		Data []model.Dishes `json:"data"`
 	}
 
 	return iris.StatusOK, &Home{
-		Data: dashesList,
+		Data: dishesList,
 		Name:user.NickName,
 	}, nil
 }

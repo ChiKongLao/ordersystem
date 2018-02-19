@@ -87,20 +87,20 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	order.Status = constant.OrderStatusWaitPay
 
 	// 设置菜单信息
-	dashesList := order.DashesList
-	for i, subItem := range dashesList {
-		status, dbItem, err := s.MenuService.GetDashes(subItem.Id)
+	dishesList := order.DishesList
+	for i, subItem := range dishesList {
+		status, dbItem, err := s.MenuService.GetDishes(subItem.Id)
 		if err != nil {
 			return status, 0, err
 		}
 		subItem.Price = dbItem.Price
 		subItem.Name = dbItem.Name
 		subItem.Type = dbItem.Type
-		dashesList[i] = subItem
+		dishesList[i] = subItem
 	}
-	order.DashesList = dashesList
+	order.DishesList = dishesList
 
-	sumPrice, err := s.MenuService.GetOrderSumPrice(order.DashesList)
+	sumPrice, err := s.MenuService.GetOrderSumPrice(order.DishesList)
 	if err != nil {
 		return iris.StatusInternalServerError, 0, err
 	}
@@ -132,7 +132,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	dbItem.PersonNum = order.PersonNum
 	dbItem.Time = strconv.FormatInt(time.Now().Unix(), 10)
 	var sumPrice float32
-	sumPrice, err = s.MenuService.GetOrderSumPrice(order.DashesList)
+	sumPrice, err = s.MenuService.GetOrderSumPrice(order.DishesList)
 	if err != nil {
 		return iris.StatusInternalServerError, err
 	}

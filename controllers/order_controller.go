@@ -94,8 +94,8 @@ func (c *OrderController) PostBy(businessId int) (int,interface{}) {
 
 	tableName := c.Ctx.FormValue(constant.NameTableName)
 	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
-	var list = new([]model.Dashes)
-	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameDashes)),&list)
+	var list = new([]model.Dishes)
+	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameDishes)),&list)
 
 	if err != nil {
 		return iris.StatusBadRequest,iris.Map{constant.NameMsg:"菜单格式错误"}
@@ -108,7 +108,7 @@ func (c *OrderController) PostBy(businessId int) (int,interface{}) {
 		UserId:userId,
 		TableName:tableName,
 		PersonNum:personNum,
-		DashesList:*list,
+		DishesList:*list,
 	} )
 
 	if err != nil{

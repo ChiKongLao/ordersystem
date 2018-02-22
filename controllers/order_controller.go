@@ -67,19 +67,19 @@ func (c *OrderController) GetByBy(userId, orderId int) (int,interface{}) {
 }
 
 // 获取商家的老用户列表
-func (c *OrderController) GetCustomer() (int,interface{}) {
-	status,userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
-	if err != nil {
-		return status, model.NewErrorResponse(err)
+func (c *OrderController) GetCustomerBy(businessId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx,businessId)
+	if !isOwn {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
-	status, user, err := c.UserService.GetUserById(userId)
+	status, user, err := c.UserService.GetUserById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 	if !user.IsManagerOrBusiness(){
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
-	status, userList, err := c.OrderService.GetOldCustomer(userId)
+	status, userList, err := c.OrderService.GetOldCustomer(businessId)
 	return status,iris.Map{
 		constant.NameData:userList,
 		}
@@ -94,8 +94,8 @@ func (c *OrderController) PostBy(businessId int) (int,interface{}) {
 
 	tableName := c.Ctx.FormValue(constant.NameTableName)
 	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
-	var list = new([]model.Dishes)
-	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameDishes)),&list)
+	var list = new([]model.Food)
+	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameFood)),&list)
 
 	if err != nil {
 		return iris.StatusBadRequest,iris.Map{constant.NameMsg:"菜单格式错误"}
@@ -108,7 +108,7 @@ func (c *OrderController) PostBy(businessId int) (int,interface{}) {
 		UserId:userId,
 		TableName:tableName,
 		PersonNum:personNum,
-		DishesList:*list,
+		FoodList:*list,
 	} )
 
 	if err != nil{

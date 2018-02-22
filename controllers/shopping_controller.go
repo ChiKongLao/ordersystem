@@ -29,7 +29,9 @@ func (c *ShoppingController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	return status,item
+	return status,iris.Map{
+		constant.NameData:item,
+	}
 }
 
 // 修改购物车,只能商家操作
@@ -38,11 +40,11 @@ func (c *ShoppingController) PutBy(businessId int) (int,interface{}) {
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	dishesType := c.Ctx.FormValue(constant.NameType)
-	dishesId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameDishesId))
+	foodType := c.Ctx.FormValue(constant.NameType)
+	foodId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameFoodId))
 	num, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
 
-	status,err = c.UpdateShopping(userId,businessId, dishesId,num,dishesType)
+	status,err = c.UpdateShopping(userId,businessId, foodId,num,foodType)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}

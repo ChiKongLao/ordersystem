@@ -12,10 +12,10 @@ import (
 
 type TableService interface {
 	GetTableList(businessId int) (int, []model.TableInfo, error)
-	GetTable(businessId, dishId int) (int, *model.TableInfo, error)
-	InsertTable(dishes *model.TableInfo) (int, error)
-	UpdateTable(dishes *model.TableInfo) (int, error)
-	DeleteTable(businessId, dishId int) (int, error)
+	GetTable(businessId, foodId int) (int, *model.TableInfo, error)
+	InsertTable(food *model.TableInfo) (int, error)
+	UpdateTable(food *model.TableInfo) (int, error)
+	DeleteTable(businessId, foodId int) (int, error)
 }
 
 func NewTableService() TableService {
@@ -44,23 +44,23 @@ func (s *tableService) GetTableList(businessId int) (int, []model.TableInfo, err
 }
 
 // 获取单个餐桌
-func (s *tableService) GetTable(businessId, dishId int) (int, *model.TableInfo, error) {
+func (s *tableService) GetTable(businessId, foodId int) (int, *model.TableInfo, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
-	if dishId == 0 {
+	if foodId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("餐桌id不能为空")
 	}
 	item := new(model.TableInfo)
 
 	res, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID), businessId, dishId).Get(item)
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID), businessId, foodId).Get(item)
 	if err != nil {
 		logrus.Errorf("获取餐桌失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取餐桌失败")
 	}
 	if res == false {
-		logrus.Errorf("餐桌不存在: %s", dishId)
+		logrus.Errorf("餐桌不存在: %s", foodId)
 		return iris.StatusNotFound, nil, errors.New("餐桌不存在")
 	}
 
@@ -68,16 +68,16 @@ func (s *tableService) GetTable(businessId, dishId int) (int, *model.TableInfo, 
 }
 
 // 添加餐桌
-func (s *tableService) InsertTable(dishes *model.TableInfo) (int, error) {
+func (s *tableService) InsertTable(food *model.TableInfo) (int, error) {
 
-	if dishes.Name == ""{
+	if food.Name == ""{
 		return iris.StatusBadRequest, errors.New("餐桌信息不能为空")
 	}
-	if dishes.Capacity <= 0 {
+	if food.Capacity <= 0 {
 		return iris.StatusBadRequest, errors.New("餐桌容纳人数错误")
 	}
 
-	_, err := manager.DBEngine.InsertOne(dishes)
+	_, err := manager.DBEngine.InsertOne(food)
 	if err != nil {
 		logrus.Errorf("添加餐桌失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("添加餐桌失败")
@@ -86,33 +86,33 @@ func (s *tableService) InsertTable(dishes *model.TableInfo) (int, error) {
 }
 
 // 修改餐桌
-func (s *tableService) UpdateTable(dishes *model.TableInfo) (int, error) {
-	if dishes.Id == 0 || dishes.Name == ""{
+func (s *tableService) UpdateTable(food *model.TableInfo) (int, error) {
+	if food.Id == 0 || food.Name == ""{
 		return iris.StatusBadRequest, errors.New("餐桌信息不能为空")
 	}
-	if dishes.Capacity <= 0 {
+	if food.Capacity <= 0 {
 		return iris.StatusBadRequest, errors.New("餐桌可容纳人数错误")
 	}
-	if dishes.Capacity < dishes.PersonNum {
+	if food.Capacity < food.PersonNum {
 		return iris.StatusBadRequest, errors.New("餐桌人数大于可容纳人数")
 	}
-	status, dbItem, err := s.GetTable(dishes.BusinessId,dishes.Id)
+	status, dbItem, err := s.GetTable(food.BusinessId,food.Id)
 	if err != nil {
 		return status, err
 	}
 	// 设置修改信息
-	dbItem.Name = dishes.Name
-	dbItem.Capacity = dishes.Capacity
-	if dishes.Status != 0 {
-		dbItem.Status = dishes.Status
+	dbItem.Name = food.Name
+	dbItem.Capacity = food.Capacity
+	if food.Status != 0 {
+		dbItem.Status = food.Status
 	}
-	if dishes.PersonNum != 0 {
-		dbItem.PersonNum = dishes.PersonNum
+	if food.PersonNum != 0 {
+		dbItem.PersonNum = food.PersonNum
 	}
 
 	_, err = manager.DBEngine.AllCols().Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
-		dishes.BusinessId, dishes.Id).Update(dbItem)
+		food.BusinessId, food.Id).Update(dbItem)
 	if err != nil {
 		logrus.Errorf("修改餐桌失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("修改餐桌失败")
@@ -122,17 +122,17 @@ func (s *tableService) UpdateTable(dishes *model.TableInfo) (int, error) {
 }
 
 // 删除餐桌
-func (s *tableService) DeleteTable(businessId, dishId int) (int, error) {
+func (s *tableService) DeleteTable(businessId, foodId int) (int, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, errors.New("商家id不能为空")
 	}
-	if dishId == 0 {
+	if foodId == 0 {
 		return iris.StatusBadRequest, errors.New("餐桌id不能为空")
 	}
 
 	_, err := manager.DBEngine.Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
-		businessId, dishId).Delete(new(model.TableInfo))
+		businessId, foodId).Delete(new(model.TableInfo))
 	if err != nil {
 		logrus.Errorf("删除餐桌失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("删除餐桌失败")

@@ -39,8 +39,8 @@ func sync(engine *xorm.Engine){
 		unSuccessTableName = "user"
 		return
 	}
-	if err = engine.Sync2(new(model.Dishes)); err != nil {
-		unSuccessTableName = "dishes"
+	if err = engine.Sync2(new(model.Food)); err != nil {
+		unSuccessTableName = "food"
 		return
 	}
 	if err = engine.Sync2(new(model.TableInfo)); err != nil {
@@ -55,8 +55,8 @@ func sync(engine *xorm.Engine){
 		unSuccessTableName = "shopping_cart"
 		return
 	}
-	if err = engine.Sync2(new(model.CollectDishes)); err != nil {
-		unSuccessTableName = "collect_dishes"
+	if err = engine.Sync2(new(model.CollectFood)); err != nil {
+		unSuccessTableName = "collect_food"
 		return
 	}
 

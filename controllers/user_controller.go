@@ -5,7 +5,6 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"strconv"
 	"github.com/chikong/ordersystem/constant"
 )
 
@@ -20,7 +19,7 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	password := c.Ctx.FormValue(constant.NamePassword)
 	nickName := c.Ctx.FormValue(constant.NameNickName)
 	head := c.Ctx.FormValue(constant.NameHead)
-	role,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameRole))
+	role,_ := c.Ctx.PostValueIntDefault(constant.NameRole,3)
 
 	status,err := c.UserService.InsertUser(role,userName,password,nickName,head)
 
@@ -50,11 +49,11 @@ func (c *UserController) PostLogin()(int,interface{}){
 
 // 获取用户信息
 func (c *UserController) Get()(int,interface{}){
-	userName,err := authentication.GetUserNameFormHeaderToken(c.Ctx)
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil{
-		return iris.StatusInternalServerError, model.NewErrorResponse(err)
+		return status, model.NewErrorResponse(err)
 	}
-	status, user, err := c.UserService.GetUserByName(userName)
+	status, user, err := c.UserService.GetUserById(userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -62,6 +61,8 @@ func (c *UserController) Get()(int,interface{}){
 	return status,iris.Map{
 		constant.NameID:user.Id,
 		constant.NameNickName:user.NickName,
+		constant.NameHead:user.Head,
+
 	}
 
 }

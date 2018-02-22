@@ -10,7 +10,7 @@ import (
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
-// 菜式
+// 食物
 type MenuController struct {
 	Ctx iris.Context
 	services.MenuService
@@ -19,15 +19,19 @@ type MenuController struct {
 }
 
 // 获取菜单
-func (c *MenuController) GetBy(userId int) (int,interface{}) {
-	status, _, err := c.UserService.GetBusinessById(userId)
+func (c *MenuController) GetBy(businessId int) (int,interface{}) {
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
 
-	var list []model.Dishes
-	status, list, err = c.GetDishesList(userId)
+	var list []model.Food
+	status, list, err = c.GetFoodList(businessId,userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -38,15 +42,15 @@ func (c *MenuController) GetBy(userId int) (int,interface{}) {
 		}
 }
 
-// 获取菜式详情
-func (c *MenuController) GetByBy(userId, dishId int) (int,interface{}) {
+// 获取食物详情
+func (c *MenuController) GetByBy(userId, foodId int) (int,interface{}) {
 
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	var item *model.Dishes
-	status, item, err = c.GetDishes(dishId)
+	var item *model.Food
+	status, item, err = c.GetFood(foodId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -56,7 +60,7 @@ func (c *MenuController) GetByBy(userId, dishId int) (int,interface{}) {
 		}
 }
 
-// 添加菜式
+// 添加食物
 func (c *MenuController) PostBy(userId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
@@ -77,17 +81,17 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 	//num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum)) // 暂时不用数量
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	dishesType := c.Ctx.FormValue(constant.NameType)
+	foodType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
 
-	status, err = c.InsertDishesOne(&model.Dishes{
+	status, err = c.InsertFoodOne(&model.Food{
 		BusinessId:userId,
 		Name:name,
 		Num:100,
 		Pic:pic,
 		Price:float32(price),
-		Type:dishesType,
+		Type:foodType,
 		Desc:desc,
 	} )
 
@@ -100,8 +104,8 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 		}
 }
 
-// 修改菜式
-func (c *MenuController) PutByBy(userId, dishId int) (int,interface{}) {
+// 修改食物
+func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -121,18 +125,18 @@ func (c *MenuController) PutByBy(userId, dishId int) (int,interface{}) {
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	dishesType := c.Ctx.FormValue(constant.NameType)
+	foodType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
 
-	status, err = c.UpdateDishes(&model.Dishes{
-		Id:dishId,
+	status, err = c.UpdateFood(&model.Food{
+		Id:foodId,
 		BusinessId:userId,
 		Name:name,
 		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		Type:dishesType,
+		Type:foodType,
 		Desc:desc,
 	} )
 
@@ -146,8 +150,8 @@ func (c *MenuController) PutByBy(userId, dishId int) (int,interface{}) {
 }
 
 
-// 删除菜式
-func (c *MenuController) DeleteByBy(userId, dishId int) (int,interface{}) {
+// 删除食物
+func (c *MenuController) DeleteByBy(userId, foodId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
@@ -163,7 +167,7 @@ func (c *MenuController) DeleteByBy(userId, dishId int) (int,interface{}) {
 		return iris.StatusUnauthorized,errors.New("没有该权限")
 	}
 
-	status, err = c.DeleteDishes(dishId)
+	status, err = c.DeleteFood(foodId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -196,10 +200,9 @@ func (c *MenuController) PutCollectBy(businessId int) (int,interface{}) {
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	dishesId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameDishesId))
-	//isCollect := c.Ctx.FormValue(constant.NameIsCollect)
+	foodId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameFoodId))
 	isCollect,_ := c.Ctx.PostValueBool(constant.NameIsCollect)
-	status, err = c.UpdateCollectList(userId,businessId,dishesId,isCollect)
+	status, err = c.UpdateCollectList(userId,businessId,foodId,isCollect)
 	if err != nil{
 		return status,model.NewErrorResponse(err)
 	}

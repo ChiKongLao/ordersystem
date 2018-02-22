@@ -43,7 +43,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	{
 
 		userService := services.NewUserService()
-		menuService := services.NewMenuService()
+		menuService := services.NewMenuService(userService)
 		tableService := services.NewTableService()
 		orderService := services.NewOrderService(userService, menuService)
 
@@ -86,11 +86,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 func addTestData()  {
 
 	userService := services.NewUserService()
-	dishesService := services.NewMenuService()
+	foodService := services.NewMenuService(userService)
 	tableService := services.NewTableService()
 
 	addUser(userService)
-	addDishes(userService,dishesService)
+	addFood(userService,foodService)
 	addTable(userService,tableService)
 
 
@@ -114,7 +114,7 @@ func addUser(userService services.UserService)  {
 	}
 }
 
-func addDishes(userService services.UserService, dishesService services.MenuService){
+func addFood(userService services.UserService, foodService services.MenuService){
 	userList, err := userService.GetUserList()
 	if err != nil {
 		return
@@ -123,20 +123,20 @@ func addDishes(userService services.UserService, dishesService services.MenuServ
 		if user.Role != constant.RoleBusiness{
 			continue
 		}
-		list := make([]*model.Dishes,100)
+		list := make([]*model.Food,100)
 
 		for j := 0; j < len(list) ; j = j+1  {
-			list[j] = &model.Dishes{
+			list[j] = &model.Food{
 				BusinessId:user.Id,
-				Name:fmt.Sprintf("菜式%v",j),
+				Name:fmt.Sprintf("食物%v",j),
 				Num:100,
 				Pic:"https://www.baidu.com/img/bd_logo1.png",
 				Price:float32(j),
-				Desc:fmt.Sprintf("%s的菜式%v",user.NickName,j),
+				Desc:fmt.Sprintf("%s的食物%v",user.NickName,j),
 
 			}
 		}
-		dishesService.InsertDishes(list)
+		foodService.InsertFood(list)
 
 	}
 

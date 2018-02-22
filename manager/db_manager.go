@@ -7,7 +7,7 @@ import (
 )
 
 // 根据表生成model
-// xorm reverse mysql root:@/order_system?charset=utf8 /Users/chikong/go_workspace/src/github.com/go-xorm/cmd/xorm/templates/goxorm modeltmp
+// xorm reverse mysql root:@/order_system?charset=utf8 /Users/chikong/go_workspace/src/github.com/go-xorm/cmd/xorm/templates/goxorm model_tmp
 // xorm reverse mysql root:@/order_system?charset=utf8 H:\GOPATH\src\github.com\go-xorm\cmd\xorm\templates\goxorm modeltmp
 
 
@@ -57,6 +57,10 @@ func sync(engine *xorm.Engine){
 	}
 	if err = engine.Sync2(new(model.CollectFood)); err != nil {
 		unSuccessTableName = "collect_food"
+		return
+	}
+	if err = engine.Sync2(new(model.Shop)); err != nil {
+		unSuccessTableName = "shop"
 		return
 	}
 

@@ -6,7 +6,6 @@ import (
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
-	"errors"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 	"encoding/json"
 )
@@ -77,7 +76,7 @@ func (c *OrderController) GetCustomerBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 	if !user.IsManagerOrBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 	status, userList, err := c.OrderService.GetOldCustomer(businessId)
 	return status,iris.Map{
@@ -135,7 +134,7 @@ func (c *OrderController) PutByBy(userId, orderId int) (int,interface{}) {
 	}
 
 	if !user.IsManagerOrBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	tableName := c.Ctx.FormValue(constant.NameTableName)
@@ -175,7 +174,7 @@ func (c *OrderController) DeleteByBy(userId, orderId int) (int,interface{}) {
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	status, err = c.DeleteOrder(userId,orderId)

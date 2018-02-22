@@ -85,16 +85,6 @@ func GetTokenFormHeader(ctx iris.Context) (*jwt.Token,error){
 	return token,nil
 }
 
-// 从请求头获取token的用户名
-func GetUserNameFormHeaderToken(ctx iris.Context) (string,error){
-	claim, err := getClaims(ctx)
-	if err != nil {
-		return "",err
-	}
-
-	return claim[constant.NameUserName].(string),nil
-}
-
 // 从请求头获取token对应的用户ID
 func GetUserIDFormHeaderToken(ctx iris.Context) (int,int,error){
 	claim, err := getClaims(ctx)

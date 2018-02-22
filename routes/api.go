@@ -44,6 +44,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 		userService := services.NewUserService()
 		menuService := services.NewMenuService(userService)
+		shopService := services.NewShopService(userService)
 		tableService := services.NewTableService()
 		orderService := services.NewOrderService(userService, menuService)
 
@@ -76,6 +77,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			service := services.NewShoppingService(userService, menuService)
 			mvcApp.Register(userService, service)
 			mvcApp.Handle(new(controllers.ShoppingController))
+		})
+		mvc.Configure(v1.Party("/shop",auth), func(mvcApp *mvc.Application) {
+			mvcApp.Register(userService, shopService)
+			mvcApp.Handle(new(controllers.ShopController))
+
 		})
 
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))

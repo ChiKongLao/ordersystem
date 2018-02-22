@@ -34,7 +34,7 @@ func (c *ShoppingController) GetBy(businessId int) (int,interface{}) {
 	}
 }
 
-// 修改购物车,只能商家操作
+// 修改购物车
 func (c *ShoppingController) PutBy(businessId int) (int,interface{}) {
 	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
@@ -69,7 +69,7 @@ func (c *ShoppingController) PutBy(businessId int) (int,interface{}) {
 //	}
 //
 //	if !user.IsManager() && !user.IsBusiness(){
-//		return iris.StatusUnauthorized,errors.New("没有该权限")
+//		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 //	}
 //
 //	status, err = c.DeleteShopping(userId,orderId)

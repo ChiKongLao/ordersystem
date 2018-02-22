@@ -21,16 +21,16 @@ type OrderService interface {
 	GetOldCustomer(businessId int) (int, interface{}, error)
 }
 
-func NewOrderService(UserService UserService, MenuService MenuService) OrderService {
+func NewOrderService(userService UserService, menuService MenuService) OrderService {
 	return &orderService{
-		MenuService: MenuService,
-		UserService:   UserService,
+		MenuService: menuService,
+		UserService: userService,
 	}
 }
 
 type orderService struct {
 	MenuService MenuService
-	UserService   UserService
+	UserService UserService
 }
 
 // 获取订单列表
@@ -191,4 +191,3 @@ func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) 
 	}
 	return iris.StatusOK, userList, nil
 }
-

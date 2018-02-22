@@ -6,7 +6,6 @@ import (
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
-	"errors"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
@@ -74,7 +73,7 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
@@ -118,7 +117,7 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
@@ -164,7 +163,7 @@ func (c *MenuController) DeleteByBy(userId, foodId int) (int,interface{}) {
 	}
 
 	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized,errors.New("没有该权限")
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	status, err = c.DeleteFood(foodId)

@@ -26,7 +26,11 @@ type Response struct {
 
 // 请求失败的回调
 func NewErrorResponse(err error) iris.Map{
-	return iris.Map{constant.NameMsg:err.Error()}
+	return NewErrorResponseWithMsg(err.Error())
+}
+// 请求失败的回调
+func NewErrorResponseWithMsg(msg string) iris.Map{
+	return iris.Map{constant.NameMsg:msg}
 
 }
 

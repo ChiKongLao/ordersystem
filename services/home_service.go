@@ -16,20 +16,23 @@ type HomeService interface {
 }
 
 func NewHomeService(userService UserService, foodService MenuService,
-	tableService TableService, orderService OrderService) HomeService {
+	tableService TableService, orderService OrderService,
+	shopService ShopService) HomeService {
 	return &homeService{
-		UserService:   userService,
-		MenuService: foodService,
-		TableService:  tableService,
-		OrderService:  orderService,
+		UserService:  userService,
+		MenuService:  foodService,
+		TableService: tableService,
+		OrderService: orderService,
+		ShopService:  shopService,
 	}
 }
 
 type homeService struct {
-	MenuService MenuService
-	UserService   UserService
-	TableService  TableService
-	OrderService  OrderService
+	MenuService  MenuService
+	UserService  UserService
+	TableService TableService
+	OrderService OrderService
+	ShopService  ShopService
 }
 
 // 获取商家端首页
@@ -78,8 +81,8 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 }
 
 // 获取用户端首页
-func (s *homeService) GetCustomerHome(businessId,userId int) (int, interface{}, error) {
-	status, foodList, err := s.MenuService.GetFoodList(businessId,userId)
+func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{}, error) {
+	status, foodList, err := s.MenuService.GetFoodList(businessId, userId)
 	if err != nil {
 		return status, nil, err
 	}
@@ -87,14 +90,17 @@ func (s *homeService) GetCustomerHome(businessId,userId int) (int, interface{}, 
 	if err != nil {
 		return status, nil, err
 	}
+	status, shop, err := s.ShopService.GetShop(businessId)
 	type Home struct {
-		Name string         `json:"name"`
-		Desc string         `json:"desc"`
-		Data []model.Food `json:"data"`
+		Name string       `json:"name"`
+		Desc string       `json:"desc"`
+		Pic  string       `json:"pic"`
+		List []model.Food `json:"list"`
 	}
 
 	return iris.StatusOK, &Home{
-		Data: foodList,
-		Name:user.NickName,
+		List: foodList,
+		Name: user.NickName,
+		Pic:  shop.Pic,
 	}, nil
 }

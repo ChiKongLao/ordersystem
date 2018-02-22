@@ -5,6 +5,7 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
+	"github.com/chikong/ordersystem/constant"
 )
 
 // 首页
@@ -38,7 +39,9 @@ func (c *HomeController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	return status,data
+	return status,iris.Map{
+		constant.NameData:data,
+	}
 }
 
 

@@ -43,8 +43,8 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	{
 
 		userService := services.NewUserService()
-		menuService := services.NewMenuService(userService)
 		shopService := services.NewShopService(userService)
+		menuService := services.NewMenuService(userService)
 		tableService := services.NewTableService()
 		orderService := services.NewOrderService(userService, menuService)
 
@@ -69,8 +69,8 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 		})
 		mvc.Configure(v1.Party("/home",auth), func(mvcApp *mvc.Application) {
-			service := services.NewHomeService(userService, menuService,tableService,orderService)
-			mvcApp.Register(userService, service)
+			service := services.NewHomeService(userService, menuService,tableService,orderService,shopService)
+			mvcApp.Register(userService,service)
 			mvcApp.Handle(new(controllers.HomeController))
 		})
 		mvc.Configure(v1.Party("/shopping",auth), func(mvcApp *mvc.Application) {

@@ -8,7 +8,7 @@ import (
 	"github.com/chikong/ordersystem/manager"
 	"strings"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"ordersystem/src/github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/constant"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"

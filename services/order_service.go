@@ -13,8 +13,8 @@ import (
 )
 
 type OrderService interface {
-	GetOrderList(businessId int) (int, []model.Order, error)
-	GetOrder(businessId, orderId int) (int, *model.Order, error)
+	GetOrderList(businessId int) (int, *model.OrderListResponse, error)
+	GetOrder(businessId, orderId int) (int, *model.OrderResponse, error)
 	InsertOrder(order *model.Order) (int, int, error)
 	UpdateOrder(order *model.Order) (int, error)
 	DeleteOrder(businessId, orderId int) (int, error)
@@ -34,37 +34,62 @@ type orderService struct {
 }
 
 // 获取订单列表
-func (s *orderService) GetOrderList(businessId int) (int, []model.Order, error) {
+func (s *orderService) GetOrderList(businessId int) (int, *model.OrderListResponse, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
-	list := make([]model.Order, 0)
+	list := make([]model.OrderResponse, 0)
+	list2 := make([]model.Order, 0)
+	err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
+		Join("INNER", "table_info", "`order`.table_id=table_info.id").
+		Find(&list2)
 
-	//err := manager.DBEngine.Where(
-	//	fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
-	sql := ""
-	err := manager.DBEngine.SQL(sql).Find(&list)
+	if err != nil {
+		logrus.Errorf("获取订单失败: %s", err)
+		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
+	}
+	logrus.Infof("%v",list)
+	logrus.Infof("%v",list2)
+	return iris.StatusOK, model.ConversionOrderResponseData(list), nil
+}
+
+
+// 获取订单列表, 针对客户
+func (s *orderService) GetOrderListForCustomer(businessId, tableId int) (int, *model.OrderListResponse, error) {
+	if businessId == 0 {
+		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
+	}
+
+	list := make([]model.OrderResponse, 0)
+	//err := manager.DBEngine.Table("order").Select("order.*, table_info.*").
+	err := manager.DBEngine.Table("order").Select("order.*, table_info.name AS tableName").
+		Join("INNER", "table_info", "order.table_id = table_info.id").
+		GroupBy("order.user_id").
+		Find(&list)
+
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
 	}
 
-	return iris.StatusOK, list, nil
+	return iris.StatusOK, model.ConversionOrderResponseData(list), nil
 }
 
 // 获取单个订单
-func (s *orderService) GetOrder(businessId, orderId int) (int, *model.Order, error) {
+func (s *orderService) GetOrder(businessId, orderId int) (int, *model.OrderResponse, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 	if orderId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("订单id不能为空")
 	}
-	item := new(model.Order)
+	item := new(model.OrderResponse)
 
-	res, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID), businessId, orderId).Get(item)
+	res, err := manager.DBEngine.Table("order").Select("order.*,table_info.table_name").
+		Join("INNER", "table_info", "order.table_id = table_info.id").
+		GroupBy("order.user_id").
+		Get(&item)
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
@@ -80,7 +105,7 @@ func (s *orderService) GetOrder(businessId, orderId int) (int, *model.Order, err
 // 添加订单
 func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 
-	if order.TableName == "" || order.PersonNum == 0 {
+	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
 	order.Time = strconv.FormatInt(time.Now().Unix(), 10)
@@ -117,7 +142,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 
 // 修改订单
 func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
-	if order.Id == 0 || order.TableName == "" ||
+	if order.Id == 0 || order.TableId == 0 ||
 		order.PersonNum == 0 || order.Status == 0 ||
 		order.BusinessId == 0 {
 		return iris.StatusBadRequest, errors.New("订单信息不能为空")
@@ -127,7 +152,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 		return status, err
 	}
 	// 设置修改信息
-	dbItem.TableName = order.TableName
+	dbItem.TableId = order.TableId
 	dbItem.Status = order.Status
 	dbItem.PersonNum = order.PersonNum
 	dbItem.Time = strconv.FormatInt(time.Now().Unix(), 10)

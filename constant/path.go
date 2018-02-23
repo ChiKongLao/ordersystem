@@ -4,5 +4,6 @@ package constant
 const (
 	// 根路径
 	ROOT = "."
+	LogFileName = "order-system.log"
 
 )

@@ -22,6 +22,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//})
 
 	//b.Logger().SetOutput(logger.NewLogFile())
+	//logger.ConfigLogger()
 
 	//setup version 1 routes
 	v1 := b.Party("/v1")
@@ -46,7 +47,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		shopService := services.NewShopService(userService)
 		menuService := services.NewMenuService(userService)
 		tableService := services.NewTableService()
-		orderService := services.NewOrderService(userService, menuService)
+		orderService := services.NewOrderService(userService, menuService,tableService)
 
 		userParty := v1.Party("/user")
 		mvc.Configure(userParty, func(mvcApp *mvc.Application) {

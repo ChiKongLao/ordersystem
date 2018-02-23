@@ -5,7 +5,6 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
-	"strconv"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 	"encoding/json"
 )
@@ -34,7 +33,7 @@ func (c *OrderController) GetBy(userId int) (int, interface{}) {
 	}
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId)
+	status, item, err = c.GetOrderList(userId,0,user.Role)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -54,7 +53,7 @@ func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
 	}
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId)
+	status, item, err = c.GetOrderList(userId,tableId,constant.RoleCustomer)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -73,7 +72,7 @@ func (c *OrderController) GetByBy(userId, orderId int) (int, interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 	var item *model.OrderResponse
-	status, item, err = c.GetOrder(userId, orderId)
+	status, item, err = c.GetOrder(orderId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -110,7 +109,7 @@ func (c *OrderController) PostBy(businessId int) (int, interface{}) {
 	}
 
 	tableId, _ := c.Ctx.PostValueInt(constant.NameTableId)
-	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
+	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
 	var list = new([]model.Food)
 	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameFood)), &list)
 
@@ -156,8 +155,8 @@ func (c *OrderController) PutByBy(userId, orderId int) (int, interface{}) {
 	}
 
 	tableId, _ := c.Ctx.PostValueInt(constant.NameTableId)
-	orderStatus, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameStatus))
-	personNum, _ := strconv.Atoi(c.Ctx.FormValue(constant.NamePersonNum))
+	orderStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
 
 	status, err = c.UpdateOrder(&model.Order{
 		Id:         orderId,
@@ -166,6 +165,36 @@ func (c *OrderController) PutByBy(userId, orderId int) (int, interface{}) {
 		Status:     orderStatus,
 		PersonNum:  personNum,
 	})
+
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
+	return status, iris.Map{
+		constant.NameIsOk: true,
+	}
+}
+
+// 修改订单,只能商家操作
+func (c *OrderController) PutByStatusBy(userId, orderId int) (int, interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+	if !isOwn {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+	}
+
+	status, user, err := c.UserService.GetUserById(userId)
+
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
+	if !user.IsManagerOrBusiness() {
+		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
+	}
+
+	orderStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+
+	status, err = c.UpdateOrderStatus(orderId,orderStatus)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)

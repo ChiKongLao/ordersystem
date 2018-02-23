@@ -16,7 +16,7 @@ import (
 
 type UserService interface {
 	InsertUser(role int, userName, password, nickName, head string) (int, error)
-	Login(userName, password string) (int, string, error)
+	Login(userName, password string) (int, *model.User, error)
 	GetUserByName(userName string) (int, *model.User, error)
 	GetUserById(id int) (int, *model.User, error)
 	GetBusinessById(id int) (int, *model.User, error)
@@ -63,25 +63,25 @@ func (s *userService) InsertUser(role int, userName, password, nickName, head st
 }
 
 // 登录
-func (s *userService) Login(userName, password string) (int, string, error) {
+func (s *userService) Login(userName, password string) (int, *model.User, error) {
 	if userName == "" || password == "" {
-		return iris.StatusBadRequest, "", errors.New("用户名或密码不能为空")
+		return iris.StatusBadRequest, nil, errors.New("用户名或密码不能为空")
 	}
 
 	status, user, err := s.GetUserByName(userName)
 	if err != nil {
-		return status, "", errors.New("没有找到该用户")
+		return status, nil, errors.New("没有找到该用户")
 	}
 	if user.Password != password {
-		return iris.StatusBadRequest, "", errors.New("密码不正确")
+		return iris.StatusBadRequest, nil, errors.New("密码不正确")
 	}
 	token, err := authentication.MakeToken(user)
 	if err != nil {
-		return iris.StatusInternalServerError, "", err
+		return iris.StatusInternalServerError, nil, err
 	}
 	setToken(user, token)
 
-	return iris.StatusOK, token, nil
+	return iris.StatusOK, user, nil
 
 }
 

@@ -32,8 +32,8 @@ const (
 	NameCapacity      = "capacity"
 	NameTableName     = "tableName"
 	NameTableId       = "tableId"
-	NameFood        = "food"
-	NameFoodId      = "foodId"
+	NameFood          = "food"
+	NameFoodId        = "foodId"
 	NameOrderId       = "orderId"
 	NameHead          = "head"
 	NameIsCollect     = "isCollect"
@@ -49,6 +49,7 @@ const (
 	ColumnUserName   = "user_name"
 	ColumnBusinessId = "business_id"
 	ColumnUserId     = "user_id"
+	ColumnTableId    = "table_id"
 	ColumnStatus     = "status"
 	ColumnNum        = "num"
 )
@@ -59,12 +60,14 @@ const (
 	RoleBusiness = 2 // 商家
 	RoleCustomer = 3 // 客户
 
-	TableStatusEmpty     = 0 // 闲置
-	TableStatusUsing     = 1 // 正在使用
-	TableStatusWaitClean = 2 // 待清理
-	TableStatusCleaning  = 3 // 清理中
+	TableStatusUnknown   = 0 // 未知
+	TableStatusEmpty     = 1 // 闲置
+	TableStatusOrdering  = 2 // 点餐中
+	TableStatusUsing     = 3 // 正在使用
+	TableStatusWaitClean = 4 // 待清理
+	TableStatusCleaning  = 5 // 清理中
 
-	OrderStatusUnKnown = 0 // 未知
+	OrderStatusUnknown = 0 // 未知
 	OrderStatusWaitPay = 1 // 待付款
 	OrderStatusPaid    = 2 // 已付款
 	OrderStatusSure    = 3 // 已确认

@@ -13,83 +13,64 @@ import (
 )
 
 type OrderService interface {
-	GetOrderList(businessId int) (int, *model.OrderListResponse, error)
-	GetOrder(businessId, orderId int) (int, *model.OrderResponse, error)
+	GetOrderList(businessId, tableId, role int) (int, *model.OrderListResponse, error)
+	GetOrder(orderId int) (int, *model.OrderResponse, error)
 	InsertOrder(order *model.Order) (int, int, error)
 	UpdateOrder(order *model.Order) (int, error)
+	UpdateOrderStatus(orderId, status int) (int, error)
 	DeleteOrder(businessId, orderId int) (int, error)
 	GetOldCustomer(businessId int) (int, interface{}, error)
 }
 
-func NewOrderService(userService UserService, menuService MenuService) OrderService {
+func NewOrderService(userService UserService, menuService MenuService, tableService TableService) OrderService {
 	return &orderService{
-		MenuService: menuService,
-		UserService: userService,
+		MenuService:  menuService,
+		UserService:  userService,
+		TableService: tableService,
 	}
 }
 
 type orderService struct {
-	MenuService MenuService
-	UserService UserService
+	MenuService  MenuService
+	UserService  UserService
+	TableService TableService
 }
 
 // 获取订单列表
-func (s *orderService) GetOrderList(businessId int) (int, *model.OrderListResponse, error) {
+func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.OrderListResponse, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
 	list := make([]model.OrderResponse, 0)
-	list2 := make([]model.Order, 0)
-	err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
-		Join("INNER", "table_info", "`order`.table_id=table_info.id").
-		Find(&list2)
+
+	session := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
+		Join("INNER", "table_info", "`order`.table_id=table_info.id")
+
+	if role == constant.RoleCustomer {
+		session = session.Where(fmt.Sprintf("%s=?", constant.ColumnTableId), tableId)
+	}
+
+	err := session.Find(&list)
 
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
 	}
-	logrus.Infof("%v",list)
-	logrus.Infof("%v",list2)
-	return iris.StatusOK, model.ConversionOrderResponseData(list), nil
-}
-
-
-// 获取订单列表, 针对客户
-func (s *orderService) GetOrderListForCustomer(businessId, tableId int) (int, *model.OrderListResponse, error) {
-	if businessId == 0 {
-		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
-	}
-
-	list := make([]model.OrderResponse, 0)
-	//err := manager.DBEngine.Table("order").Select("order.*, table_info.*").
-	err := manager.DBEngine.Table("order").Select("order.*, table_info.name AS tableName").
-		Join("INNER", "table_info", "order.table_id = table_info.id").
-		GroupBy("order.user_id").
-		Find(&list)
-
-	if err != nil {
-		logrus.Errorf("获取订单失败: %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
-	}
-
-	return iris.StatusOK, model.ConversionOrderResponseData(list), nil
+	return iris.StatusOK, model.ConvertOrderResponseData(list), nil
 }
 
 // 获取单个订单
-func (s *orderService) GetOrder(businessId, orderId int) (int, *model.OrderResponse, error) {
-	if businessId == 0 {
-		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
-	}
+func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) {
 	if orderId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("订单id不能为空")
 	}
 	item := new(model.OrderResponse)
 
-	res, err := manager.DBEngine.Table("order").Select("order.*,table_info.table_name").
-		Join("INNER", "table_info", "order.table_id = table_info.id").
-		GroupBy("order.user_id").
-		Get(&item)
+	res, err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
+		Join("INNER", "table_info", "`order`.table_id = table_info.id").
+		GroupBy("`order`.user_id").
+		Get(item)
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
@@ -137,6 +118,9 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		logrus.Errorf("添加订单失败: %s", err)
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
+	s.TableService.JoinTable(order.BusinessId,order.TableId)
+
+
 	return iris.StatusOK, order.Id, nil
 }
 
@@ -147,7 +131,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 		order.BusinessId == 0 {
 		return iris.StatusBadRequest, errors.New("订单信息不能为空")
 	}
-	status, dbItem, err := s.GetOrder(order.BusinessId, order.Id)
+	status, dbItem, err := s.GetOrder(order.Id)
 	if err != nil {
 		return status, err
 	}
@@ -165,10 +149,30 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 
 	_, err = manager.DBEngine.AllCols().Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
-		order.BusinessId, order.Id).Update(dbItem)
+		order.BusinessId, order.Id).Update(model.ConvertOrderResponseToOrder(*dbItem))
 	if err != nil {
 		logrus.Errorf("修改订单失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("修改订单失败")
+	}
+
+	return iris.StatusOK, nil
+}
+
+
+// 修改订单状态
+func (s *orderService) UpdateOrderStatus(orderId, orderStatus int) (int, error) {
+	if orderId == 0 || orderStatus == 0{
+		return iris.StatusBadRequest, errors.New("订单信息不能为空")
+	}
+	status, dbItem, err := s.GetOrder(orderId)
+	if err != nil {
+		return status, err
+	}
+	// 设置修改信息
+	dbItem.Status = orderStatus
+	status, err = s.UpdateOrder(model.ConvertOrderResponseToOrder(*dbItem))
+	if err != nil {
+		return status, err
 	}
 
 	return iris.StatusOK, nil

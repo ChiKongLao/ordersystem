@@ -10,22 +10,31 @@ type Order struct {
 	Time       string  `json:"time" xorm:"not null VARCHAR(25)"`
 	BusinessId int     `json:"-" xorm:"not null index INT(11)"`
 	UserId     int     `json:"userId" xorm:"not null index INT(11)"` // 下单的用户id
-	FoodList   []Food  `json:"foodList" xorm:"not null"`             // 菜单
+	FoodList   []Food  `json:"list" xorm:"not null"`                 // 菜单
 }
 
 type OrderResponse struct {
-	Order
+	Id         int     `json:"id"`
+	TableId    int     `json:"-"`
+	PersonNum  int     `json:"personNum"`
+	Price      float32 `json:"price"`
+	Status     int     `json:"status"`
+	Time       string  `json:"time"`
+	BusinessId int     `json:"-"`
+	UserId     int     `json:"userId"` // 下单的用户id
+	FoodList   []Food  `json:"list"`   // 菜单
+
 	TableName string `json:"tableName"`
 }
 
 type OrderListResponse struct {
-	List      []OrderResponse `json:"list"`
-	TotalPerson int `json:"totalPerson"`
-	TotalPrice	float32 `json:"totalPrice"`
+	List        []OrderResponse `json:"list"`
+	TotalPerson int             `json:"totalPerson"`
+	TotalPrice  float32         `json:"totalPrice"`
 }
 
 // 转化成回调的数据格式
-func ConversionOrderResponseData(list []OrderResponse) *OrderListResponse {
+func ConvertOrderResponseData(list []OrderResponse) *OrderListResponse {
 
 	var personCount int
 	var priceCount float32
@@ -35,8 +44,23 @@ func ConversionOrderResponseData(list []OrderResponse) *OrderListResponse {
 	}
 
 	return &OrderListResponse{
-		List:list,
-		TotalPerson:personCount,
-		TotalPrice:priceCount,
+		List:        list,
+		TotalPerson: personCount,
+		TotalPrice:  priceCount,
+	}
+}
+
+func ConvertOrderResponseToOrder(response OrderResponse) *Order{
+	return &Order{
+		Id:response.Id,
+		TableId:response.TableId,
+		PersonNum:response.PersonNum,
+		Price:response.Price,
+		Status:response.Status,
+		Time:response.Time,
+		BusinessId:response.BusinessId,
+		UserId:response.UserId,
+		FoodList:response.FoodList,
+
 	}
 }

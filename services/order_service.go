@@ -70,6 +70,7 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 	res, err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
 		Join("INNER", "table_info", "`order`.table_id = table_info.id").
 		GroupBy("`order`.user_id").
+		Where("`order`.id=?", orderId).
 		Get(item)
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
@@ -99,6 +100,9 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		if err != nil {
 			return status, 0, err
 		}
+		if subItem.Num > dbItem.Num {
+			return iris.StatusBadRequest,0,errors.New("数量不足")
+		}
 		subItem.Price = dbItem.Price
 		subItem.Name = dbItem.Name
 		subItem.Type = dbItem.Type
@@ -119,7 +123,6 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-
 	return iris.StatusOK, order.Id, nil
 }
 
@@ -134,6 +137,20 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	if err != nil {
 		return status, err
 	}
+	if dbItem.Status == constant.OrderStatusFinish {
+		return iris.StatusBadRequest, errors.New("已完成的订单不能修改")
+	}
+	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
+		foodList := order.FoodList
+		for _, subItem := range foodList {
+			status, err = s.MenuService.ReduceFoodNum(subItem.Id,subItem.Num)
+			if err != nil {
+				return status, err
+			}
+		}
+	}
+
+
 	// 设置修改信息
 	dbItem.TableId = order.TableId
 	dbItem.Status = order.Status
@@ -157,12 +174,8 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	return iris.StatusOK, nil
 }
 
-
 // 修改订单状态
 func (s *orderService) UpdateOrderStatus(orderId, orderStatus int) (int, error) {
-	if orderId == 0 || orderStatus == 0{
-		return iris.StatusBadRequest, errors.New("订单信息不能为空")
-	}
 	status, dbItem, err := s.GetOrder(orderId)
 	if err != nil {
 		return status, err

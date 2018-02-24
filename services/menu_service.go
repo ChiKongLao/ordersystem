@@ -17,6 +17,7 @@ type MenuService interface {
 	InsertFood(food []*model.Food) (int, error)
 	UpdateFood(food *model.Food) (int, error)
 	DeleteFood(foodId int) (int, error)
+	ReduceFoodNum(foodId, num int) (int, error)
 	GetOrderSumPrice(foodList []model.Food) (float32, error)
 	GetCollectList(userId, businessId int) (int,[]model.Food, error)
 	UpdateCollectList(userId, businessId, foodId int, isCollect bool) (int, error)
@@ -88,7 +89,7 @@ func (s *menuService) GetFood(foodId int) (int, *model.Food, error) {
 // 添加食物
 func (s *menuService) InsertFoodOne(food *model.Food) (int, error) {
 
-	if food.Name == "" || food.Price == 0 {
+	if food.Name == ""{
 		return iris.StatusBadRequest, errors.New("食物信息不能为空")
 	}
 
@@ -104,7 +105,7 @@ func (s *menuService) InsertFoodOne(food *model.Food) (int, error) {
 func (s *menuService) InsertFood(list []*model.Food) (int, error) {
 
 	for i, subItem := range list  {
-		if subItem.Name == "" || subItem.Price == 0 {
+		if subItem.Name == ""{
 			return iris.StatusBadRequest, errors.New(
 				fmt.Sprintf("食物信息不能为空: %s",i))
 		}
@@ -119,7 +120,7 @@ func (s *menuService) InsertFood(list []*model.Food) (int, error) {
 
 // 修改食物
 func (s *menuService) UpdateFood(food *model.Food) (int, error) {
-	if food.Id == 0 || food.Name == "" || food.Price == 0 {
+	if food.Id == 0 || food.Name == ""{
 		return iris.StatusBadRequest, errors.New("食物信息不能为空")
 	}
 
@@ -131,6 +132,20 @@ func (s *menuService) UpdateFood(food *model.Food) (int, error) {
 		return iris.StatusInternalServerError, errors.New("修改食物失败")
 	}
 	return iris.StatusOK, nil
+}
+
+// 减少食物剩余数量
+func (s *menuService) ReduceFoodNum(foodId, num int) (int, error) {
+	status, item, err := s.GetFood(foodId)
+	if err != nil {
+		return status,err
+	}
+	item.Num -= num
+	status, err = s.UpdateFood(item)
+	if err != nil {
+		return status,err
+	}
+	return status, nil
 }
 
 // 删除食物

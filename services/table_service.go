@@ -153,7 +153,7 @@ func (s *tableService) JoinTable(businessId, tableId int) (int, error) {
 		return status, err
 	}
 	if table.Status == constant.TableStatusEmpty{
-		table.Status = constant.TableStatusOrdering
+		table.Status = constant.TableStatusUsing
 	}
 	status, err = s.UpdateTable(table)
 	if err != nil{

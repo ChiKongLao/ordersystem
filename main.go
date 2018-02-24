@@ -5,6 +5,7 @@ import (
 	"github.com/chikong/ordersystem/middleware/identity"
 	"github.com/chikong/ordersystem/routes"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/kataras/iris"
 )
 
 var app = bootstrap.New(
@@ -19,6 +20,6 @@ func init() {
 }
 
 func main() {
-	app.Listen(":8090")
+	app.Listen(":8090", iris.WithPostMaxMemory(32<<20))
 
 }

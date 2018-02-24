@@ -49,11 +49,21 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		tableService := services.NewTableService()
 		orderService := services.NewOrderService(userService, menuService,tableService)
 
-		userParty := v1.Party("/user")
-		mvc.Configure(userParty, func(mvcApp *mvc.Application) {
+
+		mvc.Configure(v1.Party("/user"), func(mvcApp *mvc.Application) {
 			mvcApp.Register(userService)
 			mvcApp.Handle(new(controllers.UserController))
 		})
+
+		// ###########   系统相关开始
+		mvc.Configure(v1.Party("/upload",auth), func(mvcApp *mvc.Application) {
+			mvcApp.Register(userService)
+			mvcApp.Handle(new(controllers.UploadController))
+		})
+
+
+		// ###########   系统相关结束
+
 		mvc.Configure(v1.Party("/menu",auth), func(mvcApp *mvc.Application) {
 			mvcApp.Register(userService, menuService)
 			mvcApp.Handle(new(controllers.MenuController))

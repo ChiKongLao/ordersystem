@@ -12,6 +12,7 @@ const (
 	NamePlatForm      = "platform"
 	NameIsOk          = "isOk"
 	NameID            = "id"
+	NameUserId        = "userId"
 	NameUserName      = "userName"
 	NamePassword      = "password"
 	NameNickName      = "nickName"

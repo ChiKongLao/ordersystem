@@ -92,6 +92,20 @@ func (c *TableController) PostBy(userId int) (int,interface{}) {
 		}
 }
 
+
+// 使用餐桌
+func (c *TableController) PostByJoinBy(businessId,tableId int) (int,interface{}) {
+	status, err := c.TableService.JoinTable(businessId,tableId)
+
+	if err != nil{
+		return status, model.NewErrorResponse(err)
+	}
+
+	return status,iris.Map{
+			constant.NameIsOk:true,
+		}
+}
+
 // 修改餐桌
 func (c *TableController) PutByBy(userId, tableId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)

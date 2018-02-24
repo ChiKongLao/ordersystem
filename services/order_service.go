@@ -118,7 +118,6 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		logrus.Errorf("添加订单失败: %s", err)
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
-	s.TableService.JoinTable(order.BusinessId,order.TableId)
 
 
 	return iris.StatusOK, order.Id, nil

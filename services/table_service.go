@@ -11,7 +11,7 @@ import (
 )
 
 type TableService interface {
-	GetTableList(businessId int) (int, []model.TableInfo, error)
+	GetTableList(businessId ,status int) (int, []model.TableInfo, error)
 	GetTable(businessId, tableId int) (int, *model.TableInfo, error)
 	InsertTable(table *model.TableInfo) (int, error)
 	UpdateTable(table *model.TableInfo) (int, error)
@@ -27,15 +27,23 @@ type tableService struct {
 }
 
 // 获取餐桌列表
-func (s *tableService) GetTableList(businessId int) (int, []model.TableInfo, error) {
+func (s *tableService) GetTableList(businessId, status int) (int, []model.TableInfo, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
 	list := make([]model.TableInfo, 0)
+	var err error
+	if status == constant.TableStatusUnknown {
+		err = manager.DBEngine.Where(
+			fmt.Sprintf("%s=?", constant.ColumnBusinessId),
+			businessId).Find(&list)
+	}else{
+		err = manager.DBEngine.Where(
+			fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId,constant.NameStatus),
+			businessId,status).Find(&list)
+	}
 
-	err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
 	if err != nil {
 		logrus.Errorf("获取餐桌失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取餐桌失败")

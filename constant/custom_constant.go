@@ -39,6 +39,7 @@ const (
 	NameHead          = "head"
 	NameIsCollect     = "isCollect"
 	NameSort          = "sort"
+	NameClassifyId      = "classifyId"
 )
 
 // 数据库的表的列名

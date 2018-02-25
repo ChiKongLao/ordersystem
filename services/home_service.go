@@ -37,7 +37,7 @@ type homeService struct {
 
 // 获取商家端首页
 func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
-	status, tableList, err := s.TableService.GetTableList(userId)
+	status, tableList, err := s.TableService.GetTableList(userId, constant.TableStatusUnknown)
 	if err != nil {
 		return status, nil, err
 	}
@@ -91,15 +91,18 @@ func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{},
 		return status, nil, err
 	}
 	status, shop, err := s.ShopService.GetShop(businessId)
+	if err != nil {
+		return status, nil, err
+	}
 	type Home struct {
-		Name string       `json:"name"`
-		Desc string       `json:"desc"`
-		Pic  string       `json:"pic"`
-		List []model.FoodResponse `json:"list"`
+		Name string                          `json:"name"`
+		Desc string                          `json:"desc"`
+		Pic  string                          `json:"pic"`
+		Food map[string][]model.FoodResponse `json:"food"`
 	}
 
 	return iris.StatusOK, &Home{
-		List: foodList,
+		Food: foodList,
 		Name: user.NickName,
 		Pic:  shop.Pic,
 	}, nil

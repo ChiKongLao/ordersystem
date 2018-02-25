@@ -31,6 +31,7 @@ type OrderListResponse struct {
 	List        []OrderResponse `json:"list"`
 	TotalPerson int             `json:"totalPerson"`
 	TotalPrice  float32         `json:"totalPrice"`
+	TotalCount  int         `json:"totalCount"`
 }
 
 // 转化成回调的数据格式
@@ -47,20 +48,20 @@ func ConvertOrderResponseData(list []OrderResponse) *OrderListResponse {
 		List:        list,
 		TotalPerson: personCount,
 		TotalPrice:  priceCount,
+		TotalCount:  len(list),
 	}
 }
 
-func ConvertOrderResponseToOrder(response OrderResponse) *Order{
+func ConvertOrderResponseToOrder(response OrderResponse) *Order {
 	return &Order{
-		Id:response.Id,
-		TableId:response.TableId,
-		PersonNum:response.PersonNum,
-		Price:response.Price,
-		Status:response.Status,
-		Time:response.Time,
-		BusinessId:response.BusinessId,
-		UserId:response.UserId,
-		FoodList:response.FoodList,
-
+		Id:         response.Id,
+		TableId:    response.TableId,
+		PersonNum:  response.PersonNum,
+		Price:      response.Price,
+		Status:     response.Status,
+		Time:       response.Time,
+		BusinessId: response.BusinessId,
+		UserId:     response.UserId,
+		FoodList:   response.FoodList,
 	}
 }

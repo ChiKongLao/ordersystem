@@ -69,7 +69,7 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 
 	res, err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
 		Join("INNER", "table_info", "`order`.table_id = table_info.id").
-		GroupBy("`order`.user_id").
+		//GroupBy("`order`.user_id").
 		Where("`order`.id=?", orderId).
 		Get(item)
 	if err != nil {

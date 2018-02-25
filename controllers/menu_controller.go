@@ -7,7 +7,6 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"encoding/json"
 )
 
 // 食物
@@ -30,7 +29,7 @@ func (c *MenuController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	var list []model.FoodResponse
+	var list map[string][]model.FoodResponse
 	status, list, err = c.GetFoodList(businessId,userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -79,13 +78,11 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := c.Ctx.PostValueInt(constant.NameNum)
-	classifyId,_ := c.Ctx.PostValueInt(constant.NameType)
+	classifyId,_ := c.Ctx.PostValueInt(constant.NameClassifyId)
+	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	desc := c.Ctx.FormValue(constant.NameDesc)
-
-	//var classify model.Classify
-	//err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameType)), &classify)
 
 	if err != nil {
 		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
@@ -98,6 +95,7 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 		Pic:pic,
 		Price:float32(price),
 		ClassifyId:classifyId,
+		Type:foodType,
 		Desc:desc,
 	} )
 
@@ -129,18 +127,11 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
-	classifyId,_ := c.Ctx.PostValueInt(constant.NameType)
+	classifyId,_ := c.Ctx.PostValueInt(constant.NameClassifyId)
+	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	desc := c.Ctx.FormValue(constant.NameDesc)
-
-	var classify model.Classify
-	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameType)), &classify)
-
-	if err != nil {
-		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
-	}
-
 
 	status, err = c.UpdateFood(&model.Food{
 		Id:foodId,
@@ -150,6 +141,7 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 		Pic:pic,
 		Price:float32(price),
 		ClassifyId:classifyId,
+		Type:foodType,
 		Desc:desc,
 	} )
 

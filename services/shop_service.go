@@ -60,7 +60,7 @@ func (s *shopService) GetShop(businessId int) (int, *model.Shop, error) {
 		return iris.StatusInternalServerError, nil, errors.New("获取店铺详情失败")
 	}
 	if res == false {
-		logrus.Errorf("店铺不存在: %s", businessId)
+		logrus.Errorf("店铺不存在: %v", businessId)
 		return iris.StatusNotFound, nil, errors.New("店铺不存在")
 	}
 

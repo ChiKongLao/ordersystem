@@ -44,7 +44,7 @@ var JWTHandler = jwtmiddleware.New(jwtmiddleware.Config{
 func MakeToken(user *model.User) (string,error){
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := make(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 7).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(24) * 30).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["userName"] = user.UserName
 	claims["password"] = user.Password

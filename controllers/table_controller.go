@@ -23,10 +23,10 @@ func (c *TableController) GetBy(userId int) (int,interface{}) {
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-
+	tableStatus,_ := c.Ctx.PostValueInt(constant.NameStatus)
 
 	var list []model.TableInfo
-	status, list, err = c.GetTableList(userId)
+	status, list, err = c.GetTableList(userId,tableStatus)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -35,6 +35,24 @@ func (c *TableController) GetBy(userId int) (int,interface{}) {
 		constant.NameData:list,
 		constant.NameCount:len(list),
 		}
+}
+
+// 获取餐桌
+func (c *TableController) GetByStatusBy(userId,tableStatus int) (int,interface{}) {
+	status, _, err := c.UserService.GetBusinessById(userId)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+	var list []model.TableInfo
+	status, list, err = c.GetTableList(userId,tableStatus)
+	if err != nil{
+		return status, model.NewErrorResponse(err)
+	}
+
+	return status,iris.Map{
+		constant.NameData:list,
+		constant.NameCount:len(list),
+	}
 }
 
 // 获取餐桌详情

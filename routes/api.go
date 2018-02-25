@@ -44,8 +44,9 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	{
 
 		userService := services.NewUserService()
+		classifyService := services.NewClassifyService(userService)
 		shopService := services.NewShopService(userService)
-		menuService := services.NewMenuService(userService)
+		menuService := services.NewMenuService(userService,classifyService)
 		tableService := services.NewTableService()
 		orderService := services.NewOrderService(userService, menuService,tableService)
 
@@ -94,6 +95,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			mvcApp.Handle(new(controllers.ShopController))
 
 		})
+		mvc.Configure(v1.Party("/classify",auth), func(mvcApp *mvc.Application) {
+			mvcApp.Register(userService, classifyService)
+			mvcApp.Handle(new(controllers.ClassifyController))
+
+		})
 
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))
 
@@ -103,7 +109,8 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 func addTestData()  {
 
 	userService := services.NewUserService()
-	foodService := services.NewMenuService(userService)
+	classifyService := services.NewClassifyService(userService)
+	foodService := services.NewMenuService(userService,classifyService)
 	tableService := services.NewTableService()
 
 	addUser(userService)

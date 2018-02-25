@@ -11,35 +11,38 @@ import (
 )
 
 type MenuService interface {
-	GetFoodList(businessId, userId int) (int, []model.Food, error)
-	GetFood(foodId int) (int, *model.Food, error)
+	GetFoodList(businessId, userId int) (int, []model.FoodResponse, error)
+	GetFood(businessId, foodId int) (int, *model.FoodResponse, error)
 	InsertFoodOne(food *model.Food) (int, error)
 	InsertFood(food []*model.Food) (int, error)
 	UpdateFood(food *model.Food) (int, error)
-	DeleteFood(foodId int) (int, error)
-	ReduceFoodNum(foodId, num int) (int, error)
+	DeleteFood(businessId, foodId int) (int, error)
+	ReduceFoodNum(businessId, foodId, num int) (int, error)
 	GetOrderSumPrice(foodList []model.Food) (float32, error)
-	GetCollectList(userId, businessId int) (int,[]model.Food, error)
+	GetCollectList(userId, businessId int) (int,[]model.FoodResponse, error)
 	UpdateCollectList(userId, businessId, foodId int, isCollect bool) (int, error)
 }
 
-func NewMenuService(userService UserService) MenuService {
+func NewMenuService(userService UserService, classifyService ClassifyService) MenuService {
 	return &menuService{
 		UserService: userService,
+		ClassifyService:classifyService,
 	}
 }
 
 type menuService struct {
 	UserService UserService
+	ClassifyService ClassifyService
 }
 
 // 获取菜单
-func (s *menuService) GetFoodList(businessId, userId int) (int, []model.Food, error) {
+func (s *menuService) GetFoodList(businessId, userId int) (int, []model.FoodResponse, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
 	list := make([]model.Food, 0)
+	responseList := make([]model.FoodResponse, 0)
 
 	err := manager.DBEngine.Where(
 		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).Find(&list)
@@ -62,11 +65,21 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, []model.Food, er
 			}
 		}
 	}
-	return iris.StatusOK, list, nil
+	for _, subItem := range list {
+		status, classify, err := s.ClassifyService.GetClassify(businessId,subItem.ClassifyId)
+		if err != nil {
+			return status,nil,err
+		}
+		responseList = append(responseList, model.FoodResponse{
+			Food:subItem,
+			Classify:*classify,
+		})
+	}
+	return iris.StatusOK, responseList, nil
 }
 
 // 获取单个食物
-func (s *menuService) GetFood(foodId int) (int, *model.Food, error) {
+func (s *menuService) GetFood(businessId, foodId int) (int, *model.FoodResponse, error) {
 	if foodId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("食物id不能为空")
 	}
@@ -83,7 +96,14 @@ func (s *menuService) GetFood(foodId int) (int, *model.Food, error) {
 		return iris.StatusNotFound, nil, errors.New("食物不存在")
 	}
 
-	return iris.StatusOK, item, nil
+	status, classify, err := s.ClassifyService.GetClassify(businessId,item.ClassifyId)
+	if err != nil {
+		return status,nil,err
+	}
+	return iris.StatusOK, &model.FoodResponse{
+		Food:*item,
+		Classify:*classify,
+	}, nil
 }
 
 // 添加食物
@@ -135,13 +155,13 @@ func (s *menuService) UpdateFood(food *model.Food) (int, error) {
 }
 
 // 减少食物剩余数量
-func (s *menuService) ReduceFoodNum(foodId, num int) (int, error) {
-	status, item, err := s.GetFood(foodId)
+func (s *menuService) ReduceFoodNum(businessId, foodId, num int) (int, error) {
+	status, item, err := s.GetFood(businessId,foodId)
 	if err != nil {
 		return status,err
 	}
 	item.Num -= num
-	status, err = s.UpdateFood(item)
+	status, err = s.UpdateFood(item.GetFood())
 	if err != nil {
 		return status,err
 	}
@@ -149,13 +169,14 @@ func (s *menuService) ReduceFoodNum(foodId, num int) (int, error) {
 }
 
 // 删除食物
-func (s *menuService) DeleteFood(foodId int) (int, error) {
+func (s *menuService) DeleteFood(businessId, foodId int) (int, error) {
 	if foodId == 0 {
 		return iris.StatusBadRequest, errors.New("食物id不能为空")
 	}
 
 	_, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=?", constant.NameID),foodId).Delete(new(model.Food))
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
+		businessId,foodId).Delete(new(model.Food))
 	if err != nil {
 		logrus.Errorf("删除食物失败: %s", err)
 		return iris.StatusInternalServerError, errors.New("删除食物失败")
@@ -164,7 +185,7 @@ func (s *menuService) DeleteFood(foodId int) (int, error) {
 }
 
 // 获取收藏食物
-func (s *menuService) GetCollectList(userId, businessId int) (int,[]model.Food, error){
+func (s *menuService) GetCollectList(userId, businessId int) (int,[]model.FoodResponse, error){
 	if userId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("用户id不能为空")
 	}
@@ -174,7 +195,7 @@ func (s *menuService) GetCollectList(userId, businessId int) (int,[]model.Food, 
 		return status,nil, err
 	}
 	if item == nil {
-		return iris.StatusOK, []model.Food{}, nil
+		return iris.StatusOK, []model.FoodResponse{}, nil
 	}
 
 	status, foodList, err := s.GetFoodList(businessId,userId)

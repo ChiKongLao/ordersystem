@@ -95,7 +95,7 @@ func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{},
 		Name string       `json:"name"`
 		Desc string       `json:"desc"`
 		Pic  string       `json:"pic"`
-		List []model.Food `json:"list"`
+		List []model.FoodResponse `json:"list"`
 	}
 
 	return iris.StatusOK, &Home{

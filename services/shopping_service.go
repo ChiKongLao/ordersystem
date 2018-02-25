@@ -73,7 +73,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		return status, err
 	}
 
-	status,food, err := s.MenuService.GetFood(foodId)
+	status,food, err := s.MenuService.GetFood(businessId,foodId)
 	if err != nil {
 		return status,err
 	}
@@ -83,7 +83,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		// 设置修改信息
 		for i, subItem := range shoppingCart.FoodList {
 			// 发生变化才更新
-			if subItem.Id == foodId && subItem.Type == subItem.Type {
+			if subItem.Id == foodId && subItem.ClassifyId == subItem.ClassifyId {
 				isExist = true
 				if subItem.Num != num {
 					if num == 0 { // 删除食物
@@ -93,7 +93,8 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 						shoppingCart.FoodList[i] = subItem
 					}
 					_, err = manager.DBEngine.AllCols().Where(
-						fmt.Sprintf("%s=?", constant.NameID), shoppingCart.Id).Update(shoppingCart)
+						fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
+							businessId,shoppingCart.Id).Update(shoppingCart)
 					if err != nil {
 						logrus.Errorf("修改购物车失败: %s", err)
 						return iris.StatusInternalServerError, errors.New("修改购物车失败")
@@ -106,7 +107,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		if !isExist {
 			mySlice := shoppingCart.FoodList[:]
 			food.Num = num
-			list := append(mySlice,*food)
+			list := append(mySlice,*food.GetFood())
 			shoppingCart.FoodList = list
 			_, err = manager.DBEngine.AllCols().Where(
 				fmt.Sprintf("%s=?", constant.NameID), shoppingCart.Id).Update(shoppingCart)
@@ -119,7 +120,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 	} else {
 		food.Num = num
 		list := []model.Food{
-			*food,
+			*food.GetFood(),
 		}
 		_, err = manager.DBEngine.Insert(&model.ShoppingCart{
 			UserId:     userId,

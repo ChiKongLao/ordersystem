@@ -38,11 +38,7 @@ const (
 	NameOrderId       = "orderId"
 	NameHead          = "head"
 	NameIsCollect     = "isCollect"
-
-	NameFrom    = "From"
-	NameTo      = "To"
-	NameCc      = "Cc"
-	NameSubject = "Subject"
+	NameSort          = "sort"
 )
 
 // 数据库的表的列名
@@ -53,6 +49,7 @@ const (
 	ColumnTableId    = "table_id"
 	ColumnStatus     = "status"
 	ColumnNum        = "num"
+	ColumnSort       = "sort"
 )
 
 // 业务配置相关

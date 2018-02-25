@@ -63,6 +63,10 @@ func sync(engine *xorm.Engine){
 		unSuccessTableName = "shop"
 		return
 	}
+	if err = engine.Sync2(new(model.Classify)); err != nil {
+		unSuccessTableName = "classify"
+		return
+	}
 
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
+	"encoding/json"
 )
 
 // 食物
@@ -29,7 +30,7 @@ func (c *MenuController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	var list []model.Food
+	var list []model.FoodResponse
 	status, list, err = c.GetFoodList(businessId,userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -48,8 +49,8 @@ func (c *MenuController) GetByBy(userId, foodId int) (int,interface{}) {
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	var item *model.Food
-	status, item, err = c.GetFood(foodId)
+	var item *model.FoodResponse
+	status, item, err = c.GetFood(userId,foodId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -77,20 +78,26 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
-	//num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum)) // 暂时不用数量
+	num,_ := c.Ctx.PostValueInt(constant.NameNum)
+	classifyId,_ := c.Ctx.PostValueInt(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	foodType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
 
+	//var classify model.Classify
+	//err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameType)), &classify)
+
+	if err != nil {
+		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
+	}
 
 	status, err = c.InsertFoodOne(&model.Food{
 		BusinessId:userId,
 		Name:name,
-		Num:100,
+		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		Type:foodType,
+		ClassifyId:classifyId,
 		Desc:desc,
 	} )
 
@@ -122,10 +129,17 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
+	classifyId,_ := c.Ctx.PostValueInt(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
-	foodType := c.Ctx.FormValue(constant.NameType)
 	desc := c.Ctx.FormValue(constant.NameDesc)
+
+	var classify model.Classify
+	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameType)), &classify)
+
+	if err != nil {
+		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
+	}
 
 
 	status, err = c.UpdateFood(&model.Food{
@@ -135,7 +149,7 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		Type:foodType,
+		ClassifyId:classifyId,
 		Desc:desc,
 	} )
 
@@ -150,13 +164,13 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 
 
 // 删除食物
-func (c *MenuController) DeleteByBy(userId, foodId int) (int,interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *MenuController) DeleteByBy(businessId, foodId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
+	status, user, err := c.UserService.GetUserById(businessId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -166,7 +180,7 @@ func (c *MenuController) DeleteByBy(userId, foodId int) (int,interface{}) {
 		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
-	status, err = c.DeleteFood(foodId)
+	status, err = c.DeleteFood(businessId,foodId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

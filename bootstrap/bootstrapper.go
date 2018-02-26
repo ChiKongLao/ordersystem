@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/chikong/ordersystem/manager"
 	_"github.com/go-sql-driver/mysql"
+	"github.com/chikong/ordersystem/network"
 )
 
 type Configurator func(*Bootstrapper)
@@ -84,7 +85,7 @@ func (b *Bootstrapper) Bootstrap() *Bootstrapper {
 	b.SetupViews("./web/views")
 	b.SetupErrorHandlers()
 	go b.SetupDatabaseEngine()
-
+	go network.GetMqttInstance()
 	// middleware, after static files
 	b.Use(recover.New())
 	b.Use(logger.New())

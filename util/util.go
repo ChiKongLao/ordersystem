@@ -3,6 +3,7 @@ package util
 import (
 	"net"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/satori/go.uuid"
 )
 
 // 获取本机IP
@@ -24,5 +25,11 @@ func GetLocalIP() string{
 // 获取本机IP,带http
 func GetLocalIPWithHttp() string{
 	return "http://"+GetLocalIP()
+}
+
+// 获取UUID
+func GetUUID() string {
+	id, _ := uuid.NewV4()
+	return id.String();
 }
 

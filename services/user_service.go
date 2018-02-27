@@ -20,6 +20,7 @@ type UserService interface {
 	GetUserByName(userName string) (int, *model.User, error)
 	GetUserById(id int) (int, *model.User, error)
 	GetBusinessById(id int) (int, *model.User, error)
+	GetManager() (int, *model.User, error)
 	HashPassword(password string) (string, error)
 	CheckPasswordHash(password, hash string) bool
 	GetUserList() ([]model.User, error)
@@ -138,6 +139,23 @@ func (s *userService) GetUserList() ([]model.User, error) {
 	}
 	return list, nil
 }
+
+// 获取第一个管理员
+func (s *userService) GetManager() (int, *model.User, error) {
+	list, err := s.GetUserList()
+	if err != nil {
+		return iris.StatusInternalServerError, nil, err
+	}
+	for _, subItem := range list {
+		if !subItem.IsManager() {
+			return iris.StatusNotFound, &subItem,nil
+		}
+	}
+	return iris.StatusInternalServerError, nil, errors.New("没有找到管理员帐号")
+
+
+}
+
 
 // 检测token的角色是否为管理员
 func (s *userService) CheckRoleIsManagerWithToken(ctx iris.Context) (int, bool, error) {

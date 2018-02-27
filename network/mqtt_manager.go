@@ -7,12 +7,13 @@ import (
 	"time"
 	"github.com/sirupsen/logrus"
 	"sync"
+	"github.com/chikong/ordersystem/model"
 )
 
 type MqttCallback func(message MQTT.Message)
 
 type MqttManager interface {
-	Publish(msg MQTT.Message)
+	Publish(msg *model.Message)
 	Subscribe(topic string)
 	RegisterCallback(callback MqttCallback)
 }
@@ -62,12 +63,12 @@ func (m *mqttManager) initClient() {
 }
 
 // 发送消息
-func (m *mqttManager) Publish(msg MQTT.Message) {
+func (m *mqttManager) Publish(msg *model.Message) {
 	if m.mqttClient == nil || !m.mqttClient.IsConnected() {
 		go m.initClient()
 		return
 	}
-	m.mqttClient.Publish(msg.Topic(), msg.Qos(), false, msg.Payload())
+	m.mqttClient.Publish(msg.Topic, byte(msg.Qos), false, msg.Payload)
 }
 
 // 订阅topic

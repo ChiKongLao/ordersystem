@@ -89,6 +89,7 @@ func (b *Bootstrapper) Bootstrap() *Bootstrapper {
 	// middleware, after static files
 	b.Use(recover.New())
 	b.Use(logger.New())
+	logrus.SetLevel(logrus.DebugLevel)
 
 	return b
 }

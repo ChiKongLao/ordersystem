@@ -10,6 +10,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
 	"time"
+	"github.com/chikong/ordersystem/network"
 )
 
 type OrderService interface {
@@ -148,6 +149,8 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 				return status, err
 			}
 		}
+		_, orderUser, _ := s.UserService.GetUserById(order.UserId)
+		network.SendChatMessage("我已经下单啦",orderUser, order.BusinessId,order.TableId)
 	}
 
 

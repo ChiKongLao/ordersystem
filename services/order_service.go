@@ -100,7 +100,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	// 设置菜单信息
 	foodList := order.FoodList
 	for i, subItem := range foodList {
-		status, dbItem, err := s.MenuService.GetFood(order.BusinessId,subItem.Id)
+		status, dbItem, err := s.MenuService.GetFood(order.BusinessId, order.UserId, subItem.Id)
 		if err != nil {
 			return status, 0, err
 		}
@@ -147,7 +147,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
 		foodList := order.FoodList
 		for _, subItem := range foodList {
-			status, err = s.MenuService.ReduceFoodNum(order.BusinessId,subItem.Id,subItem.Num)
+			status, err = s.MenuService.ReduceFoodNum(order.BusinessId,order.UserId, subItem.Id,subItem.Num)
 			if err != nil {
 				return status, err
 			}

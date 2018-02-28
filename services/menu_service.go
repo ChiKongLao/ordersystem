@@ -14,12 +14,12 @@ import (
 
 type MenuService interface {
 	GetFoodList(businessId, userId int) (int, map[string][]model.FoodResponse, error)
-	GetFood(businessId, foodId int) (int, *model.FoodResponse, error)
+	GetFood(businessId, userId, foodId int) (int, *model.FoodResponse, error)
 	InsertFoodOne(food *model.Food) (int, error)
 	InsertFood(food []*model.Food) (int, error)
 	UpdateFood(food *model.Food) (int, error)
 	DeleteFood(businessId, foodId int) (int, error)
-	ReduceFoodNum(businessId, foodId, num int) (int, error)
+	ReduceFoodNum(businessId, userId, foodId, num int) (int, error)
 	GetOrderSumPrice(foodList []model.Food) (float32, error)
 	GetCollectList(userId, businessId int) (int,[]model.FoodResponse, error)
 	UpdateCollectList(userId, businessId, foodId int, isCollect bool) (int, error)
@@ -67,27 +67,6 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		}
 	}
 
-	shoppingCart := new(model.ShoppingCart)
-	_, err = manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnUserId), businessId, userId).
-		Desc(constant.NameID).Get(shoppingCart)
-	if err != nil{
-		logrus.Errorf("获取购物车失败: %s", err)
-		return iris.StatusInternalServerError,  nil, errors.New("获取购物车失败")
-	}
-
-	// 设置已选择的数量
-	shoppingCartFoodList := shoppingCart.FoodList
-	for _, cartItem := range shoppingCartFoodList {
-		for i, foodItem := range responseList{
-			if foodItem.IsSameFood(cartItem) {
-				foodItem.SelectedCount = cartItem.Num
-				responseList[i] = foodItem
-				break
-			}
-		}
-	}
-
 	status, foodMap, err := s.classifyFood(businessId,responseList)
 	if err != nil{
 		return status,  nil, err
@@ -97,7 +76,7 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 }
 
 // 获取单个食物
-func (s *menuService) GetFood(businessId, foodId int) (int, *model.FoodResponse, error) {
+func (s *menuService) GetFood(businessId, userId, foodId int) (int, *model.FoodResponse, error) {
 	if foodId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("食物id不能为空")
 	}
@@ -113,15 +92,32 @@ func (s *menuService) GetFood(businessId, foodId int) (int, *model.FoodResponse,
 		logrus.Errorf("食物不存在: %s", foodId)
 		return iris.StatusNotFound, nil, errors.New("食物不存在")
 	}
+	itemResponse := &model.FoodResponse{
+		Food:*item,
+	}
+
+	shoppingCart := new(model.ShoppingCart)
+	_, err = manager.DBEngine.Where(
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnUserId), businessId, userId).
+		Desc(constant.NameID).Get(shoppingCart)
+	if err != nil{
+		logrus.Errorf("获取购物车失败: %s", err)
+		return iris.StatusInternalServerError,  nil, errors.New("获取购物车失败")
+	}
+
+	// 设置已选择的数量
+	shoppingCartFoodList := shoppingCart.FoodList
+	for _, cartItem := range shoppingCartFoodList {
+		if cartItem.Id == itemResponse.Id {
+			itemResponse.SelectedCount = cartItem.Num
+		}
+	}
 
 	status, _, err := s.ClassifyService.GetClassify(businessId,1)
 	if err != nil {
 		return status,nil,err
 	}
-	return iris.StatusOK, &model.FoodResponse{
-		Food:*item,
-		//Classify:*classify,
-	}, nil
+	return iris.StatusOK,itemResponse , nil
 }
 
 // 添加食物
@@ -173,8 +169,8 @@ func (s *menuService) UpdateFood(food *model.Food) (int, error) {
 }
 
 // 减少食物剩余数量
-func (s *menuService) ReduceFoodNum(businessId, foodId, num int) (int, error) {
-	status, item, err := s.GetFood(businessId,foodId)
+func (s *menuService) ReduceFoodNum(businessId, userId, foodId, num int) (int, error) {
+	status, item, err := s.GetFood(businessId, userId, foodId)
 	if err != nil {
 		return status,err
 	}

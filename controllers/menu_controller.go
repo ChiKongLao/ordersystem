@@ -29,27 +29,42 @@ func (c *MenuController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	var list map[string][]model.FoodResponse
-	status, list, err = c.GetFoodList(businessId,userId)
+	var foodMap map[string][]model.FoodResponse
+	status, foodMap, err = c.GetFoodList(businessId,userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
 
-	return status,iris.Map{
-		constant.NameData:list,
-		constant.NameCount:len(list),
+	foodList := make([]model.FoodResponse,0)
+
+	for _, value := range foodMap {
+		foodList = append(foodList,value...)
+	}
+
+	if _, isOk, _ := c.UserService.CheckRoleWithToken(c.Ctx,constant.RoleCustomer); isOk { // 客户
+		return status,iris.Map{
+			constant.NameData:foodMap,
 		}
+	}else{
+		return status,iris.Map{
+			constant.NameData:foodList,
+			constant.NameCount:len(foodList),
+		}
+	}
+
+
 }
 
 // 获取食物详情
-func (c *MenuController) GetByBy(userId, foodId int) (int,interface{}) {
-
-	status, _, err := c.UserService.GetBusinessById(userId)
+func (c *MenuController) GetByBy(businessId, foodId int) (int,interface{}) {
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
+
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	var item *model.FoodResponse
-	status, item, err = c.GetFood(userId,foodId)
+	status, item, err = c.GetFood(businessId, userId, foodId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}

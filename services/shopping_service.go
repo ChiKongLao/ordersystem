@@ -51,7 +51,7 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 
 	var count int
 	for i, subItem := range item.FoodList {
-		status,dbFood, err := s.MenuService.GetFood(businessId,subItem.Id)
+		status,dbFood, err := s.MenuService.GetFood(businessId, userId, subItem.Id)
 		if err != nil {
 			return status, nil, err
 		}
@@ -80,7 +80,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		return status, err
 	}
 
-	status,food, err := s.MenuService.GetFood(businessId,foodId)
+	status,food, err := s.MenuService.GetFood(businessId, userId, foodId)
 	if err != nil {
 		return status,err
 	}

@@ -27,7 +27,7 @@ type FoodResponseSlice []FoodResponse
 type FoodResponseMap map[string][]FoodResponse
 
 // 是否为同一道菜. 包含同样的味道
-func (item *Food) IsSameFood(targetItem *Food) bool {
+func (item *Food) IsSameFood(targetItem Food) bool {
 	return item.Id == targetItem.Id &&
 		item.ClassifyId == targetItem.ClassifyId
 }
@@ -54,6 +54,14 @@ func ConvertFoodList(list []FoodResponse) []Food {
 	resList := make([]Food, 0)
 	for _, subItem := range list {
 		resList = append(resList, *(subItem.GetFood()))
+	}
+	return resList
+}
+// 获取food
+func ConvertFoodResponseList(list []Food) []FoodResponse {
+	resList := make([]FoodResponse, 0)
+	for _, subItem := range list {
+		resList = append(resList, FoodResponse{Food:subItem,SelectedCount:0,})
 	}
 	return resList
 }

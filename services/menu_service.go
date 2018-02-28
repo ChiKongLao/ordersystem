@@ -43,16 +43,14 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
-	var list []model.FoodResponse
-
-	err := manager.DBEngine.Table("food").Select("food.*, Count(user.nick_name) AS num").
-		Join("INNER", "order", "order.user_id = user.id").
-		GroupBy("order.user_id").
+	var list []model.Food
+	err := manager.DBEngine.Where(fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).
 		Find(&list)
 	if err != nil {
 		logrus.Errorf("获取食物失败: %s", err)
-		return iris.StatusInternalServerError, nil, err
+		return iris.StatusInternalServerError, nil, errors.New("获取食物失败")
 	}
+	responseList := model.ConvertFoodResponseList(list)
 	var user *model.User
 	if _, user, err = s.UserService.GetUserById(userId); user.IsCustomer() { // 客户才查看收藏
 		_, collectItem, _ := getCollectFood(userId, businessId) // 获取收藏的食物
@@ -68,10 +66,9 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 			}
 		}
 	}
-	var shoppingCartFoodList []model.Food
 
 	shoppingCart := new(model.ShoppingCart)
-	res, err := manager.DBEngine.Where(
+	_, err = manager.DBEngine.Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnUserId), businessId, userId).
 		Desc(constant.NameID).Get(shoppingCart)
 	if err != nil{
@@ -79,23 +76,24 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		return iris.StatusInternalServerError,  nil, errors.New("获取购物车失败")
 	}
 
-
-	foodMap := make(map[string][]model.FoodResponse)
-
-	// 设置分类
-	for _, subItem := range list {
-		ids := strings.Split(subItem.ClassifyId,",")
-		for _, classifyId := range ids {
-			classifyIdInt,_ := strconv.ParseInt(classifyId,10,16)
-			status, classify, err := s.ClassifyService.GetClassify(businessId,int(classifyIdInt))
-			if err != nil {
-				return status, nil, err
+	// 设置已选择的数量
+	shoppingCartFoodList := shoppingCart.FoodList
+	for _, cartItem := range shoppingCartFoodList {
+		for i, foodItem := range responseList{
+			if foodItem.IsSameFood(cartItem) {
+				foodItem.SelectedCount = cartItem.Num
+				responseList[i] = foodItem
+				break
 			}
-			key := classify.Name
-			foodMap[key] = append(foodMap[key],subItem)
 		}
 	}
-	return iris.StatusOK, foodMap, nil
+
+	status, foodMap, err := s.classifyFood(businessId,responseList)
+	if err != nil{
+		return status,  nil, err
+	}
+
+	return status, foodMap, nil
 }
 
 // 获取单个食物
@@ -333,6 +331,33 @@ func (s *menuService)GetOrderSumPrice(foodList []model.Food) (float32, error) {
 	}
 	return sum, nil
 
+}
+
+// 分类食物
+func (s *menuService)classifyFood(businessId int, list []model.FoodResponse)(int, map[string][]model.FoodResponse, error){
+
+
+	foodMap := make(map[string][]model.FoodResponse)
+
+	// 设置分类
+	for _, subItem := range list {
+		ids := strings.Split(subItem.ClassifyId,",")
+		for _, classifyId := range ids {
+			var key string
+			if classifyId == ""{
+				key = "未分类"
+			}else {
+				classifyIdInt,_ := strconv.ParseInt(classifyId,10,16)
+				status, classify, err := s.ClassifyService.GetClassify(businessId, int(classifyIdInt))
+				if err != nil {
+					return status, nil, err
+				}
+				key = classify.Name
+			}
+			foodMap[key] = append(foodMap[key],subItem)
+		}
+	}
+	return iris.StatusOK,foodMap,nil
 }
 
 

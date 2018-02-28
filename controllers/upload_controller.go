@@ -18,7 +18,7 @@ type UploadController struct {
 	services.UserService
 }
 
-func (c *UploadController) Post() (int, interface{}) {
+func (c *UploadController) Options() (int, interface{}) {
 	userId,_ := c.Ctx.PostValueInt(constant.NameUserId)
 
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)

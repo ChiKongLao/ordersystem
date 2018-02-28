@@ -24,6 +24,9 @@ type OrderService interface {
 }
 
 func NewOrderService(userService UserService, menuService MenuService, tableService TableService) OrderService {
+
+	//network.GetMqttInstance().RegisterCallback()
+
 	return &orderService{
 		MenuService:  menuService,
 		UserService:  userService,

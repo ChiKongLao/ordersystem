@@ -49,14 +49,21 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 		return iris.StatusNotFound, nil, errors.New("购物车为空")
 	}
 
+	var count int
+	for i, subItem := range item.FoodList {
+		status,dbFood, err := s.MenuService.GetFood(businessId,subItem.Id)
+		if err != nil {
+			return status, nil, err
+		}
+		dbFood.Type = subItem.Type
+		dbFood.Num = subItem.Num
+		count += dbFood.Num
+		item.FoodList[i] = *dbFood.GetFood()
+	}
+
 	price, err := s.MenuService.GetOrderSumPrice(item.FoodList)
 	if err != nil {
 		return iris.StatusInternalServerError, nil, err
-	}
-
-	var count int
-	for _, subItem := range item.FoodList {
-		count += subItem.Num
 	}
 
 	item.Count = count
@@ -77,6 +84,15 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 	if err != nil {
 		return status,err
 	}
+
+
+	// 购物车数据库不需要保存这些信息
+	food.Price = 0
+	food.Pic = ""
+	food.Desc = ""
+	food.Name = ""
+	food.ClassifyId = ""
+	food.SaleCount = 0
 
 	if shoppingCart != nil {
 		isExist := false

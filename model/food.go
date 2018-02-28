@@ -14,6 +14,7 @@ type Food struct {
 	ClassifyId  string     `json:"classifyId" xorm:"VARCHAR(255)"`             // 分类
 	Desc        string  `json:"desc" xorm:"VARCHAR(255)"`
 	//Desc       string `json:"desc,omitempty" xorm:"VARCHAR(255)"`
+	SaleCount int `json:"saleCount" xorm:"INT"` // 月销量
 }
 
 type FoodResponse struct {

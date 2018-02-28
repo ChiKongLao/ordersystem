@@ -12,14 +12,15 @@ import (
 	"strconv"
 	"github.com/chikong/ordersystem/model"
 	"fmt"
+	"github.com/iris-contrib/middleware/cors"
 )
 
 func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//setup cross domain credentials
-	//crs := cors.New(cors.Options{
-	//	AllowedOrigins:		[]string{"*"},
-	//	AllowCredentials:	true,
-	//})
+	crs := cors.New(cors.Options{
+		AllowedOrigins:		[]string{"*"},
+		AllowCredentials:	true,
+	})
 
 	//b.Logger().SetOutput(logger.NewLogFile())
 	//logger.ConfigLogger()
@@ -31,7 +32,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//v1.Use(languages.CurrentLanguage)
 	v1.Use(logger.GetRequestLogger())
 	//v1.Use(authentication.JWTHandler.Serve)
-	//v1.Use(crs)
+	v1.Use(crs)
 
 	// addTestData
 	//	b.SetupDatabaseEngine()

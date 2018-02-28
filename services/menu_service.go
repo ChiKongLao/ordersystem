@@ -68,7 +68,21 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 			}
 		}
 	}
+	var shoppingCartFoodList []model.Food
+
+	shoppingCart := new(model.ShoppingCart)
+	res, err := manager.DBEngine.Where(
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnUserId), businessId, userId).
+		Desc(constant.NameID).Get(shoppingCart)
+	if err != nil{
+		logrus.Errorf("获取购物车失败: %s", err)
+		return iris.StatusInternalServerError,  nil, errors.New("获取购物车失败")
+	}
+
+
 	foodMap := make(map[string][]model.FoodResponse)
+
+	// 设置分类
 	for _, subItem := range list {
 		ids := strings.Split(subItem.ClassifyId,",")
 		for _, classifyId := range ids {

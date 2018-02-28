@@ -78,7 +78,7 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := c.Ctx.PostValueInt(constant.NameNum)
-	classifyId,_ := c.Ctx.PostValueInt(constant.NameClassifyId)
+	classifyId := c.Ctx.PostValue(constant.NameClassifyId)
 	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
@@ -127,7 +127,7 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
-	classifyId,_ := c.Ctx.PostValueInt(constant.NameClassifyId)
+	classifyId := c.Ctx.PostValue(constant.NameClassifyId)
 	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
@@ -200,12 +200,11 @@ func (c *MenuController) GetCollectBy(businessId int) (int,interface{}) {
 }
 
 // 修改用户收藏的菜单
-func (c *MenuController) PutCollectBy(businessId int) (int,interface{}) {
+func (c *MenuController) PutCollectByBy(businessId, foodId int) (int,interface{}) {
 	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	foodId, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameFoodId))
 	isCollect,_ := c.Ctx.PostValueBool(constant.NameIsCollect)
 	status, err = c.UpdateCollectList(userId,businessId,foodId,isCollect)
 	if err != nil{

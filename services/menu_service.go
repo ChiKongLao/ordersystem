@@ -8,6 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
+	"strconv"
+	"strings"
 )
 
 type MenuService interface {
@@ -41,10 +43,11 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
-	list := make([]model.Food, 0)
+	var list []model.FoodResponse
 
-	err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).
+	err := manager.DBEngine.Table("food").Select("food.*, Count(user.nick_name) AS num").
+		Join("INNER", "order", "order.user_id = user.id").
+		GroupBy("order.user_id").
 		Find(&list)
 	if err != nil {
 		logrus.Errorf("获取食物失败: %s", err)
@@ -65,27 +68,19 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 			}
 		}
 	}
-	//resList := make([]model.FoodResponse,0)
 	foodMap := make(map[string][]model.FoodResponse)
 	for _, subItem := range list {
-		status, classify, err := s.ClassifyService.GetClassify(businessId,subItem.ClassifyId)
-		if err != nil {
-			return status,nil,err
+		ids := strings.Split(subItem.ClassifyId,",")
+		for _, classifyId := range ids {
+			classifyIdInt,_ := strconv.ParseInt(classifyId,10,16)
+			status, classify, err := s.ClassifyService.GetClassify(businessId,int(classifyIdInt))
+			if err != nil {
+				return status, nil, err
+			}
+			key := classify.Name
+			foodMap[key] = append(foodMap[key],subItem)
 		}
-		key := classify.Name
-		foodMap[key] = append(foodMap[key], model.FoodResponse{
-			Food:subItem,
-			Classify:*classify,
-		})
 	}
-	//sort.Sort(model.FoodResponseSlice(resList))
-	//foodMap := make(map[string][]model.FoodResponse)
-	//
-	//for _, subItem := range resList {
-	//	key := subItem.Classify.Name
-	//	foodMap[key] = append(foodMap[key],subItem)
-	//}
-
 	return iris.StatusOK, foodMap, nil
 }
 
@@ -107,13 +102,13 @@ func (s *menuService) GetFood(businessId, foodId int) (int, *model.FoodResponse,
 		return iris.StatusNotFound, nil, errors.New("食物不存在")
 	}
 
-	status, classify, err := s.ClassifyService.GetClassify(businessId,item.ClassifyId)
+	status, _, err := s.ClassifyService.GetClassify(businessId,1)
 	if err != nil {
 		return status,nil,err
 	}
 	return iris.StatusOK, &model.FoodResponse{
 		Food:*item,
-		Classify:*classify,
+		//Classify:*classify,
 	}, nil
 }
 

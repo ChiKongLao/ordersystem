@@ -132,7 +132,7 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 			return iris.StatusInternalServerError, errors.New("添加食物到购物车失败")
 		}
 	}
-
+	//network.SendShoppingCartMessage(businessId,)
 	return iris.StatusOK, nil
 }
 

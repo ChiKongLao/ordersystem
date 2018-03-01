@@ -29,16 +29,9 @@ func (c *MenuController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	var foodMap map[string][]model.FoodResponse
-	status, foodMap, err = c.GetFoodList(businessId,userId)
+	status, foodMap, foodList, err := c.GetFoodList(businessId,userId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
-	}
-
-	foodList := make([]model.FoodResponse,0)
-
-	for _, value := range foodMap {
-		foodList = append(foodList,value...)
 	}
 
 	if _, isOk, _ := c.UserService.CheckRoleWithToken(c.Ctx,constant.RoleCustomer); isOk { // 客户

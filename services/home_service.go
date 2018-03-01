@@ -82,7 +82,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 
 // 获取用户端首页
 func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{}, error) {
-	status, foodMap, err := s.MenuService.GetFoodList(businessId, userId)
+	status, _, foodList, err := s.MenuService.GetFoodList(businessId, userId)
 	if err != nil {
 		return status, nil, err
 	}
@@ -95,19 +95,17 @@ func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{},
 		return status, nil, err
 	}
 	type Home struct {
-		Name string                          `json:"name"`
-		Desc string                          `json:"desc"`
-		Pic  string                          `json:"pic"`
-		Food []model.FoodResponse `json:"food"`
+		Name  string               `json:"name"`
+		Desc  string               `json:"desc"`
+		Pic   []string               `json:"pic"`
+		Food  []model.FoodResponse `json:"food"`
+		Count int                  `json:"count"`
 	}
-	foodList := make([]model.FoodResponse,0)
 
-	for _, value := range foodMap {
-		foodList = append(foodList,value...)
-	}
 	return iris.StatusOK, &Home{
 		Food: foodList,
 		Name: user.NickName,
 		Pic:  shop.Pic,
+		Count:len(foodList),
 	}, nil
 }

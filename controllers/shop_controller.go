@@ -5,6 +5,7 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
+	"strings"
 )
 
 // 店铺
@@ -62,7 +63,7 @@ func (c *ShopController) Post() (int, interface{}) {
 	businessId,_ := c.Ctx.PostValueInt(constant.NameBusinessID)
 	name := c.Ctx.PostValue(constant.Name)
 	desc := c.Ctx.PostValue(constant.NameDesc)
-	pic := c.Ctx.PostValue(constant.NamePic)
+	pic := strings.Split(c.Ctx.PostValue(constant.NamePic),",")
 
 	status, err = c.InsertShop(businessId,name,desc,pic)
 
@@ -85,7 +86,7 @@ func (c *ShopController) Put() (int, interface{}) {
 	businessId,_ := c.Ctx.PostValueInt(constant.NameBusinessID)
 	name := c.Ctx.PostValue(constant.Name)
 	desc := c.Ctx.PostValue(constant.NameDesc)
-	pic := c.Ctx.PostValue(constant.NamePic)
+	pic := strings.Split(c.Ctx.PostValue(constant.NamePic),",")
 
 	status, err = c.UpdateShop(businessId,name,desc,pic)
 	if err != nil {

@@ -13,8 +13,8 @@ import (
 type ShopService interface {
 	GetShopList() (int, []model.Shop, error)
 	GetShop(businessId int) (int, *model.Shop, error)
-	InsertShop(businessId int, name, desc, pic string) (int, error)
-	UpdateShop(businessId int, name, desc, pic string) (int, error)
+	InsertShop(businessId int, name string, desc string, pic []string) (int, error)
+	UpdateShop(businessId int, name string, desc string, pic []string) (int, error)
 	DeleteShop(businessId int) (int, error)
 }
 
@@ -68,7 +68,7 @@ func (s *shopService) GetShop(businessId int) (int, *model.Shop, error) {
 }
 
 // 添加店铺
-func (s *shopService) InsertShop(businessId int, name, desc, pic string) (int, error) {
+func (s *shopService) InsertShop(businessId int, name string, desc string, pic []string) (int, error) {
 	if name == "" {
 		return iris.StatusBadRequest, errors.New("店铺名不能为空")
 	}
@@ -96,7 +96,7 @@ func (s *shopService) InsertShop(businessId int, name, desc, pic string) (int, e
 }
 
 // 修改店铺
-func (s *shopService) UpdateShop(businessId int, name, desc, pic string) (int, error) {
+func (s *shopService) UpdateShop(businessId int, name string, desc string, pic []string) (int, error) {
 	if name == "" {
 		return iris.StatusBadRequest, errors.New("店铺名不能为空")
 	}

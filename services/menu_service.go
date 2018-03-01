@@ -13,7 +13,7 @@ import (
 )
 
 type MenuService interface {
-	GetFoodList(businessId, userId int) (int, map[string][]model.FoodResponse, error)
+	GetFoodList(businessId, userId int) (int, map[string][]model.FoodResponse,[]model.FoodResponse, error)
 	GetFood(businessId, userId, foodId int) (int, *model.FoodResponse, error)
 	InsertFoodOne(food *model.Food) (int, error)
 	InsertFood(food []*model.Food) (int, error)
@@ -38,9 +38,9 @@ type menuService struct {
 }
 
 // 获取菜单
-func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]model.FoodResponse, error) {
+func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]model.FoodResponse,[]model.FoodResponse, error) {
 	if businessId == 0 {
-		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
+		return iris.StatusBadRequest, nil, nil, errors.New("商家id不能为空")
 	}
 
 	var list []model.Food
@@ -48,18 +48,18 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		Find(&list)
 	if err != nil {
 		logrus.Errorf("获取食物失败: %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取食物失败")
+		return iris.StatusInternalServerError, nil, nil, errors.New("获取食物失败")
 	}
 	responseList := model.ConvertFoodResponseList(list)
 	var user *model.User
 	if _, user, err = s.UserService.GetUserById(userId); user.IsCustomer() { // 客户才查看收藏
 		_, collectItem, _ := getCollectFood(userId, businessId) // 获取收藏的食物
 		if collectItem != nil {
-			for i, subItem := range list {
+			for i, subItem := range responseList {
 				for _, collectId := range collectItem.CollectFoodId {
 					if subItem.Id == collectId {
 						subItem.IsCollect = true
-						list[i] = subItem
+						responseList[i] = subItem
 						break
 					}
 				}
@@ -69,10 +69,10 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 
 	status, foodMap, err := s.classifyFood(businessId,responseList)
 	if err != nil{
-		return status,  nil, err
+		return status,  nil, nil, err
 	}
 
-	return status, foodMap, nil
+	return status, foodMap,responseList, nil
 }
 
 // 获取单个食物
@@ -213,16 +213,10 @@ func (s *menuService) GetCollectList(userId, businessId int) (int,[]model.FoodRe
 		return iris.StatusOK, []model.FoodResponse{}, nil
 	}
 
-	status, foodMap, err := s.GetFoodList(businessId,userId)
+	status, _,foodList, err := s.GetFoodList(businessId,userId)
 	if err != nil {
 		return status,nil, err
 	}
-	foodList := make([]model.FoodResponse,0)
-
-	for _, value := range foodMap {
-		foodList = append(foodList,value...)
-	}
-
 	contain := func(ids[]int, id int) bool{
 		for _, subItem := range ids {
 			if subItem == id{

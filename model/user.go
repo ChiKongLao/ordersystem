@@ -7,7 +7,7 @@ type User struct {
 	UserName    string `json:"userName" xorm:"VARCHAR(25) notnull unique 'user_name'"` // 名字
 	Password    string `json:"password" xorm:"not null VARCHAR(20) "`                  // 密码
 	NickName    string `json:"nickName" xorm:"VARCHAR(30)"`                            // 昵称
-	CreatedTime int64  `json:"createdTime" xorm:"INT(11) "`                            // 创建时间
+	CreatedTime int64  `json:"createdTime"`                                            // 创建时间
 	Token       string `json:"token" orm:"VARCHAR(255)"`                               // token
 	Head        string `json:"head" orm:"VARCHAR(255)"`                                // 头像
 	Role        int    `xorm:"not null INT(11)"`                                       //角色

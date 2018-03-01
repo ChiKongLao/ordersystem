@@ -4,7 +4,6 @@ import (
 	"net"
 	"github.com/chikong/ordersystem/constant"
 	"github.com/satori/go.uuid"
-	"strconv"
 	"time"
 )
 
@@ -32,11 +31,12 @@ func GetLocalIPWithHttp() string{
 // 获取UUID
 func GetUUID() string {
 	id, _ := uuid.NewV4()
-	return id.String();
+	return id.String()
 }
 
-// 系统当前时间戳
-func GetCurrentTime() string {
-	return strconv.FormatInt(time.Now().Unix(), 10)
+// 系统当前时间戳,毫秒
+func GetCurrentTime() int64 {
+	return time.Now().UnixNano()/1000/1000
+	//return strconv.FormatInt(time.Now().UnixNano()/1000/1000, 10)
 }
 

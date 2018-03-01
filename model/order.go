@@ -7,8 +7,8 @@ type Order struct {
 	PersonNum  int     `json:"personNum" xorm:"not null INT(11)"`
 	Price      float32 `json:"price" xorm:"not null FLOAT"`
 	Status     int     `json:"status" xorm:"INT(11)"`
-	CreateTime string  `json:"createTime" xorm:"not null VARCHAR(20)"`
-	UpdateTime string  `json:"-" xorm:"not null VARCHAR(20)"`
+	CreateTime int64   `json:"createTime" xorm:"not null BIGINT(20)"`
+	UpdateTime int64   `json:"-" xorm:"not null BIGINT(20)"`
 	BusinessId int     `json:"-" xorm:"not null index INT(11)"`
 	UserId     int     `json:"userId" xorm:"not null index INT(11)"` // 下单的用户id
 	FoodList   []Food  `json:"list" xorm:"not null"`                 // 菜单
@@ -20,8 +20,8 @@ type OrderResponse struct {
 	PersonNum  int     `json:"personNum"`
 	Price      float32 `json:"price"`
 	Status     int     `json:"status"`
-	CreateTime string  `json:"createTime"`
-	UpdateTime string  `json:"-"`
+	CreateTime int64   `json:"createTime"`
+	UpdateTime int64   `json:"-"`
 	BusinessId int     `json:"-"`
 	UserId     int     `json:"userId"` // 下单的用户id
 	FoodList   []Food  `json:"list"`   // 菜单

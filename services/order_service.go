@@ -8,9 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
-	"strconv"
-	"time"
 	"github.com/chikong/ordersystem/network"
+	"github.com/chikong/ordersystem/util"
 )
 
 type OrderService interface {
@@ -56,7 +55,7 @@ func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.
 			constant.ColumnTableId), tableId,constant.OrderStatusWaitPay)
 	}
 
-	err := session.Find(&list)
+	err := session.Desc(constant.ColumnCreateTime).Find(&list)
 
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
@@ -95,7 +94,9 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
-	order.Time = strconv.FormatInt(time.Now().Unix(), 10)
+	time := util.GetCurrentTime()
+	order.CreateTime = time
+	order.UpdateTime = time
 	order.Status = constant.OrderStatusWaitPay
 
 	// 设置菜单信息
@@ -162,7 +163,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	dbItem.TableId = order.TableId
 	dbItem.Status = order.Status
 	dbItem.PersonNum = order.PersonNum
-	dbItem.Time = strconv.FormatInt(time.Now().Unix(), 10)
+	dbItem.UpdateTime = util.GetCurrentTime()
 	var sumPrice float32
 	sumPrice, err = s.MenuService.GetOrderSumPrice(order.FoodList)
 	if err != nil {

@@ -39,7 +39,7 @@ const (
 	NameHead          = "head"
 	NameIsCollect     = "isCollect"
 	NameSort          = "sort"
-	NameClassifyId      = "classifyId"
+	NameClassifyId    = "classifyId"
 )
 
 // 数据库的表的列名
@@ -51,6 +51,8 @@ const (
 	ColumnStatus     = "status"
 	ColumnNum        = "num"
 	ColumnSort       = "sort"
+	ColumnCreateTime = "create_time"
+	ColumnUpdateTime = "update_time"
 )
 
 // 业务配置相关

@@ -7,7 +7,8 @@ type Order struct {
 	PersonNum  int     `json:"personNum" xorm:"not null INT(11)"`
 	Price      float32 `json:"price" xorm:"not null FLOAT"`
 	Status     int     `json:"status" xorm:"INT(11)"`
-	Time       string  `json:"time" xorm:"not null VARCHAR(25)"`
+	CreateTime string  `json:"createTime" xorm:"not null VARCHAR(20)"`
+	UpdateTime string  `json:"-" xorm:"not null VARCHAR(20)"`
 	BusinessId int     `json:"-" xorm:"not null index INT(11)"`
 	UserId     int     `json:"userId" xorm:"not null index INT(11)"` // 下单的用户id
 	FoodList   []Food  `json:"list" xorm:"not null"`                 // 菜单
@@ -19,7 +20,8 @@ type OrderResponse struct {
 	PersonNum  int     `json:"personNum"`
 	Price      float32 `json:"price"`
 	Status     int     `json:"status"`
-	Time       string  `json:"time"`
+	CreateTime string  `json:"createTime"`
+	UpdateTime string  `json:"-"`
 	BusinessId int     `json:"-"`
 	UserId     int     `json:"userId"` // 下单的用户id
 	FoodList   []Food  `json:"list"`   // 菜单
@@ -31,7 +33,7 @@ type OrderListResponse struct {
 	List        []OrderResponse `json:"list"`
 	TotalPerson int             `json:"totalPerson"`
 	TotalPrice  float32         `json:"totalPrice"`
-	TotalCount  int         `json:"totalCount"`
+	TotalCount  int             `json:"totalCount"`
 }
 
 // 转化成回调的数据格式
@@ -59,7 +61,8 @@ func ConvertOrderResponseToOrder(response OrderResponse) *Order {
 		PersonNum:  response.PersonNum,
 		Price:      response.Price,
 		Status:     response.Status,
-		Time:       response.Time,
+		CreateTime: response.CreateTime,
+		UpdateTime: response.UpdateTime,
 		BusinessId: response.BusinessId,
 		UserId:     response.UserId,
 		FoodList:   response.FoodList,

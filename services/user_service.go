@@ -25,6 +25,8 @@ type UserService interface {
 	CheckPasswordHash(password, hash string) bool
 	GetUserList() ([]model.User, error)
 	CheckRoleIsManagerWithToken(ctx iris.Context) (int, bool, error)
+	CheckRoleIsBusinessWithToken(ctx iris.Context) (int, bool, error)
+	CheckRoleIsManagerOrBusinessWithToken(ctx iris.Context) (int, bool, error)
 	CheckRoleWithToken(ctx iris.Context, role int) (int, bool, error)
 	GetUserFormToken(ctx iris.Context) (int, *model.User, error)
 }
@@ -157,11 +159,36 @@ func (s *userService) GetManager() (int, *model.User, error) {
 }
 
 
+// 检测token的角色是否为商家
+func (s *userService) CheckRoleIsBusinessWithToken(ctx iris.Context) (int, bool, error) {
+	status, res, err := s.CheckRoleWithToken(ctx, constant.RoleBusiness)
+	if !res {
+		return status, res, err
+	}
+	return iris.StatusOK, true, nil
+
+}
+
 // 检测token的角色是否为管理员
 func (s *userService) CheckRoleIsManagerWithToken(ctx iris.Context) (int, bool, error) {
 	status, res, err := s.CheckRoleWithToken(ctx, constant.RoleManager)
 	if !res {
-		return status, false, err
+		return status, res, err
+	}
+	return iris.StatusOK, true, nil
+
+}
+
+// 检测token的角色是否为管理员或者商家
+func (s *userService) CheckRoleIsManagerOrBusinessWithToken(ctx iris.Context) (int, bool, error) {
+	_, res1, err1 := s.CheckRoleIsManagerWithToken(ctx)
+	_, res2, err2 := s.CheckRoleIsBusinessWithToken(ctx)
+	if !res1 && !res2{
+		err := err2
+		if err1 != nil {
+			err = err1
+		}
+		return iris.StatusUnauthorized, false, err
 	}
 	return iris.StatusOK, true, nil
 

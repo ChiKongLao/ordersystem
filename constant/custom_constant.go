@@ -40,6 +40,8 @@ const (
 	NameIsCollect     = "isCollect"
 	NameSort          = "sort"
 	NameClassifyId    = "classifyId"
+	NameOldTableId    = "oldTableId"
+	NameNewTableId    = "newTableId"
 )
 
 // 数据库的表的列名

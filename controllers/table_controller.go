@@ -5,7 +5,6 @@ import (
 	"github.com/kataras/iris"
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
-	"strconv"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
 )
 
@@ -24,7 +23,7 @@ func (c *TableController) GetBy(businessId int) (int,interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	status, _, err = c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
+	status, _, err = c.UserService.CheckRoleIsManagerOrBusinessWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -86,13 +85,13 @@ func (c *TableController) PostBy(businessId int) (int,interface{}) {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
+	status, _, err := c.UserService.CheckRoleIsManagerOrBusinessWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
-	capacity, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameCapacity))
+	capacity, _ := c.Ctx.PostValueInt(constant.NameCapacity)
 
 	status, err = c.InsertTable(&model.TableInfo{
 		BusinessId:businessId,
@@ -133,14 +132,14 @@ func (c *TableController) PutByBy(businessId, tableId int) (int,interface{}) {
 	}
 
 
-	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
+	status, _, err := c.UserService.CheckRoleIsManagerOrBusinessWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
-	tableStatus, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameStatus))
-	capacity, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameCapacity))
+	tableStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+	capacity, _ := c.Ctx.PostValueInt(constant.NameCapacity)
 
 	status, err = c.UpdateTable(&model.TableInfo{
 		Id:tableId,
@@ -163,6 +162,32 @@ func (c *TableController) PutByBy(businessId, tableId int) (int,interface{}) {
 }
 
 
+// 换桌
+func (c *TableController) PutByChange(businessId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
+	if !isOwn {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+	}
+	
+	status, _, err := c.UserService.CheckRoleIsManagerOrBusinessWithToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
+	oldTableId, _ := c.Ctx.PostValueInt(constant.NameOldTableId)
+	newTableId, _ := c.Ctx.PostValueInt(constant.NameNewTableId)
+
+	status, err = c.ChangeTable(businessId, oldTableId, newTableId)
+	if err != nil{
+		return status, model.NewErrorResponse(err)
+	}
+
+	return status,iris.Map{
+			constant.NameIsOk:true,
+		}
+}
+
+
 // 删除餐桌
 func (c *TableController) DeleteByBy(businessId, tableId int) (int,interface{}) {
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
@@ -171,7 +196,7 @@ func (c *TableController) DeleteByBy(businessId, tableId int) (int,interface{}) 
 	}
 
 
-	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
+	status, _, err := c.UserService.CheckRoleIsManagerOrBusinessWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/util"
 )
 
 type TableService interface {
@@ -16,6 +17,8 @@ type TableService interface {
 	InsertTable(table *model.TableInfo) (int, error)
 	UpdateTable(table *model.TableInfo) (int, error)
 	DeleteTable(businessId, tableId int) (int, error)
+	ChangeTable(businessId, oldTableId, newTableId int) (int, error)
+
 	JoinTable(businessId, tableId int) (int, error)
 }
 
@@ -112,6 +115,8 @@ func (s *tableService) UpdateTable(table *model.TableInfo) (int, error) {
 	// 设置修改信息
 	dbItem.Name = table.Name
 	dbItem.Capacity = table.Capacity
+	dbItem.Time = table.Time
+	dbItem.UserId = table.UserId
 	if table.PersonNum != 0 {
 		dbItem.PersonNum = table.PersonNum
 	}
@@ -150,6 +155,37 @@ func (s *tableService) DeleteTable(businessId, tableId int) (int, error) {
 	}
 	return iris.StatusOK, nil
 }
+
+
+// 换桌
+func (s *tableService) ChangeTable(businessId, oldTableId, newTableId int) (int, error) {
+	status, oldTable, err := s.GetTable(businessId,oldTableId) // 旧桌
+	if err != nil {
+		return status,nil
+	}
+	oldTable.Status = constant.TableStatusWaitClean
+	status, err = s.UpdateTable(oldTable)
+	if err != nil {
+		return status,nil
+	}
+
+	status, newTable, err := s.GetTable(businessId,newTableId) // 新桌
+	if err != nil {
+		return status,nil
+	}
+	newTable.Status = constant.TableStatusUsing
+	newTable.UserId = oldTable.UserId
+	newTable.PersonNum = oldTable.PersonNum
+	newTable.Time = util.GetCurrentTime()
+	status, err = s.UpdateTable(newTable)
+	if err != nil {
+		return status,nil
+	}
+
+	return iris.StatusOK, nil
+}
+
+
 
 
 

@@ -59,7 +59,8 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 		// ###########   系统相关开始
 		mvc.Configure(v1.Party("/upload",auth), func(mvcApp *mvc.Application) {
-			mvcApp.Register(userService)
+			uploadService := services.NewUploadService()
+			mvcApp.Register(userService,uploadService)
 			mvcApp.Handle(new(controllers.UploadController))
 		})
 

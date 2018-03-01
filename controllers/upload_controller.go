@@ -15,10 +15,19 @@ import (
 // 上传文件
 type UploadController struct {
 	Ctx iris.Context
-	services.UserService
+	UserService services.UserService
+	services.UploadService
 }
 
 func (c *UploadController) Options() (int, interface{}) {
+	c.UploadImage(c.Ctx)
+
+	return iris.StatusOK,"ok"
+}
+
+
+
+func (c *UploadController) OptionsBy() (int, interface{}) {
 	userId,_ := c.Ctx.PostValueInt(constant.NameUserId)
 
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)

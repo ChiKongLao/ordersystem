@@ -116,8 +116,9 @@ func (s *tableService) UpdateTable(table *model.TableInfo) (int, error) {
 		dbItem.PersonNum = table.PersonNum
 	}
 	dbItem.Status = table.Status
-	if dbItem.Status == constant.TableStatusEmpty { // 闲置状态清空人数
-		dbItem.PersonNum = 0
+	if dbItem.Status == constant.TableStatusEmpty { // 闲置状态清空旧的信息
+		dbItem.ClearTable()
+
 	}
 
 	_, err = manager.DBEngine.AllCols().Where(

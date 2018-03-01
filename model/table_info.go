@@ -13,7 +13,18 @@ type TableInfo struct {
 	PersonNum  int     `json:"personNum" xorm:"default 0 INT(11)"`         // 就餐人数
 	Capacity   int     `json:"capacity" xorm:"not null default 2 INT(11)"` // 容纳人数
 	UserId     string  `json:"userId" xorm:"VARCHAR(255)"`                 // 用户id列
+	//Desc       string  `json:"desc" xorm:"VARCHAR(255)"`                   // 描述
 	OrderList  []Order `json:"orderList" `                                 // 订单列
+}
+
+
+// 重置餐桌信息
+func (item *TableInfo) ClearTable(){
+	item.PersonNum = 0
+	item.Price = ""
+	item.UserId = ""
+	item.Time = ""
+	item.OrderList = nil
 }
 
 // 获取餐桌状态描述

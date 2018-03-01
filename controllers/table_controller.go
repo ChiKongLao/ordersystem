@@ -18,15 +18,21 @@ type TableController struct {
 }
 
 // 获取餐桌
-func (c *TableController) GetBy(userId int) (int,interface{}) {
-	status, _, err := c.UserService.GetBusinessById(userId)
+func (c *TableController) GetBy(businessId int) (int,interface{}) {
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
+
+	status, _, err = c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
 	tableStatus,_ := c.Ctx.PostValueInt(constant.NameStatus)
 
 	var list []model.TableInfo
-	status, list, err = c.GetTableList(userId,tableStatus)
+	status, list, err = c.GetTableList(businessId,tableStatus)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -38,13 +44,13 @@ func (c *TableController) GetBy(userId int) (int,interface{}) {
 }
 
 // 获取餐桌
-func (c *TableController) GetByStatusBy(userId,tableStatus int) (int,interface{}) {
-	status, _, err := c.UserService.GetBusinessById(userId)
+func (c *TableController) GetByStatusBy(businessId,tableStatus int) (int,interface{}) {
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 	var list []model.TableInfo
-	status, list, err = c.GetTableList(userId,tableStatus)
+	status, list, err = c.GetTableList(businessId,tableStatus)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -56,14 +62,14 @@ func (c *TableController) GetByStatusBy(userId,tableStatus int) (int,interface{}
 }
 
 // 获取餐桌详情
-func (c *TableController) GetByBy(userId, tableId int) (int,interface{}) {
+func (c *TableController) GetByBy(businessId, tableId int) (int,interface{}) {
 
-	status, _, err := c.UserService.GetBusinessById(userId)
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 	var item *model.TableInfo
-	status, item, err = c.GetTable(userId,tableId)
+	status, item, err = c.GetTable(businessId,tableId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}
@@ -74,27 +80,22 @@ func (c *TableController) GetByBy(userId, tableId int) (int,interface{}) {
 }
 
 // 添加餐桌
-func (c *TableController) PostBy(userId int) (int,interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *TableController) PostBy(businessId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
-
+	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
-	}
-
-	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
 	capacity, _ := strconv.Atoi(c.Ctx.FormValue(constant.NameCapacity))
 
 	status, err = c.InsertTable(&model.TableInfo{
-		BusinessId:userId,
+		BusinessId:businessId,
 		Name:name,
 		Capacity:capacity,
 		Status:constant.TableStatusEmpty,
@@ -125,20 +126,16 @@ func (c *TableController) PostByJoinBy(businessId,tableId int) (int,interface{})
 }
 
 // 修改餐桌
-func (c *TableController) PutByBy(userId, tableId int) (int,interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *TableController) PutByBy(businessId, tableId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
 
+	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
-	}
-
-	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
 	name := c.Ctx.FormValue(constant.Name)
@@ -147,7 +144,7 @@ func (c *TableController) PutByBy(userId, tableId int) (int,interface{}) {
 
 	status, err = c.UpdateTable(&model.TableInfo{
 		Id:tableId,
-		BusinessId:userId,
+		BusinessId:businessId,
 		Name:name,
 		Status:tableStatus,
 		Capacity:capacity,
@@ -167,23 +164,19 @@ func (c *TableController) PutByBy(userId, tableId int) (int,interface{}) {
 
 
 // 删除餐桌
-func (c *TableController) DeleteByBy(userId, tableId int) (int,interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *TableController) DeleteByBy(businessId, tableId int) (int,interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
 
+	status, _, err := c.UserService.CheckRoleIsManagerWithToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
-	if !user.IsManager() && !user.IsBusiness(){
-		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
-	}
-
-	status, err = c.DeleteTable(userId,tableId)
+	status, err = c.DeleteTable(businessId,tableId)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

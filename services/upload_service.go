@@ -8,11 +8,16 @@ import (
 	"context"
 	"github.com/chikong/ordersystem/constant"
 	"sync"
+	"mime/multipart"
+	"os"
+	"io"
+	"github.com/sirupsen/logrus"
+	"github.com/kataras/iris/core/errors"
 )
 
 // 上传文件服务
 type UploadService interface {
-	UploadImage(ctx iris.Context) (int, error)
+	UploadImage(file multipart.File, fileName string, userId int) (int, error)
 }
 
 func NewUploadService() UploadService {
@@ -30,7 +35,7 @@ func initService() (*storage.FormUploader, string){
 	putPolicy := storage.PutPolicy{
 		Scope: constant.KeyQiNiuBucket,
 	}
-	mac := qbox.NewMac(constant.KeyQiNiuAccessKey,constant.KeyQiNiuAccessKey)
+	mac := qbox.NewMac(constant.KeyQiNiuAccessKey,constant.KeyQiNiuSecretKey)
 	upToken := putPolicy.UploadToken(mac)
 	cfg := storage.Config{}
 	cfg.Zone = &storage.ZoneHuanan
@@ -41,12 +46,30 @@ func initService() (*storage.FormUploader, string){
 }
 
 // 注册
-func (s *uploadService) UploadImage(ctx iris.Context) (int, error) {
+func (s *uploadService) UploadImage(file multipart.File, fileName string, userId int) (int, error) {
 	mOnce.Do(func() {
 		initService()
 	})
-	localFile := "./1.jpg"
-	key := "1.jpg"
+
+	// 创建目录
+	path := fmt.Sprintf("%s/%v/",constant.PathUpload,userId)
+	filePath := path + fileName
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		_ = os.MkdirAll(path, os.ModePerm)
+	}
+	out, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		logrus.Errorf("读取文件失败. "+err.Error())
+		return iris.StatusInternalServerError, errors.New("读取文件失败")
+	}
+	defer out.Close()
+	io.Copy(out, file)
+
+	if err != nil {
+		logrus.Errorf("操作文件失败. "+err.Error())
+		return iris.StatusInternalServerError, errors.New("操作文件失败")
+	}
 
 	uploader, upToken := initService()
 	ret := storage.PutRet{}
@@ -56,11 +79,11 @@ func (s *uploadService) UploadImage(ctx iris.Context) (int, error) {
 		},
 	}
 
-	err := uploader.PutFile(context.Background(), &ret, upToken, key, localFile, &putExtra)
+	err = uploader.PutFile(context.Background(), &ret, upToken, fileName, filePath, &putExtra)
 	if err != nil {
-		fmt.Println(err)
-		return iris.StatusInternalServerError,nil
+		logrus.Errorf("上传文件失败. "+err.Error())
+		return iris.StatusInternalServerError, errors.New("上传文件失败")
 	}
-	fmt.Println(ret.Key, ret.Hash)
+	os.Remove(filePath) // 上传成功, 删除本地缓存的图片
 	return iris.StatusOK, nil
 }

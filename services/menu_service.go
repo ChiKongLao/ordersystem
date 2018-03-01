@@ -19,7 +19,7 @@ type MenuService interface {
 	InsertFood(food []*model.Food) (int, error)
 	UpdateFood(food *model.Food) (int, error)
 	DeleteFood(businessId, foodId int) (int, error)
-	ReduceFoodNum(businessId, userId, foodId, num int) (int, error)
+	SellFood(businessId, userId, foodId, num int) (int, error)
 	GetOrderSumPrice(foodList []model.Food) (float32, error)
 	GetCollectList(userId, businessId int) (int,[]model.FoodResponse, error)
 	UpdateCollectList(userId, businessId, foodId int, isCollect bool) (int, error)
@@ -168,13 +168,14 @@ func (s *menuService) UpdateFood(food *model.Food) (int, error) {
 	return iris.StatusOK, nil
 }
 
-// 减少食物剩余数量
-func (s *menuService) ReduceFoodNum(businessId, userId, foodId, num int) (int, error) {
+// 卖出食物
+func (s *menuService) SellFood(businessId, userId, foodId, num int) (int, error) {
 	status, item, err := s.GetFood(businessId, userId, foodId)
 	if err != nil {
 		return status,err
 	}
 	item.Num -= num
+	item.SaleCount += num
 	status, err = s.UpdateFood(item.GetFood())
 	if err != nil {
 		return status,err

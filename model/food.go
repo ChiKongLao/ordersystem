@@ -10,8 +10,8 @@ type Food struct {
 	IsCollect   bool    `json:"isCollect"`                                        // 是否收藏
 	Pic         string  `json:"pic" xorm:"VARCHAR(255)"`
 	Price       float32 `json:"price" xorm:"not null FLOAT"`
-	Type        string  `json:"type" xorm:"VARCHAR(255)"` // 种类
-	ClassifyId  string     `json:"classifyId" xorm:"VARCHAR(255)"`             // 分类
+	Type        string  `json:"type" xorm:"VARCHAR(255)"`       // 种类
+	ClassifyId  string  `json:"classifyId" xorm:"VARCHAR(255)"` // 分类
 	Desc        string  `json:"desc" xorm:"VARCHAR(255)"`
 	//Desc       string `json:"desc,omitempty" xorm:"VARCHAR(255)"`
 	SaleCount int `json:"saleCount" xorm:"INT"` // 月销量
@@ -20,7 +20,7 @@ type Food struct {
 type FoodResponse struct {
 	Food
 	//Classify Classify `json:"-"` // 种类
-	SelectedCount int `json:"selectedCount"`  // 购物车中已选择的个数
+	SelectedCount int `json:"selectedCount"` // 购物车中已选择的个数
 }
 
 type FoodResponseSlice []FoodResponse
@@ -34,19 +34,7 @@ func (item *Food) IsSameFood(targetItem Food) bool {
 
 // 获取food
 func (item *FoodResponse) GetFood() *Food {
-	return &Food{
-		Id:          item.Id,
-		BusinessId:  item.BusinessId,
-		Name:        item.Name,
-		Num:         item.Num,
-		IsRecommend: item.IsRecommend,
-		IsCollect:   item.IsCollect,
-		Pic:         item.Pic,
-		Price:       item.Price,
-		ClassifyId:  item.ClassifyId,
-		Desc:        item.Desc,
-		Type:        item.Type,
-	}
+	return &item.Food
 }
 
 // 获取food
@@ -57,11 +45,12 @@ func ConvertFoodList(list []FoodResponse) []Food {
 	}
 	return resList
 }
+
 // 获取food
 func ConvertFoodResponseList(list []Food) []FoodResponse {
 	resList := make([]FoodResponse, 0)
 	for _, subItem := range list {
-		resList = append(resList, FoodResponse{Food:subItem,SelectedCount:0,})
+		resList = append(resList, FoodResponse{Food: subItem, SelectedCount: 0,})
 	}
 	return resList
 }

@@ -58,7 +58,6 @@ func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
 	}
 	return status, iris.Map{
 		constant.NameData:        item,
-		constant.NameTotalCount:  len(item.List),
 	}
 
 }

@@ -52,7 +52,8 @@ func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.
 		Join("INNER", "table_info", "`order`.table_id=table_info.id")
 
 	if role == constant.RoleCustomer {
-		session = session.Where(fmt.Sprintf("%s=?", constant.ColumnTableId), tableId)
+		session = session.Where(fmt.Sprintf("%s=? and `order`.status>?",
+			constant.ColumnTableId), tableId,constant.OrderStatusWaitPay)
 	}
 
 	err := session.Find(&list)
@@ -147,7 +148,7 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
 		foodList := order.FoodList
 		for _, subItem := range foodList {
-			status, err = s.MenuService.ReduceFoodNum(order.BusinessId,order.UserId, subItem.Id,subItem.Num)
+			status, err = s.MenuService.SellFood(order.BusinessId,order.UserId, subItem.Id,subItem.Num)
 			if err != nil {
 				return status, err
 			}

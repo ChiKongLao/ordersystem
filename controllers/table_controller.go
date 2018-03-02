@@ -112,8 +112,16 @@ func (c *TableController) PostBy(businessId int) (int,interface{}) {
 
 
 // 使用餐桌
-func (c *TableController) PostByJoinBy(businessId,tableId int) (int,interface{}) {
-	status, err := c.TableService.JoinTable(businessId,tableId)
+func (c *TableController) PutByStatusBy(businessId,tableId int) (int,interface{}) {
+
+	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
+	if err != nil{
+		return status, model.NewErrorResponse(err)
+	}
+
+	tableStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+
+	status, err = c.TableService.UpdateTableStatus(businessId,userId,tableId,tableStatus)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

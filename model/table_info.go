@@ -12,7 +12,7 @@ type TableInfo struct {
 	Status     int    `json:"status" xorm:"not null default 0 INT(11)"`   // 餐桌状态
 	PersonNum  int    `json:"personNum" xorm:"default 0 INT(11)"`         // 就餐人数
 	Capacity   int    `json:"capacity" xorm:"not null default 2 INT(11)"` // 容纳人数
-	UserId     string `json:"userId" xorm:"VARCHAR(255)"`                 // 用户id列
+	UserId     []string `json:"userId" xorm:"VARCHAR(255)"`                 // 用户id列
 	//Desc       string  `json:"desc" xorm:"VARCHAR(255)"`                   // 描述
 	OrderList []Order `json:"orderList" ` // 订单列
 }
@@ -21,7 +21,7 @@ type TableInfo struct {
 func (item *TableInfo) ClearTable() {
 	item.PersonNum = 0
 	item.Price = ""
-	item.UserId = ""
+	item.UserId = nil
 	item.Time = 0
 	item.OrderList = nil
 }

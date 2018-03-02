@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/util"
+	"github.com/chikong/ordersystem/network"
 )
 
 type TableService interface {
@@ -20,13 +21,17 @@ type TableService interface {
 	ChangeTable(businessId, oldTableId, newTableId int) (int, error)
 
 	JoinTable(businessId, tableId int) (int, error)
+	UpdateTableStatus(businessId, userId, tableId, tableStatus int) (int, error)
 }
 
-func NewTableService() TableService {
-	return &tableService{}
+func NewTableService(userService UserService) TableService {
+	return &tableService{
+		UserService:  userService,
+	}
 }
 
 type tableService struct {
+	UserService  UserService
 }
 
 // 获取餐桌列表
@@ -193,16 +198,25 @@ func (s *tableService) ChangeTable(businessId, oldTableId, newTableId int) (int,
 
 // 使用餐桌
 func (s *tableService) JoinTable(businessId, tableId int) (int, error) {
+	return s.UpdateTableStatus(businessId,0,tableId,constant.TableStatusUsing)
+}
+
+// 更新餐桌状态
+func (s *tableService) UpdateTableStatus(businessId, userId, tableId, tableStatus int) (int, error) {
 	status, table, err := s.GetTable(businessId,tableId)
 	if err != nil{
 		return status, err
 	}
-	if table.Status == constant.TableStatusEmpty{
-		table.Status = constant.TableStatusUsing
-	}
+	table.Status = tableStatus
+	//table.UserId.
+
 	status, err = s.UpdateTable(table)
 	if err != nil{
 		return status, err
+	}
+	if tableStatus == constant.TableStatusWaitClean {
+		_, user, _ := s.UserService.GetUserById(userId)
+		network.SendChatMessage("麻烦清理下餐桌",user, businessId, tableId)
 	}
 
 	return iris.StatusOK, nil

@@ -80,26 +80,26 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		return status, err
 	}
 
-	status,food, err := s.MenuService.GetFood(businessId, userId, foodId)
+	status,dbFood, err := s.MenuService.GetFood(businessId, userId, foodId)
 	if err != nil {
 		return status,err
 	}
 
 
 	// 购物车数据库不需要保存这些信息
-	food.Price = 0
-	food.Pic = ""
-	food.Desc = ""
-	food.Name = ""
-	food.ClassifyId = ""
-	food.SaleCount = 0
+	dbFood.Price = 0
+	dbFood.Pic = ""
+	dbFood.Desc = ""
+	dbFood.Name = ""
+	dbFood.ClassifyId = nil
+	dbFood.SaleCount = 0
 
 	if shoppingCart != nil {
 		isExist := false
 		// 设置修改信息
 		for i, subItem := range shoppingCart.FoodList {
 			// 发生变化才更新
-			if subItem.Id == foodId && subItem.ClassifyId == subItem.ClassifyId {
+			if subItem.Id == foodId && foodType == foodType {
 				isExist = true
 				if subItem.Num != num {
 					if num == 0 { // 删除食物
@@ -122,8 +122,8 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 		}
 		if !isExist {
 			mySlice := shoppingCart.FoodList[:]
-			food.Num = num
-			list := append(mySlice,*food.GetFood())
+			dbFood.Num = num
+			list := append(mySlice,*dbFood.GetFood())
 			shoppingCart.FoodList = list
 			_, err = manager.DBEngine.AllCols().Where(
 				fmt.Sprintf("%s=?", constant.NameID), shoppingCart.Id).Update(shoppingCart)
@@ -134,9 +134,9 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 
 		}
 	} else {
-		food.Num = num
+		dbFood.Num = num
 		list := []model.Food{
-			*food.GetFood(),
+			*dbFood.GetFood(),
 		}
 		_, err = manager.DBEngine.Insert(&model.ShoppingCart{
 			UserId:     userId,

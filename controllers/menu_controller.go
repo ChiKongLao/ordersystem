@@ -7,6 +7,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
+	"encoding/json"
 )
 
 // 食物
@@ -86,11 +87,13 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := c.Ctx.PostValueInt(constant.NameNum)
-	classifyId := c.Ctx.PostValue(constant.NameClassifyId)
 	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	desc := c.Ctx.FormValue(constant.NameDesc)
+
+	var classifyIds []int
+	err = json.Unmarshal([]byte(c.Ctx.PostValue(constant.NameClassifyId)),&classifyIds)
 
 	if err != nil {
 		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
@@ -102,7 +105,7 @@ func (c *MenuController) PostBy(userId int) (int,interface{}) {
 		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		ClassifyId:classifyId,
+		ClassifyId:classifyIds,
 		Type:foodType,
 		Desc:desc,
 	} )
@@ -135,11 +138,17 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 
 	name := c.Ctx.FormValue(constant.Name)
 	num,_ := strconv.Atoi(c.Ctx.FormValue(constant.NameNum))
-	classifyId := c.Ctx.PostValue(constant.NameClassifyId)
 	foodType := c.Ctx.PostValue(constant.NameType)
 	pic := c.Ctx.FormValue(constant.NamePic)
 	price, _ := strconv.ParseFloat(c.Ctx.FormValue(constant.NamePrice),10)
 	desc := c.Ctx.FormValue(constant.NameDesc)
+
+	var classifyIds []int
+	err = json.Unmarshal([]byte(c.Ctx.PostValue(constant.NameClassifyId)),&classifyIds)
+
+	if err != nil {
+		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "分类格式错误"}
+	}
 
 	status, err = c.UpdateFood(&model.Food{
 		Id:foodId,
@@ -148,7 +157,7 @@ func (c *MenuController) PutByBy(userId, foodId int) (int,interface{}) {
 		Num:num,
 		Pic:pic,
 		Price:float32(price),
-		ClassifyId:classifyId,
+		ClassifyId:classifyIds,
 		Type:foodType,
 		Desc:desc,
 	} )

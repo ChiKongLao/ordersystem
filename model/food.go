@@ -10,8 +10,8 @@ type Food struct {
 	IsCollect   bool    `json:"isCollect"`                                        // 是否收藏
 	Pic         string  `json:"pic" xorm:"VARCHAR(255)"`
 	Price       float32 `json:"price" xorm:"not null FLOAT"`
-	Type        string  `json:"type" xorm:"VARCHAR(255)"`       // 种类
-	ClassifyId  string  `json:"classifyId" xorm:"VARCHAR(255)"` // 分类
+	Type        string  `json:"type" xorm:"VARCHAR(255)"` // 种类
+	ClassifyId  []int   `json:"classifyId"`               // 分类
 	Desc        string  `json:"desc" xorm:"VARCHAR(255)"`
 	//Desc       string `json:"desc,omitempty" xorm:"VARCHAR(255)"`
 	SaleCount int `json:"saleCount" xorm:"INT"` // 月销量
@@ -19,18 +19,17 @@ type Food struct {
 
 type FoodResponse struct {
 	Food
-	//Classify Classify `json:"-"` // 种类
 	SelectedCount int `json:"selectedCount"` // 购物车中已选择的个数
 }
 
 type FoodResponseSlice []FoodResponse
 type FoodResponseMap map[string][]FoodResponse
 
-// 是否为同一道菜. 包含同样的味道
-func (item *Food) IsSameFood(targetItem Food) bool {
-	return item.Id == targetItem.Id &&
-		item.ClassifyId == targetItem.ClassifyId
-}
+//// 是否为同一道菜. 包含同样的味道
+//func (item *Food) IsSameFood(targetItem Food) bool {
+//	return item.Id == targetItem.Id &&
+//		item.ClassifyId == targetItem.ClassifyId
+//}
 
 // 获取food
 func (item *FoodResponse) GetFood() *Food {

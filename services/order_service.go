@@ -111,7 +111,9 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		}
 		subItem.Price = dbItem.Price
 		subItem.Name = dbItem.Name
-		subItem.ClassifyId = dbItem.ClassifyId
+		subItem.Type = dbItem.Type
+		subItem.ClassifyId = nil
+		subItem.Pic = ""
 		foodList[i] = subItem
 	}
 	order.FoodList = foodList

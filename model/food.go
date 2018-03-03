@@ -11,7 +11,7 @@ type Food struct {
 	Pic         string  `json:"pic" xorm:"VARCHAR(255)"`
 	Price       float32 `json:"price" xorm:"not null FLOAT"`
 	Type        string  `json:"type" xorm:"VARCHAR(255)"` // 种类
-	ClassifyId  []int   `json:"classifyId"`               // 分类
+	ClassifyId  []int   `json:"-" xorm:"VARCHAR(255)"`    // 分类
 	Desc        string  `json:"desc" xorm:"VARCHAR(255)"`
 	//Desc       string `json:"desc,omitempty" xorm:"VARCHAR(255)"`
 	SaleCount int `json:"saleCount" xorm:"INT"` // 月销量
@@ -19,7 +19,8 @@ type Food struct {
 
 type FoodResponse struct {
 	Food
-	SelectedCount int `json:"selectedCount"` // 购物车中已选择的个数
+	ClassifyList      []Classify `json:"classify"` // 分类
+	SelectedCount int        `json:"selectedCount"`        // 购物车中已选择的个数
 }
 
 type FoodResponseSlice []FoodResponse
@@ -49,7 +50,11 @@ func ConvertFoodList(list []FoodResponse) []Food {
 func ConvertFoodResponseList(list []Food) []FoodResponse {
 	resList := make([]FoodResponse, 0)
 	for _, subItem := range list {
-		resList = append(resList, FoodResponse{Food: subItem, SelectedCount: 0,})
+		resList = append(resList, FoodResponse{
+			Food: subItem,
+			ClassifyList: make([]Classify,0),
+			SelectedCount: 0,
+			})
 	}
 	return resList
 }

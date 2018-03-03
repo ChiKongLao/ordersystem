@@ -123,7 +123,18 @@ func (s *menuService) GetFood(businessId, userId, foodId int) (int, *model.FoodR
 			}
 
 		}
+	}else{ // 只有商家才显示分类详情
+		for _, classifyId := range itemResponse.ClassifyId {
+			status, classify, err := s.ClassifyService.GetClassify(businessId, int(classifyId))
+			if err != nil {
+				return status, nil, err
+			}
+			itemResponse.ClassifyList = append(itemResponse.ClassifyList,*classify)
+		}
 	}
+
+
+
 
 	return iris.StatusOK, itemResponse, nil
 }

@@ -69,6 +69,7 @@ func (m *mqttManager) Publish(msg *model.Message) {
 		return
 	}
 	m.mqttClient.Publish(msg.Topic, byte(msg.Qos), false, msg.Payload)
+	logrus.Debugf("发送 %s 消息: %s, %s",msg.Desc,msg.Topic,msg.Payload)
 }
 
 // 订阅topic

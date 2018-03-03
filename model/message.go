@@ -2,28 +2,29 @@ package model
 
 import "strings"
 
-
 type Message struct {
 	// 数据内容载体
-	Payload  string
+	Payload string
 	// 发送的设备号
-	Token    string
+	Token string
 	// 发送到平台
 	Platform string
-	Topic string
-	Qos int
+	Topic    string
+	Qos      int
+	Desc     string // 描述
 }
 
 func (msg *Message) GetTokens() []string {
-	return strings.Split(msg.Token,",")
+	return strings.Split(msg.Token, ",")
 }
 
 // 创建mqtt消息
-func NewMqttMessage(topic string, payload string) *Message{
+func NewMqttMessage(topic, payload,desc string) *Message {
 	return &Message{
-		Topic:topic,
-		Payload:payload,
-		Qos:1,
+		Topic:   topic,
+		Payload: payload,
+		Desc:desc,
+		Qos:     1,
 	}
 
 }

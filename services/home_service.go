@@ -64,15 +64,19 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		return iris.StatusInternalServerError, nil, errors.New("获取首页数据失败")
 	}
 
+	var tmpPrice interface{}
 	var totalPrice float32
-	res, err := manager.DBEngine.Table("`order`").
+	if res, err := manager.DBEngine.Table("`order`").
 		Select("Sum(`order`.price) AS totalPrice").
 		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
 		constant.OrderStatusFinish, util.GetTodayZeroTime()).
-		Get(&totalPrice)
-	if !res || err != nil {
+		Get(&tmpPrice); !res || err != nil{
 		logrus.Errorf("获取今日订单总额失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
+	}else if tmpPrice != nil{
+		totalPrice = tmpPrice.(float32)
+	}else{
+		totalPrice = 0
 	}
 
 	type Home struct {

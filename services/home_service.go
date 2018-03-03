@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"errors"
 	"fmt"
+	"github.com/chikong/ordersystem/util"
 )
 
 type HomeService interface {
@@ -63,11 +64,23 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		return iris.StatusInternalServerError, nil, errors.New("获取首页数据失败")
 	}
 
+	var totalPrice float32
+	res, err := manager.DBEngine.Table("`order`").
+		Select("Sum(`order`.price) AS totalPrice").
+		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
+		constant.OrderStatusFinish, util.GetTodayZeroTime()).
+		Get(&totalPrice)
+	if !res || err != nil {
+		logrus.Errorf("获取今日订单总额失败: %s", err)
+		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
+	}
+
 	type Home struct {
 		EatingNum    int               `json:"eatingNum"`
 		EatingPerson int               `json:"eatingPerson"`
 		EmptyTable   int               `json:"emptyTable"`
 		SaleOutNum   int               `json:"saleOutNum"`
+		Price        float32           `json:"price"`
 		Data         []model.TableInfo `json:"data"`
 	}
 
@@ -77,6 +90,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		EatingPerson: eatingPerson,
 		EmptyTable:   emptyTable,
 		SaleOutNum:   saleOutNum,
+		Price:        totalPrice,
 	}, nil
 }
 
@@ -97,15 +111,15 @@ func (s *homeService) GetCustomerHome(businessId, userId int) (int, interface{},
 	type Home struct {
 		Name  string               `json:"name"`
 		Desc  string               `json:"desc"`
-		Pic   []string               `json:"pic"`
+		Pic   []string             `json:"pic"`
 		Food  []model.FoodResponse `json:"food"`
 		Count int                  `json:"count"`
 	}
 
 	return iris.StatusOK, &Home{
-		Food: foodList,
-		Name: user.NickName,
-		Pic:  shop.Pic,
-		Count:len(foodList),
+		Food:  foodList,
+		Name:  user.NickName,
+		Pic:   shop.Pic,
+		Count: len(foodList),
 	}, nil
 }

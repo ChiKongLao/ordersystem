@@ -208,7 +208,16 @@ func (s *tableService) UpdateTableStatus(businessId, userId, tableId, tableStatu
 		return status, err
 	}
 	table.Status = tableStatus
-	//table.UserId.
+	isExist := false
+	for _, subItem := range table.UserId {
+		if subItem == userId {
+			isExist = true
+			break
+		}
+	}
+	if !isExist { // 餐桌不存在该客户, 则添加
+		table.UserId = append(table.UserId, userId)
+	}
 
 	status, err = s.UpdateTable(table)
 	if err != nil{

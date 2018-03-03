@@ -40,3 +40,10 @@ func GetCurrentTime() int64 {
 	//return strconv.FormatInt(time.Now().UnixNano()/1000/1000, 10)
 }
 
+// 获取今天零时的时间戳
+func GetTodayZeroTime() int64{
+	now := time.Now()
+	t, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), time.Local)
+	return t.Unix()*1000
+}
+

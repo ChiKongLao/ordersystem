@@ -48,7 +48,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		classifyService := services.NewClassifyService(userService)
 		shopService := services.NewShopService(userService)
 		menuService := services.NewMenuService(userService,classifyService)
-		tableService := services.NewTableService()
+		tableService := services.NewTableService(userService)
 		orderService := services.NewOrderService(userService, menuService,tableService)
 
 
@@ -113,7 +113,7 @@ func addTestData()  {
 	userService := services.NewUserService()
 	classifyService := services.NewClassifyService(userService)
 	foodService := services.NewMenuService(userService,classifyService)
-	tableService := services.NewTableService()
+	tableService := services.NewTableService(userService)
 
 	addUser(userService)
 	addFood(userService,foodService)

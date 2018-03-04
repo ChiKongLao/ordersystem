@@ -12,4 +12,6 @@ const(
 	DBPassword = ""
 	DBHOST = "localhost:3306"
 
+	RedisHost = "localhost:6379"
+
 )

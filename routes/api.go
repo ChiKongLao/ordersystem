@@ -50,6 +50,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		menuService := services.NewMenuService(userService,classifyService)
 		tableService := services.NewTableService(userService)
 		orderService := services.NewOrderService(userService, menuService,tableService)
+		chatService := services.NewChatService(userService)
 
 
 		mvc.Configure(v1.Party("/user"), func(mvcApp *mvc.Application) {
@@ -100,7 +101,10 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		mvc.Configure(v1.Party("/classify",auth), func(mvcApp *mvc.Application) {
 			mvcApp.Register(userService, classifyService)
 			mvcApp.Handle(new(controllers.ClassifyController))
-
+		})
+		mvc.Configure(v1.Party("/chat",auth), func(mvcApp *mvc.Application) {
+			mvcApp.Register(userService, chatService)
+			mvcApp.Handle(new(controllers.ChatController))
 		})
 
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))

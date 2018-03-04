@@ -1,5 +1,7 @@
 package constant
 
+import "time"
+
 // key名
 const (
 	Name              = "name"
@@ -75,5 +77,13 @@ const (
 	OrderStatusPaid    = 2 // 已付款
 	OrderStatusSure    = 3 // 已确认
 	OrderStatusFinish  = 4 // 已完成
+
+)
+
+const (
+	unit = time.Second
+	// redis缓存时效
+	TimeCacheMsgDuplicate = int(3 * time.Second / unit) // mqtt消息重复过滤时效
+	TimeCacheChatLog       = int(4 * time.Hour / unit)   //  聊天记录时效
 
 )

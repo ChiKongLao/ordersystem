@@ -3,7 +3,7 @@ package model
 // 订单
 type Order struct {
 	Id         int     `json:"id" xorm:"not null pk autoincr unique INT(11)"`
-	TableId    int     `json:"-" xorm:"not null  INT(11)"`
+	TableId    int     `json:"tableId" xorm:"not null  INT(11)"`
 	PersonNum  int     `json:"personNum" xorm:"not null INT(11)"`
 	Price      float32 `json:"price" xorm:"not null FLOAT"`
 	Status     int     `json:"status" xorm:"INT(11)"`
@@ -16,7 +16,7 @@ type Order struct {
 
 type OrderResponse struct {
 	Id         int     `json:"id"`
-	TableId    int     `json:"-"`
+	TableId    int     `json:"tableId"`
 	PersonNum  int     `json:"personNum"`
 	Price      float32 `json:"price"`
 	Status     int     `json:"status"`

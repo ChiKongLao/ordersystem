@@ -3,6 +3,7 @@ package model
 // 订单
 type Order struct {
 	Id         int     `json:"id" xorm:"not null pk autoincr unique INT(11)"`
+	Number     string  `json:"orderNo" xorm:"unique VARCHAR(35)"` // 订单号
 	TableId    int     `json:"tableId" xorm:"not null  INT(11)"`
 	PersonNum  int     `json:"personNum" xorm:"not null INT(11)"`
 	Price      float32 `json:"price" xorm:"not null FLOAT"`
@@ -17,6 +18,7 @@ type Order struct {
 type OrderResponse struct {
 	Id         int     `json:"id"`
 	TableId    int     `json:"tableId"`
+	Number     string  `json:"orderNo"` // 订单号
 	PersonNum  int     `json:"personNum"`
 	Price      float32 `json:"price"`
 	Status     int     `json:"status"`
@@ -57,6 +59,7 @@ func ConvertOrderResponseData(list []OrderResponse) *OrderListResponse {
 func ConvertOrderResponseToOrder(response OrderResponse) *Order {
 	return &Order{
 		Id:         response.Id,
+		Number:     response.Number,
 		TableId:    response.TableId,
 		PersonNum:  response.PersonNum,
 		Price:      response.Price,

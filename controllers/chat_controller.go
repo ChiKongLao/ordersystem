@@ -21,7 +21,7 @@ func (c *ChatController) GetByTableBy(businessId,tableId int) (int,interface{}) 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	var list []string
+	var list []model.ChatMsg
 	status, list, err =	c.GetChatLog(businessId,tableId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)

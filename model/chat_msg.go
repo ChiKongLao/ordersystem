@@ -1,8 +1,6 @@
 package model
 
 import (
-	"strconv"
-	"time"
 	"github.com/chikong/ordersystem/util"
 )
 
@@ -12,7 +10,7 @@ type ChatDetail struct {
 	Head     string `json:"head"`
 	UserId   int    `json:"userId"`
 	NickName string `json:"nickName"`
-	Time     string `json:"time"`
+	Time     int64 `json:"time"`
 	MsgId    string `json:"msgId"`
 }
 
@@ -30,7 +28,7 @@ func NewChatMsg(user *User, content string) *ChatMsg {
 			Head: user.Head,
 			UserId: user.Id,
 			NickName: user.NickName,
-			Time: strconv.FormatInt(time.Now().Unix(), 10),
+			Time: util.GetCurrentTime(),
 			MsgId: util.GetUUID(),
 			},
 

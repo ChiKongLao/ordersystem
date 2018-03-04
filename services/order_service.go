@@ -10,6 +10,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/network"
 	"github.com/chikong/ordersystem/util"
+	"strings"
 )
 
 type OrderService interface {
@@ -94,6 +95,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
+	order.Number = strings.Replace(util.GetUUID(),"-","",-1)
 	time := util.GetCurrentTime()
 	order.CreateTime = time
 	order.UpdateTime = time

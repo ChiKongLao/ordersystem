@@ -65,7 +65,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 	}
 
 	var tmpPrice interface{}
-	var totalPrice float32
+	var totalPrice float64
 	if res, err := manager.DBEngine.Table("`order`").
 		Select("Sum(`order`.price) AS totalPrice").
 		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
@@ -73,8 +73,8 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		Get(&tmpPrice); !res || err != nil{
 		logrus.Errorf("获取今日订单总额失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
-	}else if tmpPrice != nil{
-		totalPrice = tmpPrice.(float32)
+	}else if tmpPrice != ""{
+		totalPrice = tmpPrice.(float64)
 	}else{
 		totalPrice = 0
 	}
@@ -84,7 +84,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		EatingPerson int               `json:"eatingPerson"`
 		EmptyTable   int               `json:"emptyTable"`
 		SaleOutNum   int               `json:"saleOutNum"`
-		Price        float32           `json:"price"`
+		Price        float64           `json:"price"`
 		Data         []model.TableInfo `json:"data"`
 	}
 

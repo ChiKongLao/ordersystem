@@ -11,10 +11,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/kataras/iris/core/errors"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/model"
+	"encoding/json"
 )
 
 type ChatService interface {
-	GetChatLog(businessId, tableId int) (int, []string, error)
+	GetChatLog(businessId, tableId int) (int, []model.ChatMsg, error)
 }
 
 func NewChatService(userService UserService) ChatService {
@@ -45,16 +47,27 @@ func handleChatMessage() {
 }
 
 // 获取聊天记录
-func (s *chatService) GetChatLog(businessId, tableId int) (int, []string, error) {
+func (s *chatService) GetChatLog(businessId, tableId int) (int, []model.ChatMsg, error) {
 	key := fmt.Sprintf(network.MqttProject+"/%v/%v"+network.TopicChat, businessId, tableId)
 	len, _ := redis.Int(manager.GetRedisConn().Do(manager.RedisLLen, key))
-	list, err := redis.Strings(manager.GetRedisConn().Do(manager.RedisLRange, key, 0, len))
+	stringList, err := redis.Strings(manager.GetRedisConn().Do(manager.RedisLRange, key, 0, len))
 	if err != nil {
 		logrus.Warnf("获取redis聊天记录失败. %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取redis聊天记录失败")
+		return iris.StatusInternalServerError, nil, errors.New("获取聊天记录失败")
 	}
-	if list == nil {
-		list = make([]string, 0)
+	if stringList == nil {
+		stringList = make([]string, 0)
 	}
+	var list []model.ChatMsg
+	for _, subItem := range stringList {
+		var item model.ChatMsg
+		err = json.Unmarshal([]byte(subItem),&item)
+		if err != nil {
+			logrus.Warnf("解析聊天记录失败. %s", err)
+			return iris.StatusInternalServerError, nil, errors.New("解析聊天记录失败")
+		}
+		list = append(list, item)
+	}
+
 	return iris.StatusOK, list, nil
 }

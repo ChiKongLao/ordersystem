@@ -73,7 +73,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		Get(&tmpPrice); !res || err != nil{
 		logrus.Errorf("获取今日订单总额失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
-	}else if tmpPrice != ""{
+	}else if _,ok := tmpPrice.(float64); ok{
 		totalPrice = tmpPrice.(float64)
 	}else{
 		totalPrice = 0

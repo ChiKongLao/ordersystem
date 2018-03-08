@@ -41,7 +41,7 @@ func (s *menuService) GetFoodList(businessId, userId int) (int, map[string][]mod
 		return iris.StatusBadRequest, nil, nil, errors.New("商家id不能为空")
 	}
 
-	var list []model.Food
+	list := make([]model.Food,0)
 	err := manager.DBEngine.Where(fmt.Sprintf("%s=?", constant.ColumnBusinessId), businessId).
 		Find(&list)
 	if err != nil {

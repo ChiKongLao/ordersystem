@@ -50,6 +50,7 @@ func (m *mqttManager) subscribeCommon(){
 func (m *mqttManager) initClient() {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(MqttUrl)
+	opts.SetConnectTimeout(5*time.Second)
 	opts.SetClientID(fmt.Sprintf("system_%s", strconv.FormatInt(time.Now().Unix(), 10)))
 	//opts.SetUsername(*user)
 	//opts.SetPassword(*password)
@@ -69,11 +70,12 @@ func (m *mqttManager) initClient() {
 	})
 
 	client := MQTT.NewClient(opts)
+	logrus.Infof("连接mqtt. %s", MqttUrl)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		logrus.Errorf("mqtt连接失败")
-		panic(token.Error())
+		logrus.Errorf("mqtt连接失败: %s",token.Error())
+		return
 	}
-	logrus.Infof("连接mqtt成功. %s", MqttUrl)
+	logrus.Info("连接mqtt成功")
 	m.mqttClient = client
 	m.subscribeCommon()
 }

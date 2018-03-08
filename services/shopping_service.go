@@ -151,20 +151,3 @@ func (s *shoppingService) UpdateShopping(userId int, businessId int,
 	//network.SendShoppingCartMessage(businessId,)
 	return iris.StatusOK, nil
 }
-
-//// 删除购物车
-//func (s *shoppingService) DeleteShopping(businessId, userId, foodId int) (int, error) {
-//	if businessId == 0 {
-//		return iris.StatusBadRequest, errors.New("商家id不能为空")
-//	}
-//	if userId == 0 {
-//		return iris.StatusBadRequest, errors.New("用户id不能为空")
-//	}
-//	_, err := manager.DBEngine.Where(
-//		fmt.Sprintf("%s=?", constant.NameID), id).Delete(new(model.ShoppingCart))
-//	if err != nil {
-//		logrus.Errorf("删除购物车失败: %s", err)
-//		return iris.StatusInternalServerError, errors.New("删除购物车失败")
-//	}
-//	return iris.StatusOK, nil
-//}

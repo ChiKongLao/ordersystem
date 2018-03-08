@@ -52,8 +52,10 @@ func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.
 		Join("INNER", "table_info", "`order`.table_id=table_info.id")
 
 	if role == constant.RoleCustomer {
-		session = session.Where(fmt.Sprintf("%s=? and `order`.status>?",
-			constant.ColumnTableId), tableId,constant.OrderStatusWaitPay)
+		session = session.Where(fmt.Sprintf("%s=? and %s=? and `order`.status>?",
+			constant.ColumnTableId, constant.ColumnBusinessId), tableId, businessId, constant.OrderStatusWaitPay)
+	} else if role == constant.RoleBusiness {
+		session = session.Where(fmt.Sprintf("`order`.%s=?", constant.ColumnBusinessId), businessId)
 	}
 
 	err := session.Desc(constant.ColumnCreateTime).Find(&list)
@@ -74,7 +76,7 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 
 	res, err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
 		Join("INNER", "table_info", "`order`.table_id = table_info.id").
-		//GroupBy("`order`.user_id").
+	//GroupBy("`order`.user_id").
 		Where("`order`.id=?", orderId).
 		Get(item)
 	if err != nil {
@@ -82,7 +84,7 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
 	}
 	if res == false {
-		logrus.Errorf("订单不存在: %s", orderId)
+		logrus.Errorf("订单不存在: %v", orderId)
 		return iris.StatusNotFound, nil, errors.New("订单不存在")
 	}
 
@@ -95,7 +97,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
-	order.Number = strings.Replace(util.GetUUID(),"-","",-1)
+	order.Number = strings.Replace(util.GetUUID(), "-", "", -1)
 	time := util.GetCurrentTime()
 	order.CreateTime = time
 	order.UpdateTime = time
@@ -109,7 +111,7 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 			return status, 0, err
 		}
 		if subItem.Num > dbItem.Num {
-			return iris.StatusBadRequest,0,errors.New("数量不足")
+			return iris.StatusBadRequest, 0, errors.New("数量不足")
 		}
 		subItem.Price = dbItem.Price
 		subItem.Name = dbItem.Name
@@ -153,16 +155,15 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
 		foodList := order.FoodList
 		for _, subItem := range foodList {
-			status, err = s.MenuService.SellFood(order.BusinessId,order.UserId, subItem.Id,subItem.Num)
+			status, err = s.MenuService.SellFood(order.BusinessId, order.UserId, subItem.Id, subItem.Num)
 			if err != nil {
 				return status, err
 			}
 		}
 		_, orderUser, _ := s.UserService.GetUserById(order.UserId)
-		network.SendChatMessage("我已经下单啦",orderUser, order.BusinessId,order.TableId)
-		network.SendOrderMessage(order.BusinessId,order.Id,order.Status)
+		network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
+		network.SendOrderMessage(order.BusinessId, order.Id, order.Status)
 	}
-
 
 	// 设置修改信息
 	dbItem.TableId = order.TableId
@@ -233,15 +234,15 @@ func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) 
 		Head     string `json:"head"`
 		Num      int    `json:"num"`
 	}
-	var userList []OldCustomer
-
+	userList := make([]OldCustomer,0)
 	err := manager.DBEngine.Table("user").Select("user.nick_name, Count(user.nick_name) AS num").
-		Join("INNER", "order", "order.user_id = user.id").
-		GroupBy("order.user_id").
+		Join("INNER", "`order`", "`order`.user_id = user.id").
+		Where("`order`.business_id=?", businessId).
+		GroupBy("`order`.user_id").
 		Find(&userList)
 	if err != nil {
 		logrus.Errorf("获取老用户列表失败: %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取老用户列表失败")
+		return iris.StatusInternalServerError, userList, errors.New("获取老用户列表失败")
 	}
 	return iris.StatusOK, userList, nil
 }

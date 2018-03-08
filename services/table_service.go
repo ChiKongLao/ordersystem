@@ -54,7 +54,7 @@ func (s *tableService) GetTableList(businessId, status int) (int, []model.TableI
 
 	if err != nil {
 		logrus.Errorf("获取餐桌失败: %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取餐桌失败")
+		return iris.StatusInternalServerError, list, errors.New("获取餐桌失败")
 	}
 
 	return iris.StatusOK, list, nil

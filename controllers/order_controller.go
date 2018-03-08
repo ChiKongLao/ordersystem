@@ -17,23 +17,24 @@ type OrderController struct {
 }
 
 // 获取订单,
-func (c *OrderController) GetBy(userId int) (int, interface{}) {
+func (c *OrderController) GetBy(businessId int) (int, interface{}) {
 
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
+	if !isOwn {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+	}
 	status, user, err := c.UserService.GetUserFormToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
-	if user.Role != constant.RoleManager && user.Role != constant.RoleBusiness {
-		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
-	}
 
-	status, _, err = c.UserService.GetBusinessById(userId)
+	status, _, err = c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId,0,user.Role)
+	status, item, err = c.GetOrderList(businessId,0,user.Role)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}

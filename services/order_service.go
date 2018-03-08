@@ -152,6 +152,20 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	if dbItem.Status == constant.OrderStatusFinish {
 		return iris.StatusBadRequest, errors.New("已完成的订单不能修改")
 	}
+	order.UpdateTime = util.GetCurrentTime()
+
+	// 设置修改信息
+	dbItem.TableId = order.TableId
+	dbItem.Status = order.Status
+	dbItem.PersonNum = order.PersonNum
+	dbItem.UpdateTime = order.UpdateTime
+	var sumPrice float32
+	sumPrice, err = s.MenuService.GetOrderSumPrice(order.FoodList)
+	if err != nil {
+		return iris.StatusInternalServerError, err
+	}
+	order.Price = sumPrice
+
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
 		foodList := order.FoodList
 		for _, subItem := range foodList {
@@ -162,21 +176,8 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 		}
 		_, orderUser, _ := s.UserService.GetUserById(order.UserId)
 		network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
-		network.SendOrderMessage(order.BusinessId, order.Id, order.Status)
+		network.SendOrderMessage(order.BusinessId, order)
 	}
-
-	// 设置修改信息
-	dbItem.TableId = order.TableId
-	dbItem.Status = order.Status
-	dbItem.PersonNum = order.PersonNum
-	dbItem.UpdateTime = util.GetCurrentTime()
-	var sumPrice float32
-	sumPrice, err = s.MenuService.GetOrderSumPrice(order.FoodList)
-	if err != nil {
-		return iris.StatusInternalServerError, err
-	}
-	order.Price = sumPrice
-
 	_, err = manager.DBEngine.AllCols().Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
 		order.BusinessId, order.Id).Update(model.ConvertOrderResponseToOrder(*dbItem))

@@ -12,8 +12,7 @@ import (
 
 type ShoppingService interface {
 	GetShopping(businessId, userId int) (int, *model.ShoppingCart, error)
-	UpdateShopping(userId int, businessId int, foodId int, num int, foodType string) (int, error)
-	//DeleteShopping(id int) (int, error)
+	UpdateShopping(foodType string, userId, businessId, foodId, num, tableId int) (int, error)
 }
 
 func NewShoppingService(userService UserService, menuService MenuService) ShoppingService {
@@ -73,8 +72,8 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 }
 
 // 修改购物车
-func (s *shoppingService) UpdateShopping(userId int, businessId int,
-	foodId int, num int, foodType string) (int, error) {
+func (s *shoppingService) UpdateShopping(foodType string, userId, businessId,
+	foodId, num, tableId int) (int, error) {
 	status, shoppingCart, err := s.GetShopping(businessId, userId)
 	if status == iris.StatusInternalServerError {
 		return status, err

@@ -120,8 +120,9 @@ func (c *TableController) PutByStatusBy(businessId,tableId int) (int,interface{}
 	}
 
 	tableStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
 
-	status, err = c.TableService.UpdateTableStatus(businessId,userId,tableId,tableStatus)
+	status, err = c.TableService.UpdateTableStatus(businessId,userId,tableId,tableStatus,personNum)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)
@@ -148,6 +149,7 @@ func (c *TableController) PutByBy(businessId, tableId int) (int,interface{}) {
 	name := c.Ctx.FormValue(constant.Name)
 	tableStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
 	capacity, _ := c.Ctx.PostValueInt(constant.NameCapacity)
+	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
 
 	status, err = c.UpdateTable(&model.TableInfo{
 		Id:tableId,
@@ -155,7 +157,7 @@ func (c *TableController) PutByBy(businessId, tableId int) (int,interface{}) {
 		Name:name,
 		Status:tableStatus,
 		Capacity:capacity,
-
+		PersonNum:personNum,
 
 	} )
 

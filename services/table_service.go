@@ -20,8 +20,7 @@ type TableService interface {
 	DeleteTable(businessId, tableId int) (int, error)
 	ChangeTable(businessId, oldTableId, newTableId int) (int, error)
 
-	JoinTable(businessId, tableId int) (int, error)
-	UpdateTableStatus(businessId, userId, tableId, tableStatus int) (int, error)
+	UpdateTableStatus(businessId, userId, tableId, tableStatus, personNum int) (int, error)
 }
 
 func NewTableService(userService UserService) TableService {
@@ -122,9 +121,9 @@ func (s *tableService) UpdateTable(table *model.TableInfo) (int, error) {
 	dbItem.Capacity = table.Capacity
 	dbItem.Time = table.Time
 	dbItem.UserId = table.UserId
-	if table.PersonNum != 0 {
+	//if table.PersonNum != 0 {
 		dbItem.PersonNum = table.PersonNum
-	}
+	//}
 	dbItem.Status = table.Status
 	if dbItem.Status == constant.TableStatusEmpty { // 闲置状态清空旧的信息
 		dbItem.ClearTable()
@@ -196,18 +195,15 @@ func (s *tableService) ChangeTable(businessId, oldTableId, newTableId int) (int,
 
 /////////////////////// 客户相关
 
-// 使用餐桌
-func (s *tableService) JoinTable(businessId, tableId int) (int, error) {
-	return s.UpdateTableStatus(businessId,0,tableId,constant.TableStatusUsing)
-}
 
 // 更新餐桌状态
-func (s *tableService) UpdateTableStatus(businessId, userId, tableId, tableStatus int) (int, error) {
+func (s *tableService) UpdateTableStatus(businessId, userId, tableId, tableStatus, personNum int) (int, error) {
 	status, table, err := s.GetTable(businessId,tableId)
 	if err != nil{
 		return status, err
 	}
 	table.Status = tableStatus
+	table.PersonNum = personNum
 	isExist := false
 	for _, subItem := range table.UserId {
 		if subItem == userId {

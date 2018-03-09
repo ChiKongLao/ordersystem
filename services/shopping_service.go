@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/network"
 )
 
 type ShoppingService interface {
@@ -147,6 +148,6 @@ func (s *shoppingService) UpdateShopping(foodType string, userId, businessId,
 			return iris.StatusInternalServerError, errors.New("添加食物到购物车失败")
 		}
 	}
-	//network.SendShoppingCartMessage(businessId,)
+	network.SendShoppingCartMessage(businessId,tableId)
 	return iris.StatusOK, nil
 }

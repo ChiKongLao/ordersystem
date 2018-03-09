@@ -61,13 +61,13 @@ func (s *chatService) GetChatLog(businessId, tableId int) (int, []model.ChatMsg,
 	if stringList == nil {
 		stringList = make([]string, 0)
 	}
-	var list []model.ChatMsg
+	list := make([]model.ChatMsg,0)
 	for _, subItem := range stringList {
 		var item model.ChatMsg
 		err = json.Unmarshal([]byte(subItem), &item)
 		if err != nil {
 			logrus.Warnf("解析聊天记录失败. %s", err)
-			return iris.StatusInternalServerError, nil, errors.New("解析聊天记录失败")
+			return iris.StatusInternalServerError, list, errors.New("解析聊天记录失败")
 		}
 		list = append(list, item)
 	}

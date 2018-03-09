@@ -13,7 +13,6 @@ import (
 	"github.com/chikong/ordersystem/constant"
 )
 
-//type MqttCallback func(message MQTT.Message)
 
 type MqttManager interface {
 	Publish(msg *model.Message)
@@ -51,6 +50,7 @@ func (m *mqttManager) initClient() {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(MqttUrl)
 	opts.SetConnectTimeout(5*time.Second)
+	opts.SetAutoReconnect(true)
 	opts.SetClientID(fmt.Sprintf("system_%s", strconv.FormatInt(time.Now().Unix(), 10)))
 	//opts.SetUsername(*user)
 	//opts.SetPassword(*password)

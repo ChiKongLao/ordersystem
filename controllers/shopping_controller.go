@@ -17,13 +17,13 @@ type ShoppingController struct {
 }
 
 // 获取购物车
-func (c *ShoppingController) GetBy(businessId int) (int,interface{}) {
+func (c *ShoppingController) GetByTableBy(businessId,tableId int) (int,interface{}) {
 	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
-	status, item, err := c.GetShopping(businessId,userId)
+	status, item, err := c.GetShopping(businessId,userId,tableId)
 	if err != nil{
 		return status, model.NewErrorResponse(err)
 	}

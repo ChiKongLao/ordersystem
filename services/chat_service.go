@@ -19,15 +19,17 @@ type ChatService interface {
 	GetChatLog(businessId, tableId int) (int, []model.ChatMsg, error)
 }
 
-func NewChatService(userService UserService) ChatService {
+func NewChatService(userService UserService, tableService TableService) ChatService {
 	handleChatMessage()
 	return &chatService{
-		UserService: userService,
+		UserService:  userService,
+		TableService: tableService,
 	}
 }
 
 type chatService struct {
-	UserService UserService
+	UserService  UserService
+	TableService TableService
 }
 
 // 处理聊天消息
@@ -46,6 +48,7 @@ func handleChatMessage() {
 
 }
 
+
 // 获取聊天记录
 func (s *chatService) GetChatLog(businessId, tableId int) (int, []model.ChatMsg, error) {
 	key := fmt.Sprintf(network.MqttProject+"/%v/%v"+network.TopicChat, businessId, tableId)
@@ -61,7 +64,7 @@ func (s *chatService) GetChatLog(businessId, tableId int) (int, []model.ChatMsg,
 	var list []model.ChatMsg
 	for _, subItem := range stringList {
 		var item model.ChatMsg
-		err = json.Unmarshal([]byte(subItem),&item)
+		err = json.Unmarshal([]byte(subItem), &item)
 		if err != nil {
 			logrus.Warnf("解析聊天记录失败. %s", err)
 			return iris.StatusInternalServerError, nil, errors.New("解析聊天记录失败")

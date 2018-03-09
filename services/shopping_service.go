@@ -11,7 +11,7 @@ import (
 )
 
 type ShoppingService interface {
-	GetShopping(businessId, userId int) (int, *model.ShoppingCart, error)
+	GetShopping(businessId, userId, table int) (int, *model.ShoppingCart, error)
 	UpdateShopping(foodType string, userId, businessId, foodId, num, tableId int) (int, error)
 }
 
@@ -28,7 +28,7 @@ type shoppingService struct {
 }
 
 // 获取单个购物车
-func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.ShoppingCart, error) {
+func (s *shoppingService) GetShopping(businessId, userId, tableId int) (int, *model.ShoppingCart, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
@@ -38,7 +38,7 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 	item := new(model.ShoppingCart)
 
 	res, err := manager.DBEngine.Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnUserId), businessId, userId).
+		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnTableId), businessId, tableId).
 		Desc(constant.NameID).Get(item)
 	if err != nil {
 		logrus.Errorf("获取购物车失败: %s", err)
@@ -74,7 +74,7 @@ func (s *shoppingService) GetShopping(businessId, userId int) (int, *model.Shopp
 // 修改购物车
 func (s *shoppingService) UpdateShopping(foodType string, userId, businessId,
 	foodId, num, tableId int) (int, error) {
-	status, shoppingCart, err := s.GetShopping(businessId, userId)
+	status, shoppingCart, err := s.GetShopping(businessId, userId,tableId)
 	if status == iris.StatusInternalServerError {
 		return status, err
 	}

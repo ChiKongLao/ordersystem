@@ -46,6 +46,8 @@ func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
 
+	manager.GetRedisConn().Do(manager.Redisl)
+
 	list := make([]model.OrderResponse, 0)
 
 	session := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").

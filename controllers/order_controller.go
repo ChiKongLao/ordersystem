@@ -17,11 +17,6 @@ type OrderController struct {
 
 // 获取订单,
 func (c *OrderController) GetBy(businessId int) (int, interface{}) {
-	return c.GetByStatusBy(businessId,constant.OrderStatusAll)
-}
-
-// 获取订单,
-func (c *OrderController) GetByStatusBy(businessId, orderStatus int) (int, interface{}) {
 
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
@@ -37,32 +32,37 @@ func (c *OrderController) GetByStatusBy(businessId, orderStatus int) (int, inter
 		return status, model.NewErrorResponse(err)
 	}
 
+	orderStatus, _ := c.Ctx.URLParamIntDefault(constant.NameStatus, constant.OrderStatusAll)
+
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(businessId,0,user.Role,orderStatus)
+	status, item, err = c.GetOrderList(businessId, 0, user.Role, orderStatus)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 	return status, iris.Map{
-		constant.NameData:        item,
+		constant.NameData: item,
 	}
 
 }
 
 // 获取订单
-func (c *OrderController) GetByTableByStatusBy(userId, tableId, orderStatus int) (int, interface{}) {
+func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
+	orderStatus, _ := c.Ctx.URLParamInt(constant.NameStatus)
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId,tableId,constant.RoleCustomer,orderStatus)
+	status, item, err = c.GetOrderList(userId, tableId, constant.RoleCustomer, orderStatus)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
+
+
 	return status, iris.Map{
-		constant.NameData:        item,
+		constant.NameData: item,
 	}
 
 }
@@ -121,7 +121,7 @@ func (c *OrderController) PostBy(businessId int) (int, interface{}) {
 		UserId:     userId,
 		TableId:    tableId,
 		PersonNum:  personNum,
-	},shoppingCartId)
+	}, shoppingCartId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -190,7 +190,7 @@ func (c *OrderController) PutByStatusBy(userId, orderId int) (int, interface{}) 
 
 	orderStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
 
-	status, err = c.UpdateOrderStatus(orderId,orderStatus)
+	status, err = c.UpdateOrderStatus(orderId, orderStatus)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)

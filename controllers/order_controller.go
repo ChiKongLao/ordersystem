@@ -6,7 +6,6 @@ import (
 	"github.com/chikong/ordersystem/services"
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/api/middleware/authentication"
-	"encoding/json"
 )
 
 // 订单
@@ -18,6 +17,11 @@ type OrderController struct {
 
 // 获取订单,
 func (c *OrderController) GetBy(businessId int) (int, interface{}) {
+	return c.GetByStatusBy(businessId,constant.OrderStatusAll)
+}
+
+// 获取订单,
+func (c *OrderController) GetByStatusBy(businessId, orderStatus int) (int, interface{}) {
 
 	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
@@ -34,7 +38,7 @@ func (c *OrderController) GetBy(businessId int) (int, interface{}) {
 	}
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(businessId,0,user.Role)
+	status, item, err = c.GetOrderList(businessId,0,user.Role,orderStatus)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -46,14 +50,14 @@ func (c *OrderController) GetBy(businessId int) (int, interface{}) {
 }
 
 // 获取订单
-func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
+func (c *OrderController) GetByTableByStatusBy(userId, tableId, orderStatus int) (int, interface{}) {
 	status, _, err := c.UserService.GetBusinessById(userId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId,tableId,constant.RoleCustomer)
+	status, item, err = c.GetOrderList(userId,tableId,constant.RoleCustomer,orderStatus)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -108,14 +112,8 @@ func (c *OrderController) PostBy(businessId int) (int, interface{}) {
 	}
 
 	tableId, _ := c.Ctx.PostValueInt(constant.NameTableId)
+	shoppingCartId, _ := c.Ctx.PostValueInt(constant.NameShoppingCartId)
 	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
-	var list = new([]model.Food)
-	err = json.Unmarshal([]byte(c.Ctx.FormValue(constant.NameFood)), &list)
-
-	if err != nil {
-		return iris.StatusBadRequest, iris.Map{constant.NameMsg: "菜单格式错误"}
-	}
-
 	var orderId int
 
 	status, orderId, err = c.InsertOrder(&model.Order{
@@ -123,8 +121,7 @@ func (c *OrderController) PostBy(businessId int) (int, interface{}) {
 		UserId:     userId,
 		TableId:    tableId,
 		PersonNum:  personNum,
-		FoodList:   *list,
-	})
+	},shoppingCartId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)

@@ -87,7 +87,7 @@ func (s *menuService) GetFood(businessId, userId, foodId int) (int, *model.FoodR
 		return iris.StatusInternalServerError, nil, errors.New("获取食物失败")
 	}
 	if res == false {
-		logrus.Errorf("食物不存在: %s", foodId)
+		logrus.Errorf("食物不存在: %v", foodId)
 		return iris.StatusNotFound, nil, errors.New("食物不存在")
 	}
 	itemResponse := &model.FoodResponse{

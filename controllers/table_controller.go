@@ -112,7 +112,7 @@ func (c *TableController) PostBy(businessId int) (int,interface{}) {
 
 
 // 使用餐桌
-func (c *TableController) PutByStatusBy(businessId,tableId int) (int,interface{}) {
+func (c *TableController) PutBy(businessId int) (int,interface{}) {
 
 	status, userId, err := authentication.GetUserIDFormHeaderToken(c.Ctx)
 	if err != nil{
@@ -120,6 +120,7 @@ func (c *TableController) PutByStatusBy(businessId,tableId int) (int,interface{}
 	}
 
 	tableStatus, _ := c.Ctx.PostValueInt(constant.NameStatus)
+	tableId, _ := c.Ctx.PostValueInt(constant.NameTableId)
 	personNum, _ := c.Ctx.PostValueInt(constant.NamePersonNum)
 
 	status, err = c.TableService.UpdateTableStatus(businessId,userId,tableId,tableStatus,personNum)

@@ -49,8 +49,9 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		shopService := services.NewShopService(userService)
 		menuService := services.NewMenuService(userService,classifyService)
 		tableService := services.NewTableService(userService)
-		orderService := services.NewOrderService(userService, menuService,tableService)
-		chatService := services.NewChatService(userService)
+		shoppingCartService := services.NewShoppingService(userService, menuService)
+		orderService := services.NewOrderService(userService, menuService,tableService,shoppingCartService)
+		chatService := services.NewChatService(userService,tableService)
 
 
 		mvc.Configure(v1.Party("/user"), func(mvcApp *mvc.Application) {
@@ -89,8 +90,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 			mvcApp.Handle(new(controllers.HomeController))
 		})
 		mvc.Configure(v1.Party("/shopping",auth), func(mvcApp *mvc.Application) {
-			service := services.NewShoppingService(userService, menuService)
-			mvcApp.Register(userService, service)
+			mvcApp.Register(userService, shoppingCartService)
 			mvcApp.Handle(new(controllers.ShoppingController))
 		})
 		mvc.Configure(v1.Party("/shop",auth), func(mvcApp *mvc.Application) {

@@ -109,9 +109,9 @@ func (s *tableService) UpdateTable(table *model.TableInfo) (int, error) {
 	if table.Capacity <= 0 {
 		return iris.StatusBadRequest, errors.New("餐桌可容纳人数错误")
 	}
-	if table.Capacity < table.PersonNum {
-		return iris.StatusBadRequest, errors.New("餐桌人数大于可容纳人数")
-	}
+	//if table.Capacity < table.PersonNum {
+	//	return iris.StatusBadRequest, errors.New("餐桌人数大于可容纳人数")
+	//}
 	status, dbItem, err := s.GetTable(table.BusinessId,table.Id)
 	if err != nil {
 		return status, err

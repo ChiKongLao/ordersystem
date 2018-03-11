@@ -14,39 +14,38 @@ import (
 )
 
 type OrderService interface {
-	GetOrderList(businessId, tableId, role int) (int, *model.OrderListResponse, error)
+	GetOrderList(businessId, tableId, role, status int) (int, *model.OrderListResponse, error)
 	GetOrder(orderId int) (int, *model.OrderResponse, error)
-	InsertOrder(order *model.Order) (int, int, error)
+	InsertOrder(order *model.Order, shoppingCartId int) (int, int, error)
 	UpdateOrder(order *model.Order) (int, error)
 	UpdateOrderStatus(orderId, status int) (int, error)
 	DeleteOrder(businessId, orderId int) (int, error)
 	GetOldCustomer(businessId int) (int, interface{}, error)
 }
 
-func NewOrderService(userService UserService, menuService MenuService, tableService TableService) OrderService {
-
-	//network.GetMqttInstance().RegisterCallback()
+func NewOrderService(userService UserService, menuService MenuService,
+	tableService TableService, shoppingService ShoppingService) OrderService {
 
 	return &orderService{
-		MenuService:  menuService,
-		UserService:  userService,
-		TableService: tableService,
+		MenuService:     menuService,
+		UserService:     userService,
+		TableService:    tableService,
+		ShoppingService: shoppingService,
 	}
 }
 
 type orderService struct {
-	MenuService  MenuService
-	UserService  UserService
-	TableService TableService
+	MenuService     MenuService
+	UserService     UserService
+	TableService    TableService
+	ShoppingService ShoppingService
 }
 
 // 获取订单列表
-func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.OrderListResponse, error) {
+func (s *orderService) GetOrderList(businessId, tableId, role, status int) (int, *model.OrderListResponse, error) {
 	if businessId == 0 {
 		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
 	}
-
-	manager.GetRedisConn().Do(manager.Redisl)
 
 	list := make([]model.OrderResponse, 0)
 
@@ -54,8 +53,15 @@ func (s *orderService) GetOrderList(businessId, tableId, role int) (int, *model.
 		Join("INNER", "table_info", "`order`.table_id=table_info.id")
 
 	if role == constant.RoleCustomer {
-		session = session.Where(fmt.Sprintf("%s=? and %s=? and `order`.status>?",
-			constant.ColumnTableId, constant.ColumnBusinessId), tableId, businessId, constant.OrderStatusWaitPay)
+		symbol := "="
+		if status == constant.OrderStatusPaid || status == constant.OrderStatusAll{
+			symbol = ">="
+			if status == constant.OrderStatusAll {
+				status = 0
+			}
+		}
+		session = session.Where(fmt.Sprintf("%s=? and `order`.%s=? and `order`.status%s?",
+			constant.ColumnTableId, constant.ColumnBusinessId,symbol), tableId, businessId, status)
 	} else if role == constant.RoleBusiness {
 		session = session.Where(fmt.Sprintf("`order`.%s=?", constant.ColumnBusinessId), businessId)
 	}
@@ -78,7 +84,6 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 
 	res, err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
 		Join("INNER", "table_info", "`order`.table_id = table_info.id").
-	//GroupBy("`order`.user_id").
 		Where("`order`.id=?", orderId).
 		Get(item)
 	if err != nil {
@@ -94,35 +99,22 @@ func (s *orderService) GetOrder(orderId int) (int, *model.OrderResponse, error) 
 }
 
 // 添加订单
-func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
+func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int, int, error) {
 
 	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
-	order.Number = strings.Replace(util.GetUUID(), "-", "", -1)
+	order.OrderNo = strings.Replace(util.GetUUID(), "-", "", -1)
 	time := util.GetCurrentTime()
 	order.CreateTime = time
 	order.UpdateTime = time
 	order.Status = constant.OrderStatusWaitPay
 
-	// 设置菜单信息
-	foodList := order.FoodList
-	for i, subItem := range foodList {
-		status, dbItem, err := s.MenuService.GetFood(order.BusinessId, order.UserId, subItem.Id)
-		if err != nil {
-			return status, 0, err
-		}
-		if subItem.Num > dbItem.Num {
-			return iris.StatusBadRequest, 0, errors.New("数量不足")
-		}
-		subItem.Price = dbItem.Price
-		subItem.Name = dbItem.Name
-		subItem.Type = dbItem.Type
-		subItem.ClassifyId = nil
-		subItem.Pic = ""
-		foodList[i] = subItem
+	status, foodListResponse, err := s.ShoppingService.GetShopping(order.BusinessId,order.UserId,order.TableId)
+	if err != nil {
+		return status, 0, err
 	}
-	order.FoodList = foodList
+	order.FoodList = foodListResponse.FoodList
 
 	sumPrice, err := s.MenuService.GetOrderSumPrice(order.FoodList)
 	if err != nil {
@@ -136,6 +128,8 @@ func (s *orderService) InsertOrder(order *model.Order) (int, int, error) {
 		logrus.Errorf("添加订单失败: %s", err)
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
+
+	s.ShoppingService.DeleteShopping(order.BusinessId,shoppingCartId) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }
@@ -237,7 +231,7 @@ func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) 
 		Head     string `json:"head"`
 		Num      int    `json:"num"`
 	}
-	userList := make([]OldCustomer,0)
+	userList := make([]OldCustomer, 0)
 	err := manager.DBEngine.Table("user").Select("user.nick_name, Count(user.nick_name) AS num").
 		Join("INNER", "`order`", "`order`.user_id = user.id").
 		Where("`order`.business_id=?", businessId).

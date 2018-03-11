@@ -60,6 +60,20 @@ func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
+	if orderStatus == constant.OrderStatusWaitPay { // 转换未支付的格式, 以后改成为已支付一样
+		if len(item.List) != 0 {
+			tmpOrder := item.List[0]
+			var count int
+			for _, foodItem := range tmpOrder.FoodList {
+				count += foodItem.Num
+			}
+			tmpOrder.FoodCount = count
+			return status, iris.Map{
+				constant.NameData: tmpOrder,
+			}
+		}
+
+	}
 
 	return status, iris.Map{
 		constant.NameData: item,

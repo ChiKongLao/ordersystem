@@ -52,8 +52,8 @@ func handleChatMessage() {
 // 获取聊天记录
 func (s *chatService) GetChatLog(businessId, tableId int) (int, []model.ChatMsg, error) {
 	key := fmt.Sprintf(network.MqttProject+"/%v/%v"+network.TopicChat, businessId, tableId)
-	len, _ := redis.Int(manager.GetRedisConn().Do(manager.RedisLLen, key))
-	stringList, err := redis.Strings(manager.GetRedisConn().Do(manager.RedisLRange, key, 0, len))
+	count, _ := redis.Int(manager.GetRedisConn().Do(manager.RedisLLen, key))
+	stringList, err := redis.Strings(manager.GetRedisConn().Do(manager.RedisLRange, key, 0, count))
 	if err != nil {
 		logrus.Warnf("获取redis聊天记录失败. %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取聊天记录失败")

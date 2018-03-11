@@ -45,7 +45,8 @@ func (s *shoppingService) GetShoppingList(businessId, userId, tableId int) (int,
 
 	err := manager.DBEngine.Table("shopping_cart").Select("shopping_cart.*,`user`.nick_name").
 		Join("INNER", "`user`", "shopping_cart.user_id = `user`.id").
-		Where(fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.ColumnTableId), businessId, tableId).
+		Where(fmt.Sprintf("%s=? and %s=? and %s!=?",
+			constant.ColumnBusinessId, constant.ColumnTableId,constant.ColumnFoodList), businessId, tableId,"[]").
 		Desc("shopping_cart.id").
 		Find(&list)
 

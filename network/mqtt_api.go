@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/chikong/ordersystem/model"
 	"encoding/json"
+	"github.com/chikong/ordersystem/util"
 )
 
 type MqttApi interface {
@@ -31,8 +32,14 @@ func SendChatMessage(content string, user *model.User, businessId, tableId int){
 // 发送购物车变化消息
 func SendShoppingCartMessage(businessId, tableId int){
 	topic := fmt.Sprintf(MqttProject + "/%v/%v" + TopicShoppingCart,businessId,tableId)
-	payload := "update shopping cart"
-	GetMqttInstance().Publish(model.NewMqttMessage(topic,payload,"购物车变化"))
+	payload, _ := json.Marshal(struct {
+		Data string `json:"data"`
+		Time int64	`json:"time"`
+	}{
+		Data:"update shopping cart",
+		Time:util.GetCurrentTime(),
+	})
+	GetMqttInstance().Publish(model.NewMqttMessage(topic,string(payload),"购物车变化"))
 
 }
 

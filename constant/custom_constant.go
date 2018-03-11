@@ -58,6 +58,7 @@ const (
 	ColumnSort       = "sort"
 	ColumnCreateTime = "create_time"
 	ColumnUpdateTime = "update_time"
+	ColumnFoodList   = "food_list"
 )
 
 // 业务配置相关

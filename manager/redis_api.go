@@ -1,5 +1,9 @@
 package manager
 
+func GetRedisMenuKey(key ...string) string {
+	return generationRedisKey("menu", key)
+}
+
 func GetRedisOrderKey(key ...string) string {
 	return generationRedisKey("order", key)
 }

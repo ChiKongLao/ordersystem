@@ -274,7 +274,7 @@ func (s *menuService) UpdateCollectList(userId, businessId, foodId int, isCollec
 		item = &model.CollectFood{
 			UserId:        userId,
 			BusinessId:    businessId,
-			CollectFoodId: make([]int, 1),
+			CollectFoodId: make([]int, 0),
 		}
 	}
 	ids := item.CollectFoodId
@@ -293,6 +293,11 @@ func (s *menuService) UpdateCollectList(userId, businessId, foodId int, isCollec
 			return iris.StatusConflict, errors.New("已经收藏")
 		}
 		item.CollectFoodId = append(ids, foodId)
+		_,err = manager.DBEngine.InsertOne(item)
+		if err != nil {
+			logrus.Errorf("修改收藏列表失败: %s", err)
+			return iris.StatusInternalServerError, errors.New("修改收藏列表失败")
+		}
 	} else {
 		if !isExist {
 			return iris.StatusBadRequest, errors.New("该食物不在收藏列表")
@@ -302,14 +307,15 @@ func (s *menuService) UpdateCollectList(userId, businessId, foodId int, isCollec
 
 		}
 		item.CollectFoodId = append(ids[:i], ids[i+1:]...)
+		_, err = manager.DBEngine.AllCols().Where(
+			fmt.Sprintf("%s=? and %s=?", constant.ColumnUserId, constant.ColumnBusinessId),
+			userId, businessId).Update(item)
+		if err != nil {
+			logrus.Errorf("修改收藏列表失败: %s", err)
+			return iris.StatusInternalServerError, errors.New("修改收藏列表失败")
+		}
 	}
-	_, err = manager.DBEngine.AllCols().Where(
-		fmt.Sprintf("%s=? and %s=?", constant.ColumnUserId, constant.ColumnBusinessId),
-		userId, businessId).Update(item)
-	if err != nil {
-		logrus.Errorf("修改收藏列表失败: %s", err)
-		return iris.StatusInternalServerError, errors.New("修改收藏列表失败")
-	}
+
 
 	return iris.StatusOK, nil
 }

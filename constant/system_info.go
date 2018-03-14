@@ -6,12 +6,4 @@ const(
 	SystemServer = "https://www.baidu.com"
 	SystemHost = "8090"
 
-	DBDriverName = "mysql"
-	DBName = "order_system"
-	DBUserName = "root"
-	DBPassword = ""
-	DBHOST = "localhost:3306"
-
-	RedisHost = "localhost:6379"
-
 )

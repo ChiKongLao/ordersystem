@@ -12,6 +12,7 @@ import (
 	"github.com/chikong/ordersystem/manager"
 	_"github.com/go-sql-driver/mysql"
 	"github.com/chikong/ordersystem/network"
+	"github.com/chikong/ordersystem/configs"
 )
 
 type Configurator func(*Bootstrapper)
@@ -26,6 +27,7 @@ type Bootstrapper struct {
 
 // New returns a new Bootstrapper.
 func New(appName, appOwner string, cfgs ...Configurator) *Bootstrapper {
+	configs.InitApplicationConfig()	// 读取配置文件
 	b := &Bootstrapper{
 		AppName:      appName,
 		AppOwner:     appOwner,
@@ -65,9 +67,12 @@ func (b *Bootstrapper) SetupDatabaseEngine() {
 }
 func initDBEngine(b *Bootstrapper){
 	// 创建 ORM 引擎与数据库
-	engine, err := xorm.NewEngine(constant.DBDriverName,
+	engine, err := xorm.NewEngine("mysql",
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8",
-			constant.DBUserName,constant.DBPassword,constant.DBHOST,constant.DBName))
+			configs.GetConfig().MySQL.UserName,
+			configs.GetConfig().MySQL.Password,
+			configs.GetConfig().MySQL.Host,
+			configs.GetConfig().MySQL.Name))
 	if err != nil {
 		logrus.Errorf("连接数据库失败: %s",err)
 		return
@@ -81,7 +86,7 @@ func initDBEngine(b *Bootstrapper){
 //
 // Returns itself.
 func (b *Bootstrapper) Bootstrap() *Bootstrapper {
-	b.Configure(iris.WithConfiguration(iris.YAML(constant.ROOT+"/configs/dev.yml")))
+	b.Configure(iris.WithConfiguration(iris.YAML(constant.ROOT+"/configs/test.yml")))
 	b.SetupViews("./web/views")
 	b.SetupErrorHandlers()
 	go b.SetupDatabaseEngine()

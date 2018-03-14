@@ -1,0 +1,19 @@
+DisablePathCorrection: false
+EnablePathEscape: false
+FireMethodNotAllowed: true
+DisableBodyConsumptionOnUnmarshal: true
+WithOptimizations: true
+TimeFormat: Mon, 01 Jan 2006 15:04:05 GMT
+Charset: UTF-8
+
+Environment: prod
+MqttHost: tcp://106.38.205.89:1883
+
+MySQL:
+  Host: localhost:3306
+  UserName: root
+  Password: ky123..com
+  Name: order_system
+Redis:
+  Host: localhost:6379
+

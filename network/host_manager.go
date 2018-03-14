@@ -5,7 +5,7 @@ type HostManager struct {
 }
 
 const (
-	MqttUrl = "tcp://121.46.29.196:1883"
+	MqttUrl = "tcp://106.38.205.89:1883"
 )
 
 

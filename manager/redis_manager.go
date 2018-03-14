@@ -2,8 +2,8 @@ package manager
 
 import (
 	"github.com/garyburd/redigo/redis"
-	"github.com/chikong/ordersystem/constant"
 	"github.com/sirupsen/logrus"
+	"github.com/chikong/ordersystem/configs"
 )
 
 const (
@@ -29,7 +29,7 @@ type RedisManager struct {
 var mConn redis.Conn
 
 func InitRedis() {
-	conn, err := redis.Dial("tcp", constant.RedisHost)
+	conn, err := redis.Dial("tcp", configs.GetConfig().Redis.Host)
 	if err != nil {
 		logrus.Error("连接redis失败", err)
 		return

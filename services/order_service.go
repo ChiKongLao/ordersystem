@@ -163,16 +163,10 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 	order.Price = sumPrice
 
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
-		foodList := order.FoodList
-		for _, subItem := range foodList {
-			status, err = s.MenuService.SellFood(order.BusinessId, order.UserId, subItem.Id, subItem.Num)
-			if err != nil {
-				return status, err
-			}
+		status, err = s.handlePaidOrder(order)
+		if err != nil {
+			return status,err
 		}
-		_, orderUser, _ := s.UserService.GetUserById(order.UserId)
-		network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
-		network.SendOrderMessage(order.BusinessId, order)
 	}
 	_, err = manager.DBEngine.AllCols().Where(
 		fmt.Sprintf("%s=? and %s=?", constant.ColumnBusinessId, constant.NameID),
@@ -242,4 +236,19 @@ func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) 
 		return iris.StatusInternalServerError, userList, errors.New("获取老用户列表失败")
 	}
 	return iris.StatusOK, userList, nil
+}
+
+// 处理已支付的订单
+func (s *orderService) handlePaidOrder(order *model.Order) (int, error) {
+	foodList := order.FoodList
+	for _, subItem := range foodList {
+		status, err := s.MenuService.SellFood(order.BusinessId, order.UserId, subItem.Id, subItem.Num)
+		if err != nil {
+			return status, err
+		}
+	}
+	_, orderUser, _ := s.UserService.GetUserById(order.UserId)
+	network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
+	network.SendOrderMessage(order.BusinessId, order)
+	return iris.StatusOK,nil
 }

@@ -31,7 +31,7 @@ func InitApplicationConfig() {
 			logrus.Warn("加载配置文件失败: ", err)
 			mConfig = Config{
 				Environment: "test",
-				MqttHost:    "tcp://121.46.29.196:1883",
+				MqttHost:    "tcp://106.38.205.89:1883",
 				MySQL: MySQLConfig{
 					Host:     "localhost:3306",
 					UserName: "root",

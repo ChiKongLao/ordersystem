@@ -20,6 +20,8 @@ func init() {
 }
 
 func main() {
+	go app.Listen(":8080") // WebSocket
+
 	app.Listen(":8090", iris.WithPostMaxMemory(32<<20))
 
 }

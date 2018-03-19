@@ -15,10 +15,10 @@ const (
 	SocketKeyOrderTimeout = "*AS07#" // 打印机ID为XXXX没有处理订单号为XXXX的订单
 	SocketKeyNetworkTime = "*AS32#" // 查询网络延时状态: 根据回复速度来检查当时网络延时状态
 	SocketKeyIMEI = "*AS33#" // 查询IMEI码
-	SocketKeyNetwordSetting = "*AS34#" // 设置网络参数：设置打印机ID号、IP或域名、端口号
+	SocketKeyNetworkSetting = "*AS34#" // 设置网络参数：设置打印机ID号、IP或域名、端口号
 	SocketKeyPrintSetting = "*AS35#" // 五、设置打印份数、打印速度
 	SocketKeyCheckVersion = "*AS36#" // 查询打印机版本
-	SocketKeyNetwordSignal = "*AS37#" // 查询网络信号值
+	SocketKeyNetworkSignal = "*AS37#" // 查询网络信号值
 	SocketKeyUpgradeIPAndPort = "*AS40#" // 设置远程升级IP和端口号
 	SocketKeyChain = "*AS47#" // 打印联号设置: 是否打印联号
 	SocketKeyClearOrder = "*AS48#" // 清空订单数据

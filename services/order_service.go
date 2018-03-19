@@ -112,11 +112,14 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 	order.UpdateTime = time
 	order.Status = constant.OrderStatusWaitPay
 
-	status, foodListResponse, err := s.ShoppingService.GetShopping(order.BusinessId, order.UserId, order.TableId)
+	status, shopCarItem, err := s.ShoppingService.GetShopping(order.BusinessId, order.UserId, order.TableId)
 	if err != nil {
 		return status, 0, err
 	}
-	order.FoodList = foodListResponse.FoodList
+	if len(shopCarItem.FoodList) == 0 {
+		return iris.StatusBadRequest, 0, errors.New("购物车为空")
+	}
+	order.FoodList = shopCarItem.FoodList
 
 	sumPrice, err := s.MenuService.GetOrderSumPrice(order.FoodList)
 	if err != nil {
@@ -131,7 +134,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-	s.ShoppingService.DeleteShopping(order.BusinessId, shoppingCartId) // 删除购物车
+	s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }

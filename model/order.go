@@ -16,16 +16,16 @@ type Order struct {
 }
 
 type OrderResponse struct {
-	Order
+	Order            `xorm:"extends"`
 	TableName string `json:"tableName"`
-	FoodCount  int     `json:"count"`
+	FoodCount int    `json:"count"`
 }
 
 // 打印用
 type OrderPrint struct {
-	OrderResponse
+	OrderResponse `xorm:"extends"`
 	Customer User `json:"customer"`
-	Business User   `json:"business"`
+	Business User `json:"business"`
 }
 
 type OrderListResponse struct {

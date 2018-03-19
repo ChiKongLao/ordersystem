@@ -7,7 +7,9 @@ TimeFormat: Mon, 01 Jan 2006 15:04:05 GMT
 Charset: UTF-8
 
 Environment: test
-MqttHost: tcp://106.38.205.89:1883
+Mqtt:
+  Host: tcp://106.38.205.89:1883
+  Open: false
 
 MySQL:
   Host: localhost:3306

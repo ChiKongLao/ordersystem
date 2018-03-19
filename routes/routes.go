@@ -12,5 +12,4 @@ func Configure(b *bootstrap.Bootstrapper) {
 
 	LoadAPIRoutes(b)
 	LoadWebRoutes(b)
-	LoadWebSocketRoutes(b)
 }

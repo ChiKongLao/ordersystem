@@ -10,7 +10,9 @@ type User struct {
 	CreatedTime int64  `json:"createdTime" xorm:"not null BIGINT(20)"`                 // 创建时间
 	Token       string `json:"token" orm:"VARCHAR(255)"`                               // token
 	Head        string `json:"head" orm:"VARCHAR(255)"`                                // 头像
-	Role        int    `xorm:"not null INT(11)"`                                       //角色
+	Address     string `json:"address" orm:"VARCHAR(255)"`                             // 地址
+	Phone       string `json:"phone" orm:"VARCHAR(255)"`                               // 手机
+	Role        int    `xorm:"not null INT(11)"`                                       // 角色
 }
 
 // 是否为管理员

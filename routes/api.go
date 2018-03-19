@@ -45,12 +45,15 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	{
 
 		userService := services.NewUserService()
+
+		printerService := services.NewPrinterService()
+
 		classifyService := services.NewClassifyService(userService)
 		shopService := services.NewShopService(userService)
 		menuService := services.NewMenuService(userService,classifyService)
 		tableService := services.NewTableService(userService)
 		shoppingCartService := services.NewShoppingService(userService, menuService)
-		orderService := services.NewOrderService(userService, menuService,tableService,shoppingCartService)
+		orderService := services.NewOrderService(userService, menuService,tableService,shoppingCartService,printerService)
 		chatService := services.NewChatService(userService,tableService)
 
 
@@ -105,6 +108,10 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		mvc.Configure(v1.Party("/chat",auth), func(mvcApp *mvc.Application) {
 			mvcApp.Register(userService, chatService)
 			mvcApp.Handle(new(controllers.ChatController))
+		})
+		mvc.Configure(v1.Party("/printer",auth), func(mvcApp *mvc.Application) {
+			mvcApp.Register(userService, printerService)
+			mvcApp.Handle(new(controllers.PrinterController))
 		})
 
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))

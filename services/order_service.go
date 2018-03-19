@@ -24,13 +24,14 @@ type OrderService interface {
 }
 
 func NewOrderService(userService UserService, menuService MenuService,
-	tableService TableService, shoppingService ShoppingService) OrderService {
+	tableService TableService, shoppingService ShoppingService, printerService PrinterService) OrderService {
 
 	return &orderService{
 		MenuService:     menuService,
 		UserService:     userService,
 		TableService:    tableService,
 		ShoppingService: shoppingService,
+		PrinterService:  printerService,
 	}
 }
 
@@ -39,6 +40,7 @@ type orderService struct {
 	UserService     UserService
 	TableService    TableService
 	ShoppingService ShoppingService
+	PrinterService  PrinterService
 }
 
 // 获取订单列表
@@ -54,14 +56,14 @@ func (s *orderService) GetOrderList(businessId, tableId, role, status int) (int,
 
 	if role == constant.RoleCustomer {
 		symbol := "="
-		if status == constant.OrderStatusPaid || status == constant.OrderStatusAll{
+		if status == constant.OrderStatusPaid || status == constant.OrderStatusAll {
 			symbol = ">="
 			if status == constant.OrderStatusAll {
 				status = 0
 			}
 		}
 		session = session.Where(fmt.Sprintf("%s=? and `order`.%s=? and `order`.status%s?",
-			constant.ColumnTableId, constant.ColumnBusinessId,symbol), tableId, businessId, status)
+			constant.ColumnTableId, constant.ColumnBusinessId, symbol), tableId, businessId, status)
 	} else if role == constant.RoleBusiness {
 		session = session.Where(fmt.Sprintf("`order`.%s=?", constant.ColumnBusinessId), businessId)
 	}
@@ -110,7 +112,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 	order.UpdateTime = time
 	order.Status = constant.OrderStatusWaitPay
 
-	status, foodListResponse, err := s.ShoppingService.GetShopping(order.BusinessId,order.UserId,order.TableId)
+	status, foodListResponse, err := s.ShoppingService.GetShopping(order.BusinessId, order.UserId, order.TableId)
 	if err != nil {
 		return status, 0, err
 	}
@@ -129,7 +131,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-	s.ShoppingService.DeleteShopping(order.BusinessId,shoppingCartId) // 删除购物车
+	s.ShoppingService.DeleteShopping(order.BusinessId, shoppingCartId) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }
@@ -161,11 +163,12 @@ func (s *orderService) UpdateOrder(order *model.Order) (int, error) {
 		return iris.StatusInternalServerError, err
 	}
 	order.Price = sumPrice
+	dbItem.Price = sumPrice
 
 	if order.Status == constant.OrderStatusPaid { // 订单已付款,减少库存
-		status, err = s.handlePaidOrder(order)
+		status, err = s.handlePaidOrder(dbItem)
 		if err != nil {
-			return status,err
+			return status, err
 		}
 	}
 	_, err = manager.DBEngine.AllCols().Where(
@@ -239,7 +242,7 @@ func (s *orderService) GetOldCustomer(businessId int) (int, interface{}, error) 
 }
 
 // 处理已支付的订单
-func (s *orderService) handlePaidOrder(order *model.Order) (int, error) {
+func (s *orderService) handlePaidOrder(order *model.OrderResponse) (int, error) {
 	foodList := order.FoodList
 	for _, subItem := range foodList {
 		status, err := s.MenuService.SellFood(order.BusinessId, order.UserId, subItem.Id, subItem.Num)
@@ -247,8 +250,20 @@ func (s *orderService) handlePaidOrder(order *model.Order) (int, error) {
 			return status, err
 		}
 	}
-	_, orderUser, _ := s.UserService.GetUserById(order.UserId)
-	network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
-	network.SendOrderMessage(order.BusinessId, order)
-	return iris.StatusOK,nil
+	go func() {
+		_, orderUser, _ := s.UserService.GetUserById(order.UserId)
+		_, businessUser, _ := s.UserService.GetUserById(order.BusinessId)
+		network.SendChatMessage("我已经下单啦", orderUser, order.BusinessId, order.TableId)
+		network.SendOrderMessage(order.BusinessId, order)
+
+		s.PrinterService.SendOrder(model.OrderPrint{
+			OrderResponse:*order,
+			Customer:*orderUser,
+			Business:*businessUser,
+
+		})
+
+	}()
+
+	return iris.StatusOK, nil
 }

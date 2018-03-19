@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Environment string      `yaml:"Environment"`
-	MqttHost    string      `yaml:"MqttHost"`
+	Mqtt        MqttConfig  `yaml:"Mqtt"`
 	MySQL       MySQLConfig `yaml:"MySQL"`
 	Redis       RedisConfig `yaml:"Redis"`
 }
@@ -22,6 +22,12 @@ type MySQLConfig struct {
 type RedisConfig struct {
 	Host string `yaml:"Host"`
 }
+
+type MqttConfig struct {
+	Host string `yaml:"Host"`
+	Open bool   `yaml:"Open"`
+}
+
 var mConfig Config
 
 func InitApplicationConfig() {
@@ -31,7 +37,10 @@ func InitApplicationConfig() {
 			logrus.Warn("加载配置文件失败: ", err)
 			mConfig = Config{
 				Environment: "test",
-				MqttHost:    "tcp://106.38.205.89:1883",
+				Mqtt: MqttConfig{
+					Host: "tcp://106.38.205.89:1883",
+					Open: true,
+				},
 				MySQL: MySQLConfig{
 					Host:     "localhost:3306",
 					UserName: "root",

@@ -16,20 +16,16 @@ type Order struct {
 }
 
 type OrderResponse struct {
-	Id         int     `json:"id"`
-	TableId    int     `json:"tableId"`
-	OrderNo    string  `json:"orderNo"` // 订单号
-	PersonNum  int     `json:"personNum"`
-	Price      float32 `json:"price"`
-	Status     int     `json:"status"`
-	CreateTime int64   `json:"createTime"`
-	UpdateTime int64   `json:"-"`
-	BusinessId int     `json:"-"`
-	UserId     int     `json:"userId"` // 下单的用户id
-	FoodList   []Food  `json:"list"`   // 菜单
-	FoodCount  int     `json:"count"`
-
+	Order
 	TableName string `json:"tableName"`
+	FoodCount  int     `json:"count"`
+}
+
+// 打印用
+type OrderPrint struct {
+	OrderResponse
+	Customer User `json:"customer"`
+	Business User   `json:"business"`
 }
 
 type OrderListResponse struct {

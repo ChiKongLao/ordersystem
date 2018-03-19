@@ -67,6 +67,10 @@ func sync(engine *xorm.Engine){
 		unSuccessTableName = "classify"
 		return
 	}
+	if err = engine.Sync2(new(model.Printer)); err != nil {
+		unSuccessTableName = "printer"
+		return
+	}
 
 }
 

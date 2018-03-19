@@ -36,6 +36,10 @@ type FoodResponseMap map[string][]FoodResponse
 func (item *FoodResponse) GetFood() *Food {
 	return &item.Food
 }
+// 获取总价
+func (item *Food) GetTotalPrice() float32 {
+	return item.Price * float32(item.Num)
+}
 
 // 获取food
 func ConvertFoodList(list []FoodResponse) []Food {
@@ -58,6 +62,8 @@ func ConvertFoodResponseList(list []Food) []FoodResponse {
 	}
 	return resList
 }
+
+
 
 //func (list FoodResponseSlice) Len() int {
 //	return len(list)

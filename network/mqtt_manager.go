@@ -11,6 +11,7 @@ import (
 	"github.com/chikong/ordersystem/manager"
 	"github.com/garyburd/redigo/redis"
 	"github.com/chikong/ordersystem/constant"
+	"github.com/chikong/ordersystem/configs"
 )
 
 
@@ -47,6 +48,10 @@ func (m *mqttManager) subscribeCommon(){
 
 // 连接mqtt
 func (m *mqttManager) initClient() {
+	if !configs.GetConfig().Mqtt.Open {
+		return
+	}
+
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(MqttUrl)
 	opts.SetConnectTimeout(5*time.Second)

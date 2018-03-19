@@ -89,8 +89,9 @@ func (b *Bootstrapper) Bootstrap() *Bootstrapper {
 	b.Configure(iris.WithConfiguration(iris.YAML(constant.ROOT+"/configs/test.yml")))
 	b.SetupViews("./web/views")
 	b.SetupErrorHandlers()
-	go b.SetupDatabaseEngine()
+	b.SetupDatabaseEngine()
 	go network.GetMqttInstance()
+	network.SetupWebSocket(b.Application)
 
 	// middleware, after static files
 	b.Use(recover.New())

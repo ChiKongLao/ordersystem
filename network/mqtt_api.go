@@ -44,7 +44,7 @@ func SendShoppingCartMessage(businessId, tableId int) {
 }
 
 // 发送订单状态变化消息
-func SendOrderMessage(businessId int, order *model.Order) {
+func SendOrderMessage(businessId int, order *model.OrderResponse) {
 	topic := fmt.Sprintf(MqttProject+"/%v/%v"+TopicOrder, businessId, order.Id)
 	payload, _ := json.Marshal(struct {
 		Data interface{} `json:"data"`

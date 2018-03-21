@@ -86,17 +86,17 @@ func initDBEngine(b *Bootstrapper){
 //
 // Returns itself.
 func (b *Bootstrapper) Bootstrap() *Bootstrapper {
+	logrus.SetLevel(logrus.DebugLevel)
+
 	b.Configure(iris.WithConfiguration(iris.YAML(constant.ROOT+"/configs/test.yml")))
 	b.SetupViews("./web/views")
 	b.SetupErrorHandlers()
 	b.SetupDatabaseEngine()
 	go network.GetMqttInstance()
-	network.SetupWebSocket(b.Application)
 
 	// middleware, after static files
 	b.Use(recover.New())
 	b.Use(logger.New())
-	logrus.SetLevel(logrus.DebugLevel)
 
 	return b
 }

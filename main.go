@@ -6,7 +6,7 @@ import (
 	"github.com/chikong/ordersystem/routes"
 	"github.com/chikong/ordersystem/constant"
 	"github.com/kataras/iris"
-	"github.com/sirupsen/logrus"
+	"github.com/chikong/ordersystem/network"
 )
 
 var app = bootstrap.New(
@@ -21,9 +21,11 @@ func init() {
 }
 
 func main() {
-
-	logrus.SetLevel(logrus.DebugLevel)
-	go app.Listen(":8091") // WebSocket
+	go func() {
+		socketApp := iris.New()
+		network.SetupWebSocket(socketApp)
+		socketApp.Run(iris.Addr(":8091"))
+	}()
 
 	app.Listen(":8090", iris.WithPostMaxMemory(32<<20))
 

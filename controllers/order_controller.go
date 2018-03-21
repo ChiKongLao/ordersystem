@@ -47,15 +47,21 @@ func (c *OrderController) GetBy(businessId int) (int, interface{}) {
 }
 
 // 获取订单
-func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
-	status, _, err := c.UserService.GetBusinessById(userId)
+func (c *OrderController) GetByTableBy(businessId, tableId int) (int, interface{}) {
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
+
 	orderStatus, _ := c.Ctx.URLParamInt(constant.NameStatus)
+	status, user, err := c.UserService.GetUserFormToken(c.Ctx)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+
 
 	var item *model.OrderListResponse
-	status, item, err = c.GetOrderList(userId, tableId, constant.RoleCustomer, orderStatus)
+	status, item, err = c.GetOrderList(businessId, tableId, user.Role, orderStatus)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -82,9 +88,9 @@ func (c *OrderController) GetByTableBy(userId, tableId int) (int, interface{}) {
 }
 
 // 获取订单详情
-func (c *OrderController) GetByBy(userId, orderId int) (int, interface{}) {
+func (c *OrderController) GetByBy(businessId, orderId int) (int, interface{}) {
 
-	status, _, err := c.UserService.GetBusinessById(userId)
+	status, _, err := c.UserService.GetBusinessById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
 	}
@@ -148,13 +154,13 @@ func (c *OrderController) PostBy(businessId int) (int, interface{}) {
 }
 
 // 修改订单,只能商家操作
-func (c *OrderController) PutByBy(userId, orderId int) (int, interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *OrderController) PutByBy(businessId, orderId int) (int, interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
+	status, user, err := c.UserService.GetUserById(businessId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -170,7 +176,7 @@ func (c *OrderController) PutByBy(userId, orderId int) (int, interface{}) {
 
 	status, err = c.UpdateOrder(&model.Order{
 		Id:         orderId,
-		BusinessId: userId,
+		BusinessId: businessId,
 		TableId:    tableId,
 		Status:     orderStatus,
 		PersonNum:  personNum,
@@ -186,13 +192,13 @@ func (c *OrderController) PutByBy(userId, orderId int) (int, interface{}) {
 }
 
 // 修改订单,只能商家操作
-func (c *OrderController) PutByStatusBy(userId, orderId int) (int, interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *OrderController) PutByStatusBy(businessId, orderId int) (int, interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
+	status, user, err := c.UserService.GetUserById(businessId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -216,13 +222,13 @@ func (c *OrderController) PutByStatusBy(userId, orderId int) (int, interface{}) 
 }
 
 // 删除订单
-func (c *OrderController) DeleteByBy(userId, orderId int) (int, interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, userId)
+func (c *OrderController) DeleteByBy(businessId, orderId int) (int, interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
 	if !isOwn {
 		return iris.StatusUnauthorized, model.NewErrorResponse(err)
 	}
 
-	status, user, err := c.UserService.GetUserById(userId)
+	status, user, err := c.UserService.GetUserById(businessId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -232,7 +238,7 @@ func (c *OrderController) DeleteByBy(userId, orderId int) (int, interface{}) {
 		return iris.StatusUnauthorized, model.NewErrorResponseWithMsg("没有该权限")
 	}
 
-	status, err = c.DeleteOrder(userId, orderId)
+	status, err = c.DeleteOrder(businessId, orderId)
 
 	if err != nil {
 		return status, model.NewErrorResponse(err)

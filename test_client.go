@@ -2,9 +2,28 @@ package main
 
 import (
 	"github.com/henrylee2cn/teleport"
+	"net"
+	"github.com/henrylee2cn/teleport/socket"
+	"log"
 )
 
 func main() {
+
+	test()
+}
+
+func test()  {
+	conn, err := net.Dial("tcp", "127.0.0.1:8091")
+	if err != nil {
+		log.Fatalf("[CLI] dial err: %v", err)
+	}
+	s := socket.GetSocket(conn)
+	defer s.Close()
+	s.Write([]byte("hello"))
+
+}
+
+func test2()  {
 	tp.SetLoggerLevel("ERROR")
 
 	cli := tp.NewPeer(tp.PeerConfig{})
@@ -15,14 +34,12 @@ func main() {
 		tp.Fatalf("%v", err)
 	}
 
-	var reply string
-	rerr := sess.Pull("/",
+	rerr := sess.Push("/",
 		"hello",
-		&reply,
-	).Rerror()
+	)
 
 	if rerr != nil {
 		tp.Fatalf("err= %v", rerr)
 	}
-	tp.Printf("reply2: %s", reply)
+
 }

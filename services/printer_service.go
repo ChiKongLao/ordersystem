@@ -46,14 +46,15 @@ func NewPrinterService() PrinterService {
 }
 
 type printerService struct {
+	DeviceMap map[string]socket.Socket
 
-	}
+}
 
 var mDeviceIdReg *regexp.Regexp
 
 func(s *printerService) HandleConnection() {
 	network.GetSocketInstance().RegisterSocketCallback(func(soc socket.Socket, payload string) {
-		reply,event := s.handlePayload(payload)
+		reply,event := s.handlePayload(soc,payload)
 		if reply == "" {
 			return
 		}
@@ -78,7 +79,7 @@ func(s *printerService) SendOrder(order model.OrderPrint) {
 }
 
 func(s *printerService) HandlePayload(payload string) (string,string){
-	reply,event := s.handlePayload(payload)
+	reply,event := s.handlePayload(nil,payload)
 	if reply == "" {
 		return "",""
 	}
@@ -86,7 +87,7 @@ func(s *printerService) HandlePayload(payload string) (string,string){
 	return reply,event
 }
 
-func(s *printerService) handlePayload(payload string) (string,string) {
+func(s *printerService) handlePayload(soc socket.Socket,payload string) (string,string) {
 
 	event := ""
 	defer func() {

@@ -14,8 +14,8 @@ import (
 func main() {
 	go read2()
 	time.Sleep(1e9)
-	client()
-	time.Sleep(3e9)
+	//client()
+	time.Sleep(333e9)
 }
 
 func read() {
@@ -67,8 +67,8 @@ func read2()  {
 			log.Printf("accept %s", s.Id())
 			defer s.Close()
 			for {
-				var data []byte
-				_, err = s.Read(data)
+				data := make([]byte, 2048)
+				dataLen, err := s.Read(data)
 
 				if err != nil {
 					log.Fatalf("err: %s",err)
@@ -76,7 +76,8 @@ func read2()  {
 				}
 
 				if len(data) != 0 {
-					println(string(data))
+					data = data[:dataLen]
+					logrus.Infoln("data= ",string(data))
 				}
 			}
 		}(socket.GetSocket(conn,proto.NewJsonProtoFunc2))
@@ -124,5 +125,6 @@ func client()  {
 	}
 	s := socket.GetSocket(conn)
 	defer s.Close()
+	//s.Write([]byte("hello"))
 	s.Write([]byte("hello"))
 }

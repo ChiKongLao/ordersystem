@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/kataras/iris/websocket"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"fmt"
@@ -12,8 +11,9 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"strconv"
 	"strings"
-	"github.com/chikong/ordersystem/network"
 	"time"
+	"github.com/chikong/ordersystem/network"
+	"github.com/henrylee2cn/teleport/socket"
 )
 
 
@@ -24,8 +24,6 @@ type PrinterService interface {
 	DeletePrinter(businessId int) (int, error)
 
 	SendOrder(order model.OrderPrint)
-
-	HandleConnection(c websocket.Connection)
 	HandlePayload(payload string) (string,string)
 
 
@@ -38,9 +36,10 @@ func NewPrinterService() PrinterService {
 	}
 	go func() {
 		time.Sleep(3 * time.Second)
-		network.GetWebServer().OnConnection(func(c websocket.Connection) {
-			service.HandleConnection(c)
-		})
+		//network.GetWebServer().OnConnection(func(c websocket.Connection) {
+		//	service.HandleConnection(c)
+		//})
+		service.HandleConnection()
 	}()
 
 	return service
@@ -52,18 +51,16 @@ type printerService struct {
 
 var mDeviceIdReg *regexp.Regexp
 
-func(s *printerService) HandleConnection(c websocket.Connection) {
-
-	c.OnMessage(func(bytes []byte) {
-		payload := string(bytes)
-		println(payload)
+func(s *printerService) HandleConnection() {
+	network.GetSocketInstance().RegisterSocketCallback(func(soc socket.Socket, payload string) {
 		reply,event := s.handlePayload(payload)
 		if reply == "" {
 			return
 		}
-		c.EmitMessage([]byte(reply))
+		soc.Write([]byte(reply))
 		logrus.Debugf("回复:(%s) %s => %s",event,reply,payload)
 	})
+
 
 }
 

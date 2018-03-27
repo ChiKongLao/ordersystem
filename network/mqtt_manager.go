@@ -111,4 +111,5 @@ func (m *mqttManager) Subscribe(topic string) {
 
 func (m *mqttManager) RegisterCallback(fun func(message MQTT.Message)) {
 	m.callbackList = append(m.callbackList, fun)
+
 }

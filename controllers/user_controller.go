@@ -19,7 +19,7 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	password := c.Ctx.FormValue(constant.NamePassword)
 	nickName := c.Ctx.FormValue(constant.NameNickName)
 	head := c.Ctx.FormValue(constant.NameHead)
-	role,_ := c.Ctx.PostValueIntDefault(constant.NameRole,3)
+	role := c.Ctx.PostValueIntDefault(constant.NameRole,3)
 
 	status,err := c.UserService.InsertUser(role,userName,password,nickName,head)
 

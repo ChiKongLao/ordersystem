@@ -80,7 +80,7 @@ func (c *ClassifyController) PostBy(businessId int) (int,interface{}) {
 	}
 
 	name := c.Ctx.PostValue(constant.Name)
-	sort, _ := c.Ctx.PostValueIntDefault(constant.NameSort,100)
+	sort := c.Ctx.PostValueIntDefault(constant.NameSort,100)
 
 	status, err = c.InsertClassify(name,businessId,sort)
 

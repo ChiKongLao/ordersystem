@@ -91,7 +91,8 @@ func (b *Bootstrapper) Bootstrap() *Bootstrapper {
 	b.SetupErrorHandlers()
 	b.SetupDatabaseEngine()
 	go network.GetMqttInstance()
-	network.SetupWebSocket(b.Application)
+	//network.SetupWebSocket(b.Application)
+	go network.GetSocketInstance() // Socket
 
 	// middleware, after static files
 	b.Use(recover.New())

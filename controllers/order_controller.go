@@ -32,7 +32,7 @@ func (c *OrderController) GetBy(businessId int) (int, interface{}) {
 		return status, model.NewErrorResponse(err)
 	}
 
-	orderStatus, _ := c.Ctx.URLParamIntDefault(constant.NameStatus, constant.OrderStatusAll)
+	orderStatus := c.Ctx.URLParamIntDefault(constant.NameStatus, constant.OrderStatusAll)
 
 	var item *model.OrderListResponse
 	status, item, err = c.GetOrderList(businessId, 0, user.Role, orderStatus)

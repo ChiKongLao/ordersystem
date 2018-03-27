@@ -21,7 +21,7 @@ var NewStringProtoFunc = func(rw io.ReadWriter) socket.Proto {
 	} else {
 		readBufioSize = readBufferSize / 2
 	}
-	return &jsonproto{
+	return &stringproto{
 		id:   'j',
 		name: "json",
 		r:    bufio.NewReaderSize(rw, readBufioSize),
@@ -29,7 +29,7 @@ var NewStringProtoFunc = func(rw io.ReadWriter) socket.Proto {
 	}
 }
 
-type jsonproto struct {
+type stringproto struct {
 	id   byte
 	name string
 	r    *bufio.Reader
@@ -38,15 +38,15 @@ type jsonproto struct {
 }
 
 // Version returns the protocol's id and name.
-func (j *jsonproto) Version() (byte, string) {
+func (j *stringproto) Version() (byte, string) {
 	return j.id, j.name
 }
 
-const format = `{"seq":%d,"ptype":%d,"uri":%q,"meta":%q,"body_codec":%d,"body":"%s","xfer_pipe":%s}`
+const stringprotoFormat = `{"seq":%d,"ptype":%d,"uri":%q,"meta":%q,"body_codec":%d,"body":"%s","xfer_pipe":%s}`
 
 // Pack writes the Packet into the connection.
 // Note: Make sure to write only once or there will be package contamination!
-func (j *jsonproto) Pack(p *socket.Packet) error {
+func (j *stringproto) Pack(p *socket.Packet) error {
 	// marshal body
 	bodyBytes, err := p.MarshalBody()
 	if err != nil {
@@ -89,7 +89,7 @@ func (j *jsonproto) Pack(p *socket.Packet) error {
 
 // Unpack reads bytes from the connection to the Packet.
 // Note: Concurrent unsafe!
-func (j *jsonproto) Unpack(p *socket.Packet) error {
+func (j *stringproto) Unpack(p *socket.Packet) error {
 	j.rMu.Lock()
 	defer j.rMu.Unlock()
 	var size uint32

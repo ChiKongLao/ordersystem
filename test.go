@@ -8,10 +8,14 @@ import (
 	"github.com/henrylee2cn/teleport/socket"
 	"net"
 	"log"
+	"time"
 )
 
 func main() {
-	read()
+	go read2()
+	time.Sleep(1e9)
+	client()
+	time.Sleep(3e9)
 }
 
 func read() {
@@ -20,23 +24,28 @@ func read() {
 		ListenAddress: ":8091",
 	})
 
-	svr.Listen(proto.NewStringProtoFunc)
-	svr.SetUnknownPush(func(ctx tp.UnknownPushCtx) *tp.Rerror {
-		data := string(ctx.InputBodyBytes())
-		logrus.Infoln("push=", data)
+	//svr.SetUnknownPush(func(ctx tp.UnknownPushCtx, args string) (string, *tp.Rerror) {
+	//	data := string(ctx.InputBodyBytes())
+	//	logrus.Infoln("push=", data)
+	//	return "hello",nil
+	//})
+	//svr.RoutePushFunc(func(data string) {
+	//	logrus.Infoln("RoutePushFunc=", data)
+	//
+	//})
+	svr.RoutePushFunc(func(ctx tp.PushCtx, args *string) (*tp.Rerror) {
+		//data := string(ctx.InputBodyBytes())
+		logrus.Infoln("push=", args)
 		return nil
 	})
-	svr.RoutePushFunc(func(data string) {
-		logrus.Infoln("RoutePushFunc=", data)
 
-	})
+	//svr.RoutePullFunc(func(data string) {
+	//
+	//	logrus.Infoln("RoutePullFunc=", data)
+	//
+	//})
 
-	svr.RoutePullFunc(func(data string) {
-
-		logrus.Infoln("RoutePullFunc=", data)
-
-	})
-
+	svr.Listen(proto.NewStringProtoFunc)
 
 
 }
@@ -70,7 +79,7 @@ func read2()  {
 					println(string(data))
 				}
 			}
-		}(socket.GetSocket(conn,proto.NewStringProtoFunc))
+		}(socket.GetSocket(conn,proto.NewJsonProtoFunc2))
 	}
 }
 
@@ -84,7 +93,7 @@ func push() {
 	svr.Listen()
 	svr.SetUnknownPush(func(ctx tp.UnknownPushCtx) *tp.Rerror {
 		data := string(ctx.InputBodyBytes())
-		logrus.Infoln("push=", data)
+		logrus.Infoln("SetUnknownPush=", data)
 		return nil
 	})
 }
@@ -106,4 +115,14 @@ func pull() {
 		logrus.Infoln("args=", v)
 		return "Unknown", nil
 	})
+}
+
+func client()  {
+	conn, err := net.Dial("tcp", "0.0.0.0:8091")
+	if err != nil {
+		log.Fatalf("[CLI] dial err: %v", err)
+	}
+	s := socket.GetSocket(conn)
+	defer s.Close()
+	s.Write([]byte("hello"))
 }

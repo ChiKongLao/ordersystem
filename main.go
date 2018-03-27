@@ -24,7 +24,7 @@ func main() {
 	go func() {
 		socketApp := iris.New()
 		network.SetupWebSocket(socketApp)
-		socketApp.Run(iris.Addr(":8091"))
+		//socketApp.Run(iris.Addr(":8091"))
 	}()
 
 	app.Listen(":8090", iris.WithPostMaxMemory(32<<20))

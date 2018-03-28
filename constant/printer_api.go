@@ -30,9 +30,11 @@ const (
 	// A*88888888*0*AS01#
 	SocketFormatPingReply = "AS02#"               // 心跳包回复
 	SocketFormatCheckVersion = "AS36?#"           // 查询打印机版本
+	SocketFormatCheckSignal= "AS32*?#"            // 查询网络延时状态
+	SocketFormatClearOrder = "AS48*1#" // 清空订单数据
 
 	// &!*XXXX*XXXX*<big>XXXXXX*<S0XT>XXXX*<BMP>*<qrc>XXXX#
-	SocketFormatOrderSend1 = "&!*%v%s*%s#" // 下发打印数据1
+	SocketFormatOrderSend = "&!*%v%s*%s#" // 下发打印数据
 	// AS38*XXXX*X#
 	SocketFormatOrderReply = "AS%s*%s*%s#" // 服务器对订单号为XXXX回复
 

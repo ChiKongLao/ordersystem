@@ -74,3 +74,7 @@ func Float32ToString(value float32) string {
 	return strconv.FormatFloat(float64(value),'f',-1,32)
 
 }
+// 获取字符串的rune和size
+func GetRuneAndSize(string string) ([]rune,int)  {
+	return []rune(string),len(string)
+}

@@ -64,7 +64,8 @@ func MakePrinterOrderData(status int,order OrderPrint) string{
 	add(&content,fmt.Sprintf("电话:%s",order.Business.Phone))
 	add(&content,makeNewLine())
 
-	return fmt.Sprintf(constant.SocketFormatOrderSend1,status,order.OrderNo,content.String())
+	//return fmt.Sprintf(constant.SocketFormatOrderSend,status,order.OrderNo,content.String())
+	return fmt.Sprintf(constant.SocketFormatOrderSend,status,order.Id,content.String())
 
 }
 

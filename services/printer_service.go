@@ -14,6 +14,7 @@ import (
 	"time"
 	"github.com/chikong/ordersystem/network"
 	"github.com/henrylee2cn/teleport/socket"
+	"github.com/chikong/ordersystem/util"
 )
 
 
@@ -32,13 +33,10 @@ type PrinterService interface {
 func NewPrinterService() PrinterService {
 	mDeviceIdReg, _ = regexp.Compile(constant.SocketRegexDeviceId)
 	service := &printerService{
-
+		ConnectionMap:make(map[string]socket.Socket),
 	}
 	go func() {
-		time.Sleep(3 * time.Second)
-		//network.GetWebServer().OnConnection(func(c websocket.Connection) {
-		//	service.HandleConnection(c)
-		//})
+		time.Sleep(2 * time.Second)
 		service.HandleConnection()
 	}()
 
@@ -46,14 +44,21 @@ func NewPrinterService() PrinterService {
 }
 
 type printerService struct {
-	DeviceMap map[string]socket.Socket
-
+	ConnectionMap map[string]socket.Socket
 }
 
 var mDeviceIdReg *regexp.Regexp
 
 func(s *printerService) HandleConnection() {
-	network.GetSocketInstance().RegisterSocketCallback(func(soc socket.Socket, payload string) {
+	network.GetSocketInstance().OnConnect(func(soc socket.Socket) {
+		s.SendCheckSignal(soc,0)  // 主动记录连接所属
+	})
+	network.GetSocketInstance().OnMessage(func(soc socket.Socket, payload string) {
+		deviceName := getDeviceName(payload)
+		soc.SetId(deviceName)
+		if deviceName != ""{
+			s.ConnectionMap[deviceName] = soc
+		}
 		reply,event := s.handlePayload(soc,payload)
 		if reply == "" {
 			return
@@ -72,10 +77,26 @@ func(s *printerService) SendOrder(order model.OrderPrint) {
 	//if err != nil {
 	//	return
 	//}
-	//network.GetWebServer().
+	soc := s.ConnectionMap[strconv.Itoa(order.BusinessId)]
+	if soc != nil {
+		payload := model.MakePrinterOrderData(1,order)
+		//soc.Write([]byte(constant.SocketFormatClearOrder)) // 先清空订单信息再下发
+		soc.Write([]byte(payload))
+		logrus.Debugf("发送订单到打印机(%s): %s",soc.Id(),payload)
+	}
 
-	//list := network.GetWebServer().GetConnections()
-	//logrus.Infoln(list)
+
+}
+// 查询网络延时状态
+func(s *printerService) SendCheckSignal(soc socket.Socket, businessId int) {
+	if soc == nil {
+		soc = s.ConnectionMap[strconv.Itoa(businessId)]
+	}
+	if soc != nil {
+		soc.Write([]byte(constant.SocketFormatCheckSignal))
+		logrus.Debugf("查询网络延时状态(%s)",soc.Id())
+	}
+
 }
 
 func(s *printerService) HandlePayload(payload string) (string,string){
@@ -168,7 +189,7 @@ func(s *printerService) handlePayload(soc socket.Socket,payload string) (string,
 // 处理心跳,A*88888888*0*AS01#
 func(s *printerService) handlePing(payload string) string {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 	status,_ := strconv.Atoi(string(data[:1]))
 	if status == 1{ // 缺纸
 		//_, userId, err := s.GetUserIdByPrinterId(getDeviceName(payload))
@@ -182,7 +203,7 @@ func(s *printerService) handlePing(payload string) string {
 // 处理打印机回复, A*13302920661*2345*AS04#
 func(s *printerService) handlePrinterReceive(payload string) string {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,size := getRuneAndSize(newPayload)
+	data,size := util.GetRuneAndSize(newPayload)
 	orderNo := string(data[:size-6])
 
 	replyStatus := ""
@@ -206,9 +227,9 @@ func(s *printerService) handlePrinterReceive(payload string) string {
 // 查询打印机版本, A*ID*XXXXX*AS36#
 func(s *printerService) handlePrinterVersion(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 	result := string(data[:strings.Index(newPayload,"*")])
-	logrus.Infoln(fmt.Sprintf("打印机%s的版本: %s",getDeviceName(payload),result))
+	logrus.Debugln(fmt.Sprintf("打印机%s的版本: \n%s",getDeviceName(payload),result))
 	return
 
 }
@@ -216,19 +237,19 @@ func(s *printerService) handlePrinterVersion(payload string) {
 // 查询打印机IMEI, A*ID*IMEI码*AS33#
 func(s *printerService) handleIMEI(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 	result := string(data[:strings.Index(newPayload,"*")])
-	logrus.Infoln(fmt.Sprintf("打印机%s的IMEI: %s",getDeviceName(payload),result))
+	logrus.Debugln(fmt.Sprintf("打印机%s的IMEI: %s",getDeviceName(payload),result))
 	return
 
 }
 // 设置打印份数、打印速度, A*ID*X,X*AS35#
 func(s *printerService) handlePrintSetting(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 	count := string(data[:1])
 	speed := string(data[2:3])
-	logrus.Infoln(fmt.Sprintf("打印机%s的打印份数=%v,速度=%v",
+	logrus.Debugln(fmt.Sprintf("打印机%s的打印份数=%v,速度=%v",
 		getDeviceName(payload),count,speed))
 	return
 
@@ -237,7 +258,7 @@ func(s *printerService) handlePrintSetting(payload string) {
 // 设置网络参数：设置打印机ID号、IP或域名、端口号、A*ID*id,IP,端口号*AS34#
 func(s *printerService) handleNetworkSetting(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 
 	index := strings.Index(newPayload,",")
 	id := string(data[:index])
@@ -250,7 +271,7 @@ func(s *printerService) handleNetworkSetting(payload string) {
 	index = strings.Index(newPayload,"*")
 	port := string(data[:index])
 
-	logrus.Infoln(fmt.Sprintf("打印机%s的网络参数: %s,%s,%s",
+	logrus.Debugln(fmt.Sprintf("打印机%s的网络参数: %s,%s,%s",
 		getDeviceName(payload),id,ip,port))
 	return
 
@@ -259,11 +280,11 @@ func(s *printerService) handleNetworkSetting(payload string) {
 // 查询网络信号值,A*ID*XX*AS37#   XX(00-31)表示信号值，值越大信号越好
 func(s *printerService) handleNetworkSignal(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 
 	result := string(data[:strings.Index(newPayload,"*")])
 
-	logrus.Infoln(fmt.Sprintf("打印机%s的网络信号: %s",
+	logrus.Debugln(fmt.Sprintf("打印机%s的网络信号: %s",
 		getDeviceName(payload),result))
 	return
 
@@ -272,9 +293,9 @@ func(s *printerService) handleNetworkSignal(payload string) {
 // 查询网络延时状态,根据回复速度来检查当时网络延时状态, A*ID*AS32#
 func(s *printerService) handleNetworkTimeout(payload string) {
 	//newPayload := getPayloadWithoutDeviceName(payload)
-	//data,_ := getRuneAndSize(newPayload)
+	//data,_ := util.GetRuneAndSize(newPayload)
 
-	logrus.Infoln(fmt.Sprintf("打印机%s的网络延时状态: TODO",
+	logrus.Debugln(fmt.Sprintf("打印机%s的网络延时状态: TODO",
 		getDeviceName(payload)))
 	return
 
@@ -283,9 +304,9 @@ func(s *printerService) handleNetworkTimeout(payload string) {
 // 清空订单信息, A*ID*AS48#
 func(s *printerService) handleClearOrder(payload string) {
 	//newPayload := getPayloadWithoutDeviceName(payload)
-	//data,_ := getRuneAndSize(newPayload)
+	//data,_ := util.GetRuneAndSize(newPayload)
 
-	logrus.Infoln(fmt.Sprintf("打印机%s的清空订单信息: TODO",
+	logrus.Debugln(fmt.Sprintf("打印机%s的清空订单信息: TODO",
 		getDeviceName(payload)))
 	return
 
@@ -294,9 +315,9 @@ func(s *printerService) handleClearOrder(payload string) {
 // 打印联号设置, X=1表示打印联号   X=0表示不打印联号,AS47*X#
 func(s *printerService) handleChain(payload string) {
 	newPayload := getPayloadWithoutDeviceName(payload)
-	data,_ := getRuneAndSize(newPayload)
+	data,_ := util.GetRuneAndSize(newPayload)
 	result := string(data[:1])
-	logrus.Infoln(fmt.Sprintf("打印机%s的打印联号设置=%v",
+	logrus.Debugln(fmt.Sprintf("打印机%s的打印联号设置=%v",
 		getDeviceName(payload),result))
 	return
 
@@ -311,13 +332,13 @@ func getPayloadWithoutDeviceName(payload string) string{
 // 获取设备id
 func getDeviceName(payload string) string{
 	result := mDeviceIdReg.FindString(payload)
-	data, size := getRuneAndSize(result)
+	data, size := util.GetRuneAndSize(result)
+	if len(data) > size || size == 0 {
+		return ""
+	}
 	return string(data[2:size-1])
 }
 
-func getRuneAndSize(payload string) ([]rune,int)  {
-	return []rune(payload),len(payload)
-}
 
 
 

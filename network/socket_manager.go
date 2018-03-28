@@ -10,12 +10,14 @@ import (
 
 
 type SocketManager interface {
-	RegisterSocketCallback(func(s socket.Socket, payload string))
+	OnConnect(func(s socket.Socket))
+	OnMessage(func(s socket.Socket, payload string))
 }
 
 type socketManager struct {
 	// 回调列
 	socketCallbackList []func(s socket.Socket, payload string)
+	connectCallbackList []func(s socket.Socket)
 }
 
 var mSocketInstance *socketManager
@@ -44,7 +46,10 @@ func(m *socketManager) initSocket() {
 		conn, err := lis.Accept()
 		if err != nil {
 			logrus.Errorln("接受socket失败, err: ", err)
-
+		}
+		soc := socket.GetSocket(conn)
+		for _, value := range mSocketInstance.connectCallbackList {
+			value(soc)
 		}
 		go func(s socket.Socket) {
 			logrus.Infoln("打印机连接服务器: ", s.Id())
@@ -56,6 +61,10 @@ func(m *socketManager) initSocket() {
 				if err != nil {
 					if err.Error() == "EOF" {
 						logrus.Infof("打印机断开连接", s.Id())
+						break
+					}
+					if err.Error() == "closed by the remote host" {
+						logrus.Infof("远程主机强制关闭现有的连接", s.Id())
 						break
 					}
 					logrus.Errorln("解析内容出错, err: ", err)
@@ -70,11 +79,15 @@ func(m *socketManager) initSocket() {
 				}
 				time.Sleep(10*time.Millisecond)
 			}
-		}(socket.GetSocket(conn))
+		}(soc)
 	}
 
 }
 
-func (m *socketManager) RegisterSocketCallback(fun func(s socket.Socket, payload string)) {
+func (m *socketManager) OnMessage(fun func(s socket.Socket, payload string)) {
 	m.socketCallbackList = append(m.socketCallbackList, fun)
+}
+
+func (m *socketManager) OnConnect(fun func(s socket.Socket)) {
+	m.connectCallbackList = append(m.connectCallbackList, fun)
 }

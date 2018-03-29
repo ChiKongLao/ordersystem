@@ -293,7 +293,14 @@ func (s *menuService) UpdateCollectList(userId, businessId, foodId int, isCollec
 			return iris.StatusConflict, errors.New("已经收藏")
 		}
 		item.CollectFoodId = append(ids, foodId)
-		_,err = manager.DBEngine.InsertOne(item)
+		if len(item.CollectFoodId) == 0{
+			_,err = manager.DBEngine.InsertOne(item)
+
+		}else{
+			_, err = manager.DBEngine.AllCols().Where(
+				fmt.Sprintf("%s=? and %s=?", constant.ColumnUserId, constant.ColumnBusinessId),
+				userId, businessId).Update(item)
+		}
 		if err != nil {
 			logrus.Errorf("修改收藏列表失败: %s", err)
 			return iris.StatusInternalServerError, errors.New("修改收藏列表失败")

@@ -66,6 +66,6 @@ func SendPrinterMessage(businessId, status int) {
 	payload, _ := json.Marshal(struct {
 		Data Data `json:"data"`
 	}{data})
-	GetMqttInstance().Publish(model.NewMqttMessage(topic, string(payload), "订单状态变化"))
+	GetMqttInstance().Publish(model.NewMqttMessage(topic, string(payload), "打印机缺纸"))
 
 }

@@ -80,7 +80,8 @@ func(s *printerService) SendOrder(order model.OrderPrint) {
 	soc := s.ConnectionMap[strconv.Itoa(order.BusinessId)]
 	if soc != nil {
 		payload := model.MakePrinterOrderData(1,order)
-		//soc.Write([]byte(constant.SocketFormatClearOrder)) // 先清空订单信息再下发
+		soc.Write([]byte(constant.SocketFormatClearOrder)) // 先清空订单信息再下发
+		time.Sleep(5*time.Millisecond)
 		soc.Write([]byte(payload))
 		logrus.Debugf("发送订单到打印机(%s): %s",soc.Id(),payload)
 	}
@@ -192,10 +193,10 @@ func(s *printerService) handlePing(payload string) string {
 	data,_ := util.GetRuneAndSize(newPayload)
 	status,_ := strconv.Atoi(string(data[:1]))
 	if status == 1{ // 缺纸
-		//_, userId, err := s.GetUserIdByPrinterId(getDeviceName(payload))
-		//if err == nil {
-			//network.SendPrinterMessage(userId,status)
-		//}
+		userId, err := strconv.Atoi(getDeviceName(payload))
+		if err == nil {
+			network.SendPrinterMessage(userId,status)
+		}
 	}
 	return constant.SocketFormatPingReply
 }
@@ -210,7 +211,7 @@ func(s *printerService) handlePrinterReceive(payload string) string {
 	printStatus := ""
 	if strings.Contains(payload,constant.SocketKeyOrderReceive) {
 		replyStatus = "38"
-		printStatus = "1"
+		printStatus = "0"
 	}else if strings.Contains(payload,constant.SocketKeyOrderAccept){
 		replyStatus = "39"
 		printStatus = ""

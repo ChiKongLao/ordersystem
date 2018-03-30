@@ -7,7 +7,7 @@ import (
 	"github.com/chikong/ordersystem/util"
 )
 
-func main() {
+func maintest() {
 	logrus.SetLevel(logrus.DebugLevel)
 	printerService := services.NewPrinterService()
 	printerService.HandlePayload("A*888*1*AS01#")

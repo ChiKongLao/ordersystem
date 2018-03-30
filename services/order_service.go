@@ -10,7 +10,7 @@ import (
 	"github.com/chikong/ordersystem/constant"
 	"github.com/chikong/ordersystem/network"
 	"github.com/chikong/ordersystem/util"
-	"strings"
+	"strconv"
 )
 
 type OrderService interface {
@@ -106,7 +106,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 	if order.TableId == 0 || order.PersonNum == 0 {
 		return iris.StatusBadRequest, 0, errors.New("订单信息不能为空")
 	}
-	order.OrderNo = strings.Replace(util.GetUUID(), "-", "", -1)
+	order.OrderNo, _ = s.makeOrderNo(order)
 	time := util.GetCurrentTime()
 	order.CreateTime = time
 	order.UpdateTime = time
@@ -134,7 +134,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-	s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
+	//s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }
@@ -260,13 +260,40 @@ func (s *orderService) handlePaidOrder(order *model.OrderResponse) (int, error) 
 		network.SendOrderMessage(order.BusinessId, order)
 
 		s.PrinterService.SendOrder(model.OrderPrint{
-			OrderResponse:*order,
-			Customer:*orderUser,
-			Business:*businessUser,
-
+			OrderResponse: *order,
+			Customer:      *orderUser,
+			Business:      *businessUser,
 		})
 
 	}()
 
 	return iris.StatusOK, nil
+}
+
+// 生成订单号
+func (s *orderService) makeOrderNo(order *model.Order) (string, error) {
+	type DBItem struct {
+		OrderNo    string
+		CreateTime int64
+	}
+	item := new(DBItem)
+	if res, err := manager.DBEngine.Table("`order`").
+		Select("`order`.order_no,'order'.create_time").
+		Where(fmt.Sprintf("%s=?", constant.ColumnBusinessId), order.BusinessId).
+		Desc(constant.NameID).
+		Limit(1).
+		Get(&item); res == false || err != nil{
+			return "1",nil
+	}else{
+		no, err := strconv.Atoi(item.OrderNo)
+		if err != nil {
+			logrus.Errorf("生成订单号失败:%s",err)
+			return "1", nil
+		}
+
+		return strconv.Itoa(no+1),nil
+
+	}
+
+	return "1", nil
 }

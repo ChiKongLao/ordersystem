@@ -6,6 +6,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"strings"
 )
 
 
@@ -59,11 +60,12 @@ func(m *socketManager) initSocket() {
 				dataLen, err := s.Read(data)
 
 				if err != nil {
-					if err.Error() == "EOF" {
+					errString := err.Error()
+					if strings.Contains(errString,"EOF") {
 						logrus.Infof("打印机断开连接", s.Id())
 						break
 					}
-					if err.Error() == "closed by the remote host" {
+					if strings.Contains(errString,"closed by the remote host") {
 						logrus.Infof("远程主机强制关闭现有的连接", s.Id())
 						break
 					}

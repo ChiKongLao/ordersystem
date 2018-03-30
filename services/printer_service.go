@@ -15,6 +15,7 @@ import (
 	"github.com/chikong/ordersystem/network"
 	"github.com/henrylee2cn/teleport/socket"
 	"github.com/chikong/ordersystem/util"
+	"github.com/axgle/mahonia"
 )
 
 
@@ -32,6 +33,7 @@ type PrinterService interface {
 
 func NewPrinterService() PrinterService {
 	mDeviceIdReg, _ = regexp.Compile(constant.SocketRegexDeviceId)
+	mGBK = mahonia.NewEncoder("GBK")
 	service := &printerService{
 		ConnectionMap:make(map[string]socket.Socket),
 	}
@@ -48,6 +50,7 @@ type printerService struct {
 }
 
 var mDeviceIdReg *regexp.Regexp
+var mGBK mahonia.Encoder
 
 func(s *printerService) HandleConnection() {
 	network.GetSocketInstance().OnConnect(func(soc socket.Socket) {
@@ -81,8 +84,8 @@ func(s *printerService) SendOrder(order model.OrderPrint) {
 	if soc != nil {
 		payload := model.MakePrinterOrderData(1,order)
 		soc.Write([]byte(constant.SocketFormatClearOrder)) // 先清空订单信息再下发
-		time.Sleep(5*time.Millisecond)
-		soc.Write([]byte(payload))
+		time.Sleep(100 * time.Millisecond)
+		soc.Write([]byte(mGBK.ConvertString(payload)))
 		logrus.Debugf("发送订单到打印机(%s): %s",soc.Id(),payload)
 	}
 

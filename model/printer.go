@@ -17,7 +17,7 @@ type Printer struct {
 
 }
 
-func MakePrinterOrderData(status int,order OrderPrint) string{
+func TestMakePrinterOrderData(status int,order OrderPrint) string{
 	var totalCount int
 	//&!*XXXX*XXXX*<big>XXXXXX*<S0XT>XXXX*<BMP>*<qrc>XXXX#
 	var content bytes.Buffer
@@ -65,6 +65,47 @@ func MakePrinterOrderData(status int,order OrderPrint) string{
 	add(&content,makeNewLine())
 
 	//orderNo := order.OrderNo
+	orderNo := strconv.Itoa(order.Id)
+	//return fmt.Sprintf(constant.SocketFormatOrderSend,status,order.OrderNo,content.String())
+	return fmt.Sprintf(constant.SocketFormatOrderSend,status,orderNo,content.String())
+
+}
+
+
+func MakePrinterOrderData(status int,order OrderPrint) string{
+	var totalCount int
+	//&!*XXXX*XXXX*<big>XXXXXX*<S0XT>XXXX*<BMP>*<qrc>XXXX#
+	var content bytes.Buffer
+	//content = "<big>XXXXXX*<S0XT>XXXX*<BMP>*<qrc>XXXX"
+	add(&content,makeTwoContent("桌号",order.TableName))
+	add(&content,makeTwoContent("会员",order.Customer.UserName))
+	add(&content,makeTwoContent("时间",util.GetCurrentFormatTime()))
+	add(&content,makeInterval())
+	add(&content,makeFourContent("名称"," 数量","单价","金额"))
+	add(&content,makeInterval())
+	for _, subItem := range order.FoodList {
+		add(&content,subItem.Name)
+		add(&content,makeNewLine())
+		add(&content,makeFourContent("",strconv.Itoa(subItem.Num),
+			util.Float32ToString(subItem.Price),
+			util.Float32ToString(subItem.GetTotalPrice())))
+
+
+		totalCount += subItem.Num
+	}
+	add(&content,makeInterval())
+
+	add(&content,makeFourContent("合计",strconv.Itoa(totalCount),
+		"",util.Float32ToString(order.Price)))
+	add(&content,makeTwoContent("应收金额",util.Float32ToString(order.Price)))
+	add(&content,makeInterval())
+
+	add(&content,makeCenterContent("欢迎您下次光临!"))
+	add(&content,makeNewLine())
+	add(&content,fmt.Sprintf("地址:%s",order.Business.Address))
+	add(&content,makeNewLine())
+	add(&content,fmt.Sprintf("电话:%s",order.Business.Phone))
+
 	orderNo := strconv.Itoa(order.Id)
 	return fmt.Sprintf(constant.SocketFormatOrderSend,status,orderNo,content.String())
 

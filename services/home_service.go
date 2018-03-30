@@ -54,6 +54,11 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		}
 	}
 
+	status, orderResponse, err := s.OrderService.GetTodayOrderList(userId)
+	if err != nil {
+		return status, nil, err
+	}
+
 	_, err = manager.DBEngine.Table("food").
 		Select("Count(num) AS saleOutNum").
 		Where(fmt.Sprintf("%s=0", constant.ColumnNum)).
@@ -70,22 +75,23 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		Select("Sum(`order`.price) AS totalPrice").
 		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
 		constant.OrderStatusFinish, util.GetTodayZeroTime()).
-		Get(&tmpPrice); !res || err != nil{
+		Get(&tmpPrice); !res || err != nil {
 		logrus.Errorf("获取今日订单总额失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
-	}else if _,ok := tmpPrice.(float64); ok{
+	} else if _, ok := tmpPrice.(float64); ok {
 		totalPrice = tmpPrice.(float64)
-	}else{
+	} else {
 		totalPrice = 0
 	}
 
 	type Home struct {
-		EatingNum    int               `json:"eatingNum"`
-		EatingPerson int               `json:"eatingPerson"`
-		EmptyTable   int               `json:"emptyTable"`
-		SaleOutNum   int               `json:"saleOutNum"`
-		Price        float64           `json:"price"`
-		Data         []model.TableInfo `json:"data"`
+		EatingNum    int                   `json:"eatingNum"`
+		EatingPerson int                   `json:"eatingPerson"`
+		EmptyTable   int                   `json:"emptyTable"`
+		SaleOutNum   int                   `json:"saleOutNum"`
+		Price        float64               `json:"price"`
+		Data         []model.TableInfo     `json:"data"`
+		OrderList    []model.OrderResponse `json:"orderList"`
 	}
 
 	return iris.StatusOK, &Home{
@@ -95,6 +101,7 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		EmptyTable:   emptyTable,
 		SaleOutNum:   saleOutNum,
 		Price:        totalPrice,
+		OrderList:    orderResponse.List,
 	}, nil
 }
 

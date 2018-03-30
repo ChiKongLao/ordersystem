@@ -15,6 +15,7 @@ import (
 
 type OrderService interface {
 	GetOrderList(businessId, tableId, role, status int) (int, *model.OrderListResponse, error)
+	GetTodayOrderList(businessId int) (int, *model.OrderListResponse, error)
 	GetOrder(orderId int) (int, *model.OrderResponse, error)
 	InsertOrder(order *model.Order, shoppingCartId int) (int, int, error)
 	UpdateOrder(order *model.Order) (int, error)
@@ -73,6 +74,28 @@ func (s *orderService) GetOrderList(businessId, tableId, role, status int) (int,
 	if err != nil {
 		logrus.Errorf("获取订单失败: %s", err)
 		return iris.StatusInternalServerError, nil, errors.New("获取订单失败")
+	}
+	return iris.StatusOK, model.ConvertOrderResponseData(list), nil
+}
+
+// 获取今日订单列表
+func (s *orderService) GetTodayOrderList(businessId int) (int, *model.OrderListResponse, error) {
+	if businessId == 0 {
+		return iris.StatusBadRequest, nil, errors.New("商家id不能为空")
+	}
+
+	list := make([]model.OrderResponse, 0)
+
+	err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
+		Join("INNER", "table_info", "`order`.table_id=table_info.id").
+			Where(fmt.Sprintf("`order`.%s=? and `order`.%s>=?",
+				constant.ColumnBusinessId,constant.ColumnCreateTime), businessId,util.GetTodayZeroTime()).
+				Desc(constant.ColumnCreateTime).
+					Find(&list)
+
+	if err != nil {
+		logrus.Errorf("获取今日订单失败: %s", err)
+		return iris.StatusInternalServerError, nil, errors.New("获取今日订单失败")
 	}
 	return iris.StatusOK, model.ConvertOrderResponseData(list), nil
 }

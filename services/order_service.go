@@ -278,12 +278,18 @@ func (s *orderService) makeOrderNo(order *model.Order) (string, error) {
 	}
 	item := new(DBItem)
 	if res, err := manager.DBEngine.Table("`order`").
-		Select("`order`.order_no,'order'.create_time").
-		Where(fmt.Sprintf("%s=?", constant.ColumnBusinessId), order.BusinessId).
-		Desc(constant.NameID).
-		Limit(1).
-		Get(&item); res == false || err != nil{
+		Select("order_no,create_time").
+		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnBusinessId,constant.ColumnCreateTime),
+			order.BusinessId,util.GetTodayZeroTime()).
+		Desc("id").
+		Limit(1,0).
+		Get(item); err != nil {
+		logrus.Errorf("生成订单号时查询失败:%s",err)
+
+
 			return "1",nil
+	}else if res == false{
+		return "1",nil
 	}else{
 		no, err := strconv.Atoi(item.OrderNo)
 		if err != nil {

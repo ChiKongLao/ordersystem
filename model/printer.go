@@ -64,8 +64,8 @@ func TestMakePrinterOrderData(status int,order OrderPrint) string{
 	add(&content,fmt.Sprintf("电话:%s",order.Business.Phone))
 	add(&content,makeNewLine())
 
-	//orderNo := order.OrderNo
-	orderNo := strconv.Itoa(order.Id)
+	orderNo := order.OrderNo
+	//orderNo := strconv.Itoa(order.Id)
 	//return fmt.Sprintf(constant.SocketFormatOrderSend,status,order.OrderNo,content.String())
 	return fmt.Sprintf(constant.SocketFormatOrderSend,status,orderNo,content.String())
 

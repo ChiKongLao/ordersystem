@@ -48,6 +48,25 @@ func (c *MenuController) GetBy(businessId int) (int,interface{}) {
 
 
 }
+// 获取菜单
+func (c *MenuController) GetBySaleout(businessId int) (int,interface{}) {
+	status, data := c.GetBy(businessId)
+	if status != iris.StatusOK{
+		return status,data
+	}
+	saleOutList := make([]model.FoodResponse,0)
+	dataMap := data.(iris.Map)
+	list := dataMap[constant.NameData].([]model.FoodResponse)
+	for _, subItem := range list {
+		if subItem.Num == 0{
+			saleOutList = append(saleOutList, subItem)
+		}
+	}
+	return iris.StatusOK,iris.Map{
+		constant.NameData:saleOutList,
+	}
+
+}
 
 // 获取食物详情
 func (c *MenuController) GetByBy(businessId, foodId int) (int,interface{}) {

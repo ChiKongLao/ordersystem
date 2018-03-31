@@ -157,7 +157,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-	//s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
+	s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }

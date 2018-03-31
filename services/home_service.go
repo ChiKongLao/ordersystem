@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"errors"
 	"fmt"
-	"github.com/chikong/ordersystem/util"
 )
 
 type HomeService interface {
@@ -58,6 +57,23 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 	if err != nil {
 		return status, nil, err
 	}
+	var totalPrice float32
+	//if res, err := manager.DBEngine.Table("`order`").
+	//	Select("Sum(`order`.price) AS totalPrice").
+	//	Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
+	//	constant.OrderStatusFinish, util.GetTodayZeroTime()).
+	//	Get(&tmpPrice); !res || err != nil {
+	//	logrus.Errorf("获取今日订单总额失败: %s", err)
+	//	return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
+	//} else if _, ok := tmpPrice.(float64); ok {
+	//	totalPrice = tmpPrice.(float64)
+	//} else {
+	//	totalPrice = 0
+	//}
+
+	for _, subItem := range orderResponse.List  {
+		totalPrice += subItem.Price
+	}
 
 	_, err = manager.DBEngine.Table("food").
 		Select("Count(num) AS saleOutNum").
@@ -69,27 +85,12 @@ func (s *homeService) GetBusinessHome(userId int) (int, interface{}, error) {
 		return iris.StatusInternalServerError, nil, errors.New("获取首页数据失败")
 	}
 
-	var tmpPrice interface{}
-	var totalPrice float64
-	if res, err := manager.DBEngine.Table("`order`").
-		Select("Sum(`order`.price) AS totalPrice").
-		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnStatus, constant.ColumnCreateTime),
-		constant.OrderStatusFinish, util.GetTodayZeroTime()).
-		Get(&tmpPrice); !res || err != nil {
-		logrus.Errorf("获取今日订单总额失败: %s", err)
-		return iris.StatusInternalServerError, nil, errors.New("获取今日订单总额失败")
-	} else if _, ok := tmpPrice.(float64); ok {
-		totalPrice = tmpPrice.(float64)
-	} else {
-		totalPrice = 0
-	}
-
 	type Home struct {
 		EatingNum    int                   `json:"eatingNum"`
 		EatingPerson int                   `json:"eatingPerson"`
 		EmptyTable   int                   `json:"emptyTable"`
 		SaleOutNum   int                   `json:"saleOutNum"`
-		Price        float64               `json:"price"`
+		Price        float32               `json:"price"`
 		Data         []model.TableInfo     `json:"data"`
 		OrderList    []model.OrderResponse `json:"orderList"`
 	}

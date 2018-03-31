@@ -9,8 +9,8 @@ Charset: UTF-8
 Environment: test
 Mqtt:
   Host: tcp://106.38.205.89:1883
-#  Open: true
-  Open: false
+  Open: true
+#  Open: false
 
 MySQL:
   Host: localhost:3306

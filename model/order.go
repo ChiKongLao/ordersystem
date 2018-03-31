@@ -3,7 +3,7 @@ package model
 // 订单
 type Order struct {
 	Id         int     `json:"id" xorm:"not null pk autoincr unique INT(11)"`
-	OrderNo    string  `json:"orderNo" xorm:"unique VARCHAR(35)"` // 订单号
+	OrderNo    string  `json:"orderNo" xorm:"VARCHAR(10)"` // 订单号
 	TableId    int     `json:"tableId" xorm:"not null  INT(11)"`
 	PersonNum  int     `json:"personNum" xorm:"not null INT(11)"`
 	Price      float32 `json:"price" xorm:"not null FLOAT"`

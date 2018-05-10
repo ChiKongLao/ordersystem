@@ -143,6 +143,15 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusBadRequest, 0, errors.New("购物车为空")
 	}
 	order.FoodList = shopCarItem.FoodList
+	for _, subItem := range shopCarItem.FoodList {
+		status, foodResponse, err := s.MenuService.GetFood(order.BusinessId, order.UserId, subItem.Id)
+		if err != nil {
+			return status,0, err
+		}
+		if subItem.Num > foodResponse.Num {
+			return iris.StatusBadRequest, 0, fmt.Errorf("%s的剩余数量不足",subItem.Name)
+		}
+	}
 
 	sumPrice, err := s.MenuService.GetOrderSumPrice(order.FoodList)
 	if err != nil {
@@ -157,7 +166,7 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 		return iris.StatusInternalServerError, 0, errors.New("添加订单失败")
 	}
 
-	s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
+	//s.ShoppingService.DeleteShopping(order.BusinessId, shopCarItem.Id) // 删除购物车
 
 	return iris.StatusOK, order.Id, nil
 }

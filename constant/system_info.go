@@ -6,4 +6,6 @@ const(
 	SystemServer = "https://www.baidu.com"
 	SystemHost = "8090"
 
+	WeChatPayNotifyUrl = ""
+
 )

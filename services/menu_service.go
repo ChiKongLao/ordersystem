@@ -141,8 +141,7 @@ func (s *menuService) GetFood(businessId, userId, foodId int) (int, *model.FoodR
 
 // 添加食物
 func (s *menuService) InsertFoodOne(food *model.Food) (int, error) {
-
-	if food.Name == "" {
+	if food.Name == "" || food.Num <= 0 {
 		return iris.StatusBadRequest, errors.New("食物信息不能为空")
 	}
 

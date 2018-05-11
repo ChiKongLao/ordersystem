@@ -17,9 +17,9 @@ type Wechat struct {
 
 const (
 	PAY_URL     = "https://api.mch.weixin.qq.com/pay/unifiedorder"
-	MERCHANT_ID = "mch_id"
-	APP_ID      = "appid"
-	APP_KEY     = "key"
+	MERCHANT_ID = "1377732502"
+	APP_ID      = "wx4fe64cd949d7bf46"
+	APP_KEY     = "iAAndRPzIoo5GJT0C0CErHPXHm9MhO5a"
 )
 
 // 统一下单数据包

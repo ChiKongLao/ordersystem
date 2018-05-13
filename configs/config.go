@@ -11,6 +11,7 @@ type Config struct {
 	Mqtt        MqttConfig  `yaml:"Mqtt"`
 	MySQL       MySQLConfig `yaml:"MySQL"`
 	Redis       RedisConfig `yaml:"Redis"`
+	WeChat      WeChat      `yaml:"WeChat"`
 }
 type MySQLConfig struct {
 	Host     string `yaml:"Host"`
@@ -26,6 +27,10 @@ type RedisConfig struct {
 type MqttConfig struct {
 	Host string `yaml:"Host"`
 	Open bool   `yaml:"Open"`
+}
+
+type WeChat struct {
+	NotifyUrl string `yaml:"NotifyUrl"`
 }
 
 var mConfig Config

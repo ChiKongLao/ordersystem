@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"github.com/sirupsen/logrus"
-	"github.com/chikong/ordersystem/constant"
 )
 
 type Wechat struct {
@@ -17,9 +16,10 @@ type Wechat struct {
 
 const (
 	PAY_URL     = "https://api.mch.weixin.qq.com/pay/unifiedorder"
-	MERCHANT_ID = "1377732502"
-	APP_ID      = "wx4fe64cd949d7bf46"
-	APP_KEY     = "iAAndRPzIoo5GJT0C0CErHPXHm9MhO5a"
+	KEY_MERCHANT_ID = "mch_id"
+	KEY_APP_ID      = "appid"
+	KEY_APP_KEY     = "key"
+	KEY_PayNotifyUrl = "notify_url"
 )
 
 // 统一下单数据包
@@ -85,14 +85,14 @@ func NewWechat(params map[string]interface{}) *Wechat {
 	return &Wechat{Payment{Config: params}}
 }
 
-func (this *Wechat) GenderPayUrl(order Order) (string, error) {
+func (this *Wechat) GenderPayUrl(order WechatOrder) (string, error) {
 	var o OrderXML
-	o.APPID = this.getConfig(APP_ID).(string)
-	o.MchID = this.getConfig(MERCHANT_ID).(string)
-	o.Body = order.ProudctName
-	o.Detail = order.ProudctDescription
+	o.APPID = this.getConfig(KEY_APP_ID).(string)
+	o.MchID = this.getConfig(KEY_MERCHANT_ID).(string)
+	o.Body = order.ProductName
+	o.Detail = order.ProductDescription
 	o.NonceStr = this.GenerateString(16)
-	o.NotifyUrl = this.getConfig(constant.WeChatPayNotifyUrl).(string)
+	o.NotifyUrl = this.getConfig(KEY_PayNotifyUrl).(string)
 	o.OrderID = order.OrderID
 	o.ClientIP = order.IP
 	o.PriceTotal = order.PriceTotal
@@ -126,13 +126,13 @@ func (this *Wechat) GenderPayUrl(order Order) (string, error) {
 	}
 
 }
-func (this *Wechat) PayNotify(notify []byte) (*NofiyData, error) {
+func (this *Wechat) PayNotify(notify []byte) (*NotifyData, error) {
 	if len(notify) == 0 {
 		return nil, fmt.Errorf("Notify Data empty")
 	}
 	var notifyPay WechatNotify
 	var msg returnMSG
-	var paydata NofiyData
+	var paydata NotifyData
 	xml.Unmarshal(notify, &notifyPay)
 	notifyMap := this.struct2map(notifyPay)
 	if !this.checkSign(notifyMap) {
@@ -187,7 +187,7 @@ func (this *Wechat) checkConfig() bool {
 
 func (this *Wechat) makeSign(params map[string]interface{}) string {
 	signParams := this.makeUrl(params)
-	return strings.ToUpper(this.MD5Sigin(fmt.Sprintf("%s&key=%s", signParams, this.getConfig(APP_KEY))))
+	return strings.ToUpper(this.MD5Sigin(fmt.Sprintf("%s&key=%s", signParams, this.getConfig(KEY_APP_KEY))))
 }
 
 func (this *Wechat) checkSign(params map[string]interface{}) bool {

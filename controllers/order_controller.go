@@ -59,7 +59,6 @@ func (c *OrderController) GetByTableBy(businessId, tableId int) (int, interface{
 		return status, model.NewErrorResponse(err)
 	}
 
-
 	var item *model.OrderListResponse
 	status, item, err = c.GetOrderList(businessId, tableId, user.Role, orderStatus)
 	if err != nil {
@@ -220,6 +219,27 @@ func (c *OrderController) PutByStatusBy(businessId, orderId int) (int, interface
 		constant.NameIsOk: true,
 	}
 }
+
+// 确认支付订单
+func (c *OrderController) PostByConfirmBy(businessId, orderId int) (int, interface{}) {
+	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
+	if !isOwn {
+		return iris.StatusUnauthorized, model.NewErrorResponse(err)
+	}
+	status, _, err := c.UserService.GetUserById(businessId)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+	status, url, err := c.ConfirmOrder(orderId)
+	if err != nil {
+		return status, model.NewErrorResponse(err)
+	}
+	return status, iris.Map{
+		constant.NameIsOk: true,
+		constant.NameUrl:  url,
+	}
+}
+
 
 // 删除订单
 func (c *OrderController) DeleteByBy(businessId, orderId int) (int, interface{}) {

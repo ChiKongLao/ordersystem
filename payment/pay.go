@@ -21,21 +21,21 @@ type Pay interface {
 	checkConfig() bool
 	makeSign(params map[string]interface{}) string
 	checkSign(params map[string]interface{}) bool
-	GenderPayUrl(order Order) (string, error)    // 生成支付URL
-	PayNotify(notfiy []byte) (*NofiyData, error) // 支付回调
+	GenderPayUrl(order WechatOrder) (string, error)    // 生成支付URL
+	PayNotify(notify []byte) (*NotifyData, error) // 支付回调
 }
 
-type Order struct {
+type WechatOrder struct {
 	ExtraParam         string // 公用回传参数
 	IP                 string // 订单用户IP
 	OrderID            string // 订单ID
 	PriceTotal         int    // 单位为分
-	ProudctName        string // 产品名称
-	ProudctDescription string // 产品描述
+	ProductName        string // 产品名称
+	ProductDescription string // 产品描述
 	ProductID          int    // 商品ID
 }
 
-type NofiyData struct {
+type NotifyData struct {
 	OrderID       string      // 订单号
 	TransactionID string      // 支付交易号
 	TotalFee      int         // 订单金额(单位分)

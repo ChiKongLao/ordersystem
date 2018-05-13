@@ -11,6 +11,8 @@ import (
 	"github.com/chikong/ordersystem/network"
 	"github.com/chikong/ordersystem/util"
 	"strconv"
+	"github.com/chikong/ordersystem/payment"
+	"github.com/chikong/ordersystem/configs"
 )
 
 type OrderService interface {
@@ -22,10 +24,12 @@ type OrderService interface {
 	UpdateOrderStatus(orderId, status int) (int, error)
 	DeleteOrder(businessId, orderId int) (int, error)
 	GetOldCustomer(businessId int) (int, interface{}, error)
+	ConfirmOrder(orderId int) (int, string, error)
 }
 
 func NewOrderService(userService UserService, menuService MenuService,
-	tableService TableService, shoppingService ShoppingService, printerService PrinterService) OrderService {
+	tableService TableService, shoppingService ShoppingService, printerService PrinterService,
+	payService PayService) OrderService {
 
 	return &orderService{
 		MenuService:     menuService,
@@ -33,6 +37,7 @@ func NewOrderService(userService UserService, menuService MenuService,
 		TableService:    tableService,
 		ShoppingService: shoppingService,
 		PrinterService:  printerService,
+		PayService:      payService,
 	}
 }
 
@@ -42,6 +47,7 @@ type orderService struct {
 	TableService    TableService
 	ShoppingService ShoppingService
 	PrinterService  PrinterService
+	PayService      PayService
 }
 
 // 获取订单列表
@@ -88,10 +94,10 @@ func (s *orderService) GetTodayOrderList(businessId int) (int, *model.OrderListR
 
 	err := manager.DBEngine.Table("`order`").Select("`order`.*,table_info.name AS table_name").
 		Join("INNER", "table_info", "`order`.table_id=table_info.id").
-			Where(fmt.Sprintf("`order`.%s=? and `order`.%s>=?",
-				constant.ColumnBusinessId,constant.ColumnCreateTime), businessId,util.GetTodayZeroTime()).
-				Desc(constant.ColumnCreateTime).
-					Find(&list)
+		Where(fmt.Sprintf("`order`.%s=? and `order`.%s>=?",
+		constant.ColumnBusinessId, constant.ColumnCreateTime), businessId, util.GetTodayZeroTime()).
+		Desc(constant.ColumnCreateTime).
+		Find(&list)
 
 	if err != nil {
 		logrus.Errorf("获取今日订单失败: %s", err)
@@ -146,10 +152,10 @@ func (s *orderService) InsertOrder(order *model.Order, shoppingCartId int) (int,
 	for _, subItem := range shopCarItem.FoodList {
 		status, foodResponse, err := s.MenuService.GetFood(order.BusinessId, order.UserId, subItem.Id)
 		if err != nil {
-			return status,0, err
+			return status, 0, err
 		}
 		if subItem.Num > foodResponse.Num {
-			return iris.StatusBadRequest, 0, fmt.Errorf("%s的剩余数量不足",subItem.Name)
+			return iris.StatusBadRequest, 0, fmt.Errorf("%s的剩余数量不足", subItem.Name)
 		}
 	}
 
@@ -233,6 +239,39 @@ func (s *orderService) UpdateOrderStatus(orderId, orderStatus int) (int, error) 
 	return iris.StatusOK, nil
 }
 
+// 确认支付订单
+func (s *orderService) ConfirmOrder(orderId int) (int, string, error) {
+	if orderId == 0 {
+		return iris.StatusBadRequest, "", errors.New("订单信息不能为空")
+	}
+	status, dbItem, err := s.GetOrder(orderId)
+	if err != nil {
+		return status, "", err
+	}
+	if dbItem.Status == constant.OrderStatusFinish {
+		return iris.StatusBadRequest, "", errors.New("该订单已完成")
+	}
+
+	// 设置修改信息
+	dbItem.UpdateTime = util.GetCurrentTime()
+	priceInt, _ := strconv.Atoi(util.Float32ToString(dbItem.Price))
+	wechatOrder := payment.WechatOrder{
+		OrderID:     strconv.Itoa(orderId),
+		ProductName: dbItem.TableName,
+		PriceTotal:  priceInt,
+		ProductID:   dbItem.TableId,
+		IP:          "127.0.0.1",
+	}
+	notifyUrl := fmt.Sprintf(configs.GetConfig().WeChat.NotifyUrl + "/wechatnotify/%s",orderId) // 微信回调通知
+	url, err := s.PayService.GetPayClient(notifyUrl).GenderPayUrl(wechatOrder)
+	if err != nil {
+		logrus.Errorf("修改订单失败: %s", err)
+		return iris.StatusInternalServerError, "", errors.New("修改订单失败")
+	}
+
+	return iris.StatusOK, url, nil
+}
+
 // 删除订单
 func (s *orderService) DeleteOrder(businessId, orderId int) (int, error) {
 	if businessId == 0 {
@@ -311,25 +350,24 @@ func (s *orderService) makeOrderNo(order *model.Order) (string, error) {
 	item := new(DBItem)
 	if res, err := manager.DBEngine.Table("`order`").
 		Select("order_no,create_time").
-		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnBusinessId,constant.ColumnCreateTime),
-			order.BusinessId,util.GetTodayZeroTime()).
+		Where(fmt.Sprintf("%s=? and %s>=?", constant.ColumnBusinessId, constant.ColumnCreateTime),
+		order.BusinessId, util.GetTodayZeroTime()).
 		Desc("id").
-		Limit(1,0).
+		Limit(1, 0).
 		Get(item); err != nil {
-		logrus.Errorf("生成订单号时查询失败:%s",err)
+		logrus.Errorf("生成订单号时查询失败:%s", err)
 
-
-			return "1",nil
-	}else if res == false{
-		return "1",nil
-	}else{
+		return "1", nil
+	} else if res == false {
+		return "1", nil
+	} else {
 		no, err := strconv.Atoi(item.OrderNo)
 		if err != nil {
-			logrus.Errorf("生成订单号失败:%s",err)
+			logrus.Errorf("生成订单号失败:%s", err)
 			return "1", nil
 		}
 
-		return strconv.Itoa(no+1),nil
+		return strconv.Itoa(no + 1), nil
 
 	}
 

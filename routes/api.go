@@ -39,22 +39,23 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 	//	addTestData()
 
 
+	userService := services.NewUserService()
+	wechatPayService := services.NewPayService()
+
+	printerService := services.NewPrinterService()
+
+	classifyService := services.NewClassifyService(userService)
+	shopService := services.NewShopService(userService)
+	menuService := services.NewMenuService(userService,classifyService)
+	tableService := services.NewTableService(userService)
+	shoppingCartService := services.NewShoppingService(userService, menuService)
+	orderService := services.NewOrderService(userService, menuService,tableService,shoppingCartService,printerService,wechatPayService)
+	chatService := services.NewChatService(userService,tableService)
+
 
 
 	auth := authentication.JWTHandler.Serve
 	{
-
-		userService := services.NewUserService()
-
-		printerService := services.NewPrinterService()
-
-		classifyService := services.NewClassifyService(userService)
-		shopService := services.NewShopService(userService)
-		menuService := services.NewMenuService(userService,classifyService)
-		tableService := services.NewTableService(userService)
-		shoppingCartService := services.NewShoppingService(userService, menuService)
-		orderService := services.NewOrderService(userService, menuService,tableService,shoppingCartService,printerService)
-		chatService := services.NewChatService(userService,tableService)
 
 
 		mvc.Configure(v1.Party("/user"), func(mvcApp *mvc.Application) {
@@ -117,6 +118,11 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 		mvc.New(v1.Party("/message",auth)).Handle(new(controllers.MessageController))
 
 	}
+
+	mvc.Configure(v1.Party("/wechatNotify"), func(mvcApp *mvc.Application) {
+		mvcApp.Register(orderService)
+		mvcApp.Handle(new(controllers.WeChatNotifyController))
+	})
 }
 
 func addTestData()  {

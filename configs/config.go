@@ -39,7 +39,7 @@ func InitApplicationConfig() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			logrus.Warn("加载配置文件失败: ", err)
+			logrus.Warnln("加载配置文件失败: ", err)
 			mConfig = Config{
 				Environment: "test",
 				Mqtt: MqttConfig{

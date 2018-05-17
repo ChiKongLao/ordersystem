@@ -97,7 +97,8 @@ func (this *Wechat) GenderPayUrl(order WechatOrder) (string, error) {
 	o.ClientIP = order.IP
 	o.PriceTotal = order.PriceTotal
 	o.TradeType = "NATIVE"
-	o.ProductId = order.ProductID
+	//o.TradeType = "JSAPI"
+	//o.ProductId = order.ProductID
 	params := this.struct2map(o)
 
 	o.Sign = this.makeSign(params)
@@ -114,6 +115,7 @@ func (this *Wechat) GenderPayUrl(order WechatOrder) (string, error) {
 	}
 	var wechatPay WeChatPayXML
 	xml.Unmarshal(res, &wechatPay)
+	logrus.Debugln("wechatPay=%s",wechatPay)
 	if wechatPay.ResultCode == "FAIL" {
 		return "", fmt.Errorf("%v", wechatPay.ErrorMSG)
 	}

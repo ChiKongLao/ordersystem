@@ -18,10 +18,6 @@ func NewPayService() PayService {
 type payService struct {
 }
 
-func (s *payService) init() {
-
-}
-
 func (s *payService)GetPayClient(notifyUrl string) payment.Pay  {
 	wxconfig := map[string]interface{}{
 		payment.KEY_APP_ID:       payment.WechatAppId,

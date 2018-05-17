@@ -19,6 +19,6 @@ MySQL:
 Redis:
   Host: localhost:6379
 
-Wechat:
+WeChat:
   NotifyUrl: www.eeeat.com
 

@@ -45,7 +45,7 @@ func GetRequestLogger() context.Handler {
 
 		// if !empty then its contents derives from `ctx.Values().Get("logger_message")
 		// will be added to the logs.
-		MessageContextKey: "api_message",
+		MessageContextKeys: []string{"api_message"},
 	})
 }
 

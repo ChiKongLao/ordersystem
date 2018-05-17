@@ -222,10 +222,6 @@ func (c *OrderController) PutByStatusBy(businessId, orderId int) (int, interface
 
 // 确认支付订单
 func (c *OrderController) PostByConfirmBy(businessId, orderId int) (int, interface{}) {
-	isOwn, err := authentication.IsOwnWithToken(c.Ctx, businessId)
-	if !isOwn {
-		return iris.StatusUnauthorized, model.NewErrorResponse(err)
-	}
 	status, _, err := c.UserService.GetUserById(businessId)
 	if err != nil {
 		return status, model.NewErrorResponse(err)
@@ -235,7 +231,6 @@ func (c *OrderController) PostByConfirmBy(businessId, orderId int) (int, interfa
 		return status, model.NewErrorResponse(err)
 	}
 	return status, iris.Map{
-		constant.NameIsOk: true,
 		constant.NameUrl:  url,
 	}
 }

@@ -41,7 +41,8 @@ func NewOrderService(userService UserService, menuService MenuService,
 	}
 }
 
-type orderService struct {
+type
+orderService struct {
 	MenuService     MenuService
 	UserService     UserService
 	TableService    TableService
@@ -248,25 +249,26 @@ func (s *orderService) ConfirmOrder(orderId int) (int, string, error) {
 	if err != nil {
 		return status, "", err
 	}
-	if dbItem.Status == constant.OrderStatusFinish {
-		return iris.StatusBadRequest, "", errors.New("该订单已完成")
+	if dbItem.Status != constant.OrderStatusWaitPay {
+		return iris.StatusBadRequest, "", errors.New("该订单不是待支付状态")
 	}
 
 	// 设置修改信息
 	dbItem.UpdateTime = util.GetCurrentTime()
-	priceInt, _ := strconv.Atoi(util.Float32ToString(dbItem.Price))
+	//priceInt, _ := strconv.Atoi(util.Float32ToString(dbItem.Price))
 	wechatOrder := payment.WechatOrder{
 		OrderID:     strconv.Itoa(orderId),
 		ProductName: dbItem.TableName,
-		PriceTotal:  priceInt,
+		//PriceTotal:  priceInt,
+		PriceTotal:  1,
 		ProductID:   dbItem.TableId,
-		IP:          "127.0.0.1",
+		IP:          "171.214.154.130",
 	}
-	notifyUrl := fmt.Sprintf(configs.GetConfig().WeChat.NotifyUrl + "/wechatnotify/%s",orderId) // 微信回调通知
+	notifyUrl := fmt.Sprintf(configs.GetConfig().WeChat.NotifyUrl + "/wechatnotify/%v",orderId) // 微信回调通知
 	url, err := s.PayService.GetPayClient(notifyUrl).GenderPayUrl(wechatOrder)
 	if err != nil {
-		logrus.Errorf("修改订单失败: %s", err)
-		return iris.StatusInternalServerError, "", errors.New("修改订单失败")
+		logrus.Errorf("支付订单失败: %s", err)
+		return iris.StatusInternalServerError, "", errors.New("支付订单失败")
 	}
 
 	return iris.StatusOK, url, nil

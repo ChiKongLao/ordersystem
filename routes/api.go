@@ -40,6 +40,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 
 	userService := services.NewUserService()
+	wechatService := services.NewWechatService()
 	wechatPayService := services.NewPayService()
 
 	printerService := services.NewPrinterService()
@@ -119,9 +120,10 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 	}
 
-	mvc.Configure(v1.Party("/wechatNotify"), func(mvcApp *mvc.Application) {
-		mvcApp.Register(orderService)
-		mvcApp.Handle(new(controllers.WeChatNotifyController))
+	// 无需授权的接口
+	mvc.Configure(v1.Party("/wechat"), func(mvcApp *mvc.Application) {
+		mvcApp.Register(wechatService)
+		mvcApp.Handle(new(controllers.WeChatController))
 	})
 }
 

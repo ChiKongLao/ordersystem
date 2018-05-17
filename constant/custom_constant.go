@@ -47,6 +47,8 @@ const (
 	NameShoppingCartId = "shoppingCartId"
 	NameTime           = "time"
 	NameUrl            = "url"
+	NameCode           = "code"
+	NameState          = "state"
 )
 
 // 数据库的表的列名

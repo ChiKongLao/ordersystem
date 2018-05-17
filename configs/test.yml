@@ -15,10 +15,13 @@ Mqtt:
 MySQL:
   Host: localhost:3306
   UserName: root
-  Password:
+  Password: 2888400
   Name: order_system
 Redis:
   Host: localhost:6379
 
-Wechat:
-  NotifyUrl: 127.0.0.1
+WeChat:
+#  NotifyUrl:  http://rfcurv.natappfree.cc/v1
+  NotifyUrl:  http://ordersystem.free.ngrok.cc/v1
+#  NotifyUrl:  http://www.eeeat.com
+

@@ -25,14 +25,30 @@ func (c *WeChatController) GetAuth() (int, interface{}) {
 // 获取用户的个人信息
 func (c *WeChatController) GetAuthResponse() (int, interface{}) {
 
-	data, err := c.GetUserInfo(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
+	//data, err := c.GetUserInfo(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
+	//if err != nil {
+	//	return iris.StatusInternalServerError, model.NewErrorResponse(err)
+	//}
+	//return iris.StatusOK, iris.Map{
+	//	constant.NameData: data,
+	//}
+	return iris.StatusOK,iris.Map{
+		constant.NameCode: c.Ctx.URLParam(constant.NameCode),
+		constant.NameState: c.Ctx.URLParam(constant.NameState),
+	}
+
+}
+
+// 获取用户的token url
+func (c *WeChatController) GetToken() (int, interface{}) {
+
+	data, err := c.GetTokenUrl(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
 	if err != nil {
 		return iris.StatusInternalServerError, model.NewErrorResponse(err)
 	}
 	return iris.StatusOK, iris.Map{
-		constant.NameData: data,
+		constant.NameUrl: data,
 	}
-
 }
 
 // 获取微信支付回调

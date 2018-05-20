@@ -21,7 +21,7 @@ func (c *UserController) PostRegister() (int,interface{}) {
 	head := c.Ctx.FormValue(constant.NameHead)
 	role := c.Ctx.PostValueIntDefault(constant.NameRole,3)
 
-	status,err := c.UserService.InsertUser(role,userName,password,nickName,head)
+	status, _, err := c.UserService.InsertUser(role,userName,password,nickName,head)
 
 	if err != nil{
 		return status, model.NewErrorResponse(err)

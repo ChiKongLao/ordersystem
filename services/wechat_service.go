@@ -8,11 +8,12 @@ import (
 	"github.com/kataras/iris/core/errors"
 	"github.com/sirupsen/logrus"
 	"fmt"
+	"github.com/chikong/ordersystem/model"
 )
 
 type WechatService interface {
 	GetAuthUrl() string
-	GetToken(code, state string) (*mpoauth2.UserInfo, error)
+	GetUserInfo(code, state string) (*model.User, error)
 }
 
 func NewWechatService() WechatService {
@@ -38,7 +39,7 @@ func (s *wechatService) GetAuthUrl() string {
 }
 
 // 获取换取token的url
-func (s *wechatService) GetToken(code, state string) (*mpoauth2.UserInfo, error) {
+func (s *wechatService) GetUserInfo(code, state string) (*model.User, error) {
 	if code == "" {
 		return nil, errors.New("用户禁止授权")
 	}
@@ -59,6 +60,25 @@ func (s *wechatService) GetToken(code, state string) (*mpoauth2.UserInfo, error)
 		logrus.Errorln(str)
 		return nil, errors.New(str)
 	}
+	user, err := s.exchangeUser(*userInfo)
+	if err != nil {
+		return nil, err
 
-	return userInfo,nil
+	}
+	return user,nil
+
+}
+
+// 从微信用户信息转为系统用户
+func (s *wechatService)exchangeUser(wxUser mpoauth2.UserInfo) (*model.User, error) {
+	_, user, err := s.UserService.InsertUser(constant.RoleCustomer,wxUser.OpenId,"8888888888",wxUser.Nickname,wxUser.HeadImageURL)
+	if err == nil {
+		return user, nil
+	}
+	_, user, err = s.UserService.GetUserByName(wxUser.OpenId)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+
 }

@@ -71,11 +71,9 @@ func (s *wechatService) GetUserInfo(code, state string) (*model.User, error) {
 
 // 从微信用户信息转为系统用户
 func (s *wechatService)exchangeUser(wxUser mpoauth2.UserInfo) (*model.User, error) {
-	_, user, err := s.UserService.InsertUser(constant.RoleCustomer,wxUser.OpenId,"8888888888",wxUser.Nickname,wxUser.HeadImageURL)
-	if err == nil {
-		return user, nil
-	}
-	_, user, err = s.UserService.GetUserByName(wxUser.OpenId)
+	s.UserService.InsertUser(constant.RoleCustomer,wxUser.OpenId,"8888888888",wxUser.Nickname,wxUser.HeadImageURL)
+
+	_, user, err := s.UserService.GetUserByName(wxUser.OpenId)
 	if err != nil {
 		return nil, err
 	}

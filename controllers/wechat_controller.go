@@ -40,9 +40,9 @@ func (c *WeChatController) GetAuthResponse() (int, interface{}) {
 }
 
 // 获取用户的token url
-func (c *WeChatController) GetToken() (int, interface{}) {
+func (c *WeChatController) GetUserinfo() (int, interface{}) {
 
-	data, err := c.GetTokenUrl(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
+	data, err := c.GetToken(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
 	if err != nil {
 		return iris.StatusInternalServerError, model.NewErrorResponse(err)
 	}

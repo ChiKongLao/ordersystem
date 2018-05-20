@@ -47,7 +47,7 @@ func (c *WeChatController) GetUserinfo() (int, interface{}) {
 		return iris.StatusInternalServerError, model.NewErrorResponse(err)
 	}
 	return iris.StatusOK, iris.Map{
-		constant.NameUrl: data,
+		constant.NameData: data,
 	}
 }
 

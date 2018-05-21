@@ -9,18 +9,20 @@ import (
 	"github.com/sirupsen/logrus"
 	"fmt"
 	"github.com/chikong/ordersystem/model"
+	"github.com/kataras/iris"
 )
 
 type WechatService interface {
 	GetAuthUrl() string
-	GetUserInfo(code, state string) (*model.User, error)
+	GetUserInfo(code, state string) (interface{}, error)
 }
 
-func NewWechatService() WechatService {
+func NewWechatService(userService UserService) WechatService {
 	oauth2Client := oauth2.Client{
 		Endpoint: mpoauth2.NewEndpoint(constant.WechatAppId, constant.WechatAppSecret),
 	}
 	service := &wechatService{
+		UserService:userService,
 		oauth2Client: oauth2Client,
 	}
 	return service
@@ -28,7 +30,6 @@ func NewWechatService() WechatService {
 
 type wechatService struct {
 	UserService  UserService
-	TableService TableService
 	oauth2Client oauth2.Client
 }
 
@@ -39,7 +40,7 @@ func (s *wechatService) GetAuthUrl() string {
 }
 
 // 获取换取token的url
-func (s *wechatService) GetUserInfo(code, state string) (*model.User, error) {
+func (s *wechatService) GetUserInfo(code, state string) (interface{}, error) {
 	if code == "" {
 		return nil, errors.New("用户禁止授权")
 	}
@@ -65,15 +66,21 @@ func (s *wechatService) GetUserInfo(code, state string) (*model.User, error) {
 		return nil, err
 
 	}
-	return user,nil
+	return iris.Map{
+		constant.NameID:user.Id,
+		constant.NameNickName:user.NickName,
+		constant.NameHead:user.Head,
+		constant.NameAuthorization:user.Token,
+	},nil
 
 }
 
 // 从微信用户信息转为系统用户
 func (s *wechatService)exchangeUser(wxUser mpoauth2.UserInfo) (*model.User, error) {
-	s.UserService.InsertUser(constant.RoleCustomer,wxUser.OpenId,"8888888888",wxUser.Nickname,wxUser.HeadImageURL)
+	password := "8888888888"
+	s.UserService.InsertUser(constant.RoleCustomer,wxUser.OpenId,password,wxUser.Nickname,wxUser.HeadImageURL)
 
-	_, user, err := s.UserService.GetUserByName(wxUser.OpenId)
+	_, user, err := s.UserService.Login(wxUser.OpenId,password)
 	if err != nil {
 		return nil, err
 	}

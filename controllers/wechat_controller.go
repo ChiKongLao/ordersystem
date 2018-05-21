@@ -42,13 +42,11 @@ func (c *WeChatController) GetAuthResponse() (int, interface{}) {
 // 获取用户的token url
 func (c *WeChatController) GetUserinfo() (int, interface{}) {
 
-	data, err := c.GetToken(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
+	data, err := c.GetUserInfo(c.Ctx.URLParam(constant.NameCode), c.Ctx.URLParam(constant.NameState))
 	if err != nil {
 		return iris.StatusInternalServerError, model.NewErrorResponse(err)
 	}
-	return iris.StatusOK, iris.Map{
-		constant.NameData: data,
-	}
+	return iris.StatusOK, data
 }
 
 // 获取微信支付回调

@@ -4,9 +4,9 @@ import "github.com/chikong/ordersystem/constant"
 
 type User struct {
 	Id          int    `json:"id" xorm:"not null pk autoincr unique INT(11)"`          // id
-	UserName    string `json:"userName" xorm:"VARCHAR(25) notnull unique 'user_name'"` // 名字
+	UserName    string `json:"userName" xorm:"VARCHAR(255) notnull unique 'user_name'"` // 名字
 	Password    string `json:"password" xorm:"not null VARCHAR(20) "`                  // 密码
-	NickName    string `json:"nickName" xorm:"VARCHAR(30)"`                            // 昵称
+	NickName    string `json:"nickName" xorm:"VARCHAR(40)"`                            // 昵称
 	CreatedTime int64  `json:"createdTime" xorm:"not null BIGINT(20)"`                 // 创建时间
 	Token       string `json:"token" orm:"VARCHAR(255)"`                               // token
 	Head        string `json:"head" orm:"VARCHAR(255)"`                                // 头像

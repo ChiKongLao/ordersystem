@@ -40,7 +40,7 @@ func LoadAPIRoutes(b *bootstrap.Bootstrapper) {
 
 
 	userService := services.NewUserService()
-	wechatService := services.NewWechatService()
+	wechatService := services.NewWechatService(userService)
 	wechatPayService := services.NewPayService()
 
 	printerService := services.NewPrinterService()
